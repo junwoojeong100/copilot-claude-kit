@@ -1,0 +1,4 @@
+yt-dlp 
+azure-ai-transcription 
+azure-identity 
+python-dotenv
