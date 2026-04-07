@@ -1,8 +1,10 @@
-# Claude AI — GitHub Copilot Custom Instructions
+# GitHub Copilot as Claude AI + Claude Code
 
 > **Microsoft FTE를 위한 프로젝트**: Microsoft 정직원(FTE)에게 무료 제공되는 **GitHub Copilot Business** 라이센스로, **별도 Anthropic 구독 없이** Claude Opus 4.6 · Sonnet 4.6 등의 모델을 VS Code Copilot Chat에서 사용할 수 있습니다.
 
 이 리포지토리는 여기에 **커스텀 인스트럭션을 추가**하여, 페르소나·코딩 스타일·보안 규칙과 Azure/GitHub 전문 스킬까지 갖춘 코딩 어시스턴트로 만들어 줍니다.
+
+> **목표**: GitHub Copilot을 **Claude AI + Claude Code**처럼 사용하는 것. Anthropic 유료 구독 없이도, Copilot의 Claude 모델 + 커스텀 인스트럭션 조합으로 동일한 경험을 구현합니다.
 
 ## 왜 이 리포가 필요한가?
 
@@ -19,8 +21,8 @@
 ### 1. 리포지토리 클론
 
 ```bash
-git clone https://github.com/junwoojeong100/github-copilot-like-claude.git
-cd github-copilot-like-claude
+git clone https://github.com/junwoojeong100/github-copilot-claude-ai.git
+cd github-copilot-claude-ai
 ```
 
 ### 2. VS Code로 열기
