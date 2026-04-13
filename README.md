@@ -12,9 +12,10 @@
 |-----------|------|
 | **GitHub Copilot Business** (MS FTE 무료) | Claude 모델 접근 권한 제공 |
 | **VS Code Model Picker** | Copilot Chat에서 Claude Opus/Sonnet 모델 선택 |
+| **GitHub Copilot CLI** | 터미널에서 직접 AI 에이전트와 대화하며 코딩 |
 | **이 리포의 Custom Instructions** | 페르소나·코딩 스타일·보안 규칙 + Azure/GitHub 전문 스킬 |
 
-→ 결과: **무료로 Claude AI + Azure 전문가 경험**을 얻을 수 있습니다.
+→ 결과: **VS Code와 터미널 모두에서 무료로 Claude AI + Azure 전문가 경험**을 얻을 수 있습니다.
 
 ## 빠른 시작
 
@@ -43,6 +44,87 @@ VS Code에서 Copilot Chat 패널을 열고, 하단의 **모델 선택기(Model 
 - **코드 작업**: `instructions/` 파일이 패턴 매칭으로 자동 로드
 - **프롬프트 템플릿**: `prompts/` 파일을 VS Code 프롬프트 선택기에서 선택
 - **전문 스킬**: 관련 질문 시 자동 활성화
+
+---
+
+## GitHub Copilot CLI에서도 사용하기
+
+이 리포의 커스텀 인스트럭션은 **VS Code Copilot Chat뿐 아니라 터미널 기반 [GitHub Copilot CLI](https://docs.github.com/copilot/concepts/agents/about-copilot-cli)에서도 자동 적용**됩니다.
+
+> **Copilot CLI란?** GitHub Copilot의 에이전트 기능을 터미널에서 사용할 수 있는 CLI 도구입니다. 코드 편집, 디버깅, 리팩토링, Git 작업 등을 자연어로 요청할 수 있으며, 실행 전 모든 액션을 미리 확인할 수 있습니다.
+
+### 설치
+
+**macOS / Linux** (Install Script):
+
+```bash
+curl -fsSL https://gh.io/copilot-install | bash
+```
+
+**macOS / Linux** (Homebrew):
+
+```bash
+brew install copilot-cli
+```
+
+**Windows** (WinGet):
+
+```bash
+winget install GitHub.Copilot
+```
+
+**크로스 플랫폼** (npm):
+
+```bash
+npm install -g @github/copilot
+```
+
+### 사용법
+
+```bash
+# 이 리포 디렉토리에서 실행
+cd github-copilot-claude-ai
+copilot
+```
+
+첫 실행 시 `/login` 명령으로 GitHub 인증을 진행합니다. 이후 자연어로 대화하며 코딩할 수 있습니다.
+
+**주요 명령어:**
+
+| 명령어 | 설명 |
+|--------|------|
+| `/model` | AI 모델 선택 (Claude Sonnet, Claude Opus, GPT 등) |
+| `/diff` | 현재 디렉토리 변경사항 리뷰 |
+| `/pr` | 현재 브랜치의 PR 작업 |
+| `/plan` | 코딩 전 구현 계획 수립 |
+| `/research` | GitHub 검색 + 웹 소스로 심층 조사 |
+| `/compact` | 대화 히스토리 요약으로 컨텍스트 절약 |
+| `/help` | 전체 명령어 목록 보기 |
+
+### 이 리포와의 관계
+
+Copilot CLI는 다음 경로의 인스트럭션 파일을 **자동으로 읽습니다**:
+
+- `.github/copilot-instructions.md`
+- `.github/instructions/**/*.instructions.md`
+
+따라서 이 리포를 클론한 디렉토리에서 `copilot` 명령을 실행하면, **persona, thinking, communication, safety, coding 지침이 모두 자동 적용**됩니다.
+
+### VS Code Chat vs Copilot CLI 비교
+
+| 항목 | VS Code Copilot Chat | GitHub Copilot CLI |
+|------|---------------------|-------------------|
+| **환경** | VS Code GUI | 터미널 |
+| **copilot-instructions.md** | ✅ 자동 적용 | ✅ 자동 적용 |
+| **instructions/*.instructions.md** | ✅ 자동 적용 | ✅ 자동 적용 |
+| **prompts/ (프롬프트 템플릿)** | ✅ 프롬프트 선택기에서 사용 | ❌ 미지원 |
+| **skills/ (전문 스킬)** | ✅ 슬래시 명령 또는 자동 활성화 | ❌ 미지원 |
+| **agents/ (커스텀 에이전트)** | ✅ 에이전트 선택기에서 사용 | ❌ 미지원 (별도 에이전트 구조) |
+| **MCP 서버 확장** | ✅ 지원 | ✅ 지원 |
+| **파일 편집** | IDE 내 직접 편집 | 에이전트가 파일 수정 (승인 후) |
+| **Git 작업** | 확장 기능 연동 | `/diff`, `/pr` 등 내장 명령 |
+
+> **요약**: `instructions/`와 `copilot-instructions.md`는 **두 환경 모두에서 동일하게 적용**됩니다. `prompts/`와 `skills/`는 VS Code 전용 기능이므로 CLI에서는 사용할 수 없습니다.
 
 ---
 
@@ -259,6 +341,10 @@ Copilot이 자동으로 `copilot-instructions.md`를 인식합니다.
 ### Q: 기존 copilot-instructions.md와 충돌하나요?
 
 `copilot-instructions.md`는 프로젝트당 하나만 인식됩니다. 기존 파일이 있다면 내용을 병합하세요.
+
+### Q: Copilot CLI에서도 이 커스텀 인스트럭션이 적용되나요?
+
+네. Copilot CLI는 `.github/copilot-instructions.md`와 `.github/instructions/**/*.instructions.md`를 자동으로 읽습니다. 이 리포를 클론한 디렉토리에서 `copilot` 명령을 실행하면 persona, thinking, communication, safety, coding 지침이 모두 적용됩니다. 다만 `prompts/`와 `skills/`는 VS Code 전용 기능이므로 CLI에서는 사용할 수 없습니다.
 
 ---
 
