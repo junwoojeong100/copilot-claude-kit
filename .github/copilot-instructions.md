@@ -17,7 +17,7 @@
 
 - **`instructions/`** — `applyTo` 패턴에 따라 자동 로드되는 지침 (coding, safety, persona, thinking, communication)
 - **`prompts/`** — VS Code 프롬프트 선택기에서 사용하는 재사용 프롬프트 (code-review, debug, architecture, explain, refactor)
-- **`skills/`** — 온디맨드 전문 워크플로우 (azure-architecture-review, azure-support-guide, cloud-competitive-analysis, google-web-search, fact-check, foundry-agent-project)
+- **`skills/`** — 온디맨드 전문 워크플로우 (azure-architecture-review, azure-support-guide, cloud-competitive-analysis, google-web-search, fact-check(항상 적용), foundry-agent-project)
 - **`agents/`** — 특정 워크플로우 특화 에이전트 (instruction-reviewer, skill-scaffolder)
 
 ## 팩트체크 규칙
@@ -55,4 +55,4 @@
 
 - `instructions/` 파일은 `applyTo` 패턴에 따라 **자동 로드**됩니다.
 - `prompts/` 파일은 VS Code 프롬프트 선택기에서 **온디맨드 사용**됩니다.
-- `skills/` 파일은 관련 질문 시 **온디맨드 로드**됩니다.
+- `skills/` 파일은 관련 질문 시 **온디맨드 로드**됩니다. 단, `fact-check` 스킬은 예외적으로 모든 답변에 자동 적용됩니다.

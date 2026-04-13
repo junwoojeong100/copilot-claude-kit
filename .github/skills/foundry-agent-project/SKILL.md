@@ -303,6 +303,15 @@ registry:
 2. 프롬프트 최적화 수행
 3. 재배포
 
+## Error Handling
+
+| 상황 | 처리 방법 |
+|------|----------|
+| `aitk-*` 도구 사용 불가 | SKILL.md의 의사코드 기반으로 생성하되, "최신 SDK 패턴은 `aitk-get_agent_code_gen_best_practices` 도구로 확인하세요"라고 안내 |
+| Foundry 프로젝트 접근 불가 | 로컬 개발 환경(pyproject.toml, src/, tests/)까지만 구성하고, 배포 단계는 Foundry 접근 확보 후 진행하도록 안내 |
+| Docker 미설치 | Dockerfile은 생성하되, 로컬 실행(`python -m`)까지만 안내. 컨테이너 빌드·배포는 Docker 설치 후 진행 |
+| SDK 호환성 문제 | pyproject.toml에 버전을 핀하지 않고, 사용자에게 최신 호환 버전 확인을 요청 |
+
 ## Output Format
 
 프로젝트 생성 완료 시 아래 형식으로 요약합니다:

@@ -92,7 +92,7 @@ https://html.duckduckgo.com/html/?q={encoded_query}
 ```
 - 공식 문서, 기술 블로그, 가이드, 릴리스 노트 등 일반 웹 문서 검색에 적합
 - JavaScript가 불필요한 순수 HTML 버전이라 `fetch_webpage`와 100% 호환
-- 검색 결과에서 URL을 추출한 뒤, **허용 도메인(google.com, youtube.com, microsoft.com, github.com)의 링크만 상세 fetch**
+- 검색 결과에서 URL을 추출한 뒤, **1차·2차 신뢰 도메인의 링크만 상세 fetch**
 
 **허용 도메인 직접 접근 (URL을 이미 알거나 추론 가능한 경우)**
 검색 주제에 따라 허용 도메인의 관련 페이지를 직접 fetch합니다:
@@ -109,7 +109,7 @@ https://www.google.com/search?q={encoded_query}
 
 **⚠️ 검색 엔진 vs 결과 소스 구분:**
 - **검색 엔진** (URL 발견용): Google News, DuckDuckGo HTML, Google Search 모두 사용 가능
-- **결과 소스** (상세 내용 fetch용): 반드시 허용 도메인(`google.com`, `youtube.com`, `microsoft.com`, `github.com`) 내 URL만 fetch
+- **결과 소스** (상세 내용 fetch용): 반드시 1차·2차 신뢰 도메인 내 URL만 fetch (비신뢰 도메인은 fetch 금지)
 
 **검색 실행 예시:**
 
@@ -217,4 +217,4 @@ fetch_webpage 도구를 사용:
 3. **날짜 확인**: 검색 결과의 게시 날짜를 확인하여 최신성을 판단합니다. 1년 이상 된 정보는 변경 여부를 재확인합니다.
 4. **불확실성 표시**: 검색 결과가 상충하거나 불확실할 경우 명시합니다.
 5. **개인정보 보호**: 검색 쿼리에 사용자의 개인정보를 포함하지 않습니다.
-6. **신뢰할 수 없는 소스 회피**: 출처가 불명한 개인 블로그, SEO 스패 사이트, 클릭베이트 사이트의 정보는 사용하지 않습니다.
+6. **신뢰할 수 없는 소스 회피**: 출처가 불명한 개인 블로그, SEO 스팸 사이트, 클릭베이트 사이트의 정보는 사용하지 않습니다.

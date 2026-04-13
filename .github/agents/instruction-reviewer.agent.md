@@ -23,6 +23,7 @@ tools: [read, search]
 - `instructions/*.instructions.md`
 - `prompts/*.prompt.md`
 - `skills/*/SKILL.md` 및 `references/`, `assets/`
+- `agents/*.agent.md`
 
 ### 2. 프론트매터 검증
 
@@ -33,6 +34,7 @@ tools: [read, search]
 | `description` | 존재 여부, 키워드 포함 여부, 길이 적절성 (1024자 이내) |
 | `applyTo` | 패턴 정확성, 과도한 범위(`**`) 여부 |
 | `name` | 폴더명과 일치 여부 (skills) |
+| `tools`, `agents` | 참조 유효성 (agents) |
 | YAML 문법 | 콜론 이스케이프, 탭 사용 여부 |
 
 ### 3. 내용 품질 분석
