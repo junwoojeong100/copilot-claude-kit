@@ -1,6 +1,6 @@
 # GitHub Copilot as Claude AI + Claude Code
 
-> **Microsoft FTE를 위한 프로젝트**: Microsoft 정직원(FTE)에게 무료 제공되는 **GitHub Copilot Business** 라이센스로, **별도 Anthropic 구독 없이** Claude Opus 4.6 · Sonnet 4.6 등의 모델을 VS Code Copilot Chat에서 사용할 수 있습니다.
+> **Microsoft FTE를 위한 프로젝트**: Microsoft 정직원(FTE)에게 무료 제공되는 **GitHub Copilot Business** 라이센스로, **별도 Anthropic 구독 없이** Claude Sonnet · Claude Opus 등의 모델을 VS Code Copilot Chat에서 사용할 수 있습니다.
 
 이 리포지토리는 여기에 **커스텀 인스트럭션을 추가**하여, 페르소나·코딩 스타일·보안 규칙과 Azure/GitHub 전문 스킬까지 갖춘 코딩 어시스턴트로 만들어 줍니다.
 
@@ -33,7 +33,7 @@ code .
 
 ### 3. Claude 모델 선택
 
-VS Code에서 Copilot Chat 패널을 열고, 하단의 **모델 선택기(Model Picker)** 에서 `Claude Opus 4.6` 또는 `Claude Sonnet 4.6`를 선택합니다.
+VS Code에서 Copilot Chat 패널을 열고, 하단의 **모델 선택기(Model Picker)** 에서 `Claude Sonnet` 또는 `Claude Opus`를 선택합니다.
 
 ### 4. 바로 사용
 

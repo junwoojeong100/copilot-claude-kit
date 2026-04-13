@@ -37,13 +37,13 @@
 
 | 항목 | Azure (AKS / Container Apps) | AWS (EKS / ECS / Fargate) | GCP (GKE / Cloud Run) |
 |------|------------------------------|---------------------------|----------------------|
-| 관리형 K8s | AKS (컨트롤 플레인 무료) | EKS ($0.10/hr/cluster, Standard Tier) | GKE (Autopilot/Standard) |
+| 관리형 K8s | AKS (Free tier: 컨트롤 플레인 무료, SLA 없음) | EKS ($0.10/hr/cluster, Standard Tier) | GKE (Autopilot/Standard) |
 | 서버리스 컨테이너 | Container Apps (Dapr 네이티브) | Fargate (ECS/EKS) | Cloud Run |
 | K8s 버전 관리 | 자동 업그레이드 채널 | 관리형 업그레이드 | Autopilot 자동 관리 |
 | 서비스 메시 | Istio (AKS Addon) | App Mesh | Istio (Anthos) |
-| 비용 | AKS 컨트롤 플레인 무료 | EKS $73/월/cluster (Standard Tier) | GKE Standard 무료, Autopilot 유료 |
+| 비용 | AKS Free tier: 컨트롤 플레인 무료(SLA 없음), Standard: ~$73/월(99.95% SLA) | EKS $73/월/cluster (Standard Tier) | GKE Standard 무료, Autopilot 유료 |
 
-**Microsoft 차별화**: AKS 컨트롤 플레인 무료 + Container Apps의 Dapr 네이티브 통합으로 마이크로서비스 개발 간소화
+**Microsoft 차별화**: AKS Free tier는 컨트롤 플레인 무료(비프로덕션 적합) + Container Apps의 Dapr 네이티브 통합으로 마이크로서비스 개발 간소화
 
 ---
 

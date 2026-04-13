@@ -22,7 +22,7 @@
 | 모델 | Microsoft Foundry | AWS Bedrock | Vertex AI | OpenAI Platform | Anthropic |
 |------|-------------------|-------------|-----------|----------------|-----------|
 | GPT-4o / GPT-4.1 | ✅ (Azure OpenAI) | ❌ | ❌ | ✅ | ❌ |
-| o1 / o3 / o4-mini | ✅ (Azure OpenAI) | ❌ | ❌ | ✅ | ❌ |
+| o1 / o3 등 최신 추론 모델 | ✅ (Azure OpenAI) | ❌ | ❌ | ✅ | ❌ |
 | Claude 3.5/4 | ⚠️ 카탈로그에서 일부 | ✅ | ✅ (일부) | ❌ | ✅ |
 | Gemini 2.x | ❌ | ❌ | ✅ (독점) | ❌ | ❌ |
 | Llama 3.x | ✅ 카탈로그 | ✅ | ✅ | ❌ | ❌ |

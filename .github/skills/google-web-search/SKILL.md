@@ -63,12 +63,14 @@ AI 모델의 학습 데이터 컷오프 이후의 **최신 정보**가 필요할
 
 **검색 쿼리 예시:**
 
+> ⚠️ 검색 쿼리의 연도는 반드시 **현재 연도**를 사용합니다. 아래 예시의 연도는 설명용입니다.
+
 | 사용자 질문 | 최적화된 쿼리 |
 |------------|-------------|
-| "React 최신 버전이 뭐야?" | `React latest version 2026 site:react.dev OR site:github.com/facebook/react` |
-| "Azure Functions 요금 변경됐어?" | `Azure Functions pricing changes 2026 site:microsoft.com` |
+| "React 최신 버전이 뭐야?" | `React latest version {current_year} site:react.dev OR site:github.com/facebook/react` |
+| "Azure Functions 요금 변경됐어?" | `Azure Functions pricing changes {current_year} site:microsoft.com` |
 | "Python 3.13 새 기능" | `Python 3.13 new features changelog site:python.org OR site:github.com` |
-| "Kubernetes 최신 동향" | `Kubernetes latest trends 2026 site:kubernetes.io OR site:github.com` |
+| "Kubernetes 최신 동향" | `Kubernetes latest trends {current_year} site:kubernetes.io OR site:github.com` |
 
 ### Step 2: 웹 검색 수행
 
