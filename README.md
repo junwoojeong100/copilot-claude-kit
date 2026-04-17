@@ -1,4 +1,4 @@
-# GitHub Copilot as Claude AI + Claude Code
+# Copilot × Claude Kit — GitHub Copilot을 Claude AI + Claude Code처럼 사용하기
 
 > **Microsoft FTE를 위한 프로젝트**: Microsoft 정직원(FTE)에게 무료 제공되는 **GitHub Copilot Business** 라이센스로, **별도 Anthropic 구독 없이** Claude Sonnet · Claude Opus 등의 모델을 VS Code Copilot Chat에서 사용할 수 있습니다.
 
@@ -22,8 +22,8 @@
 ### 1. 리포지토리 클론
 
 ```bash
-git clone https://github.com/junwoojeong100/github-copilot-claude-ai.git
-cd github-copilot-claude-ai
+git clone https://github.com/junwoojeong100/copilot-claude-kit.git
+cd copilot-claude-kit
 ```
 
 ### 2. VS Code로 열기
@@ -83,7 +83,7 @@ npm install -g @github/copilot
 
 ```bash
 # 이 리포 디렉토리에서 실행
-cd github-copilot-claude-ai
+cd copilot-claude-kit
 copilot
 ```
 
