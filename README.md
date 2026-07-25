@@ -26,7 +26,7 @@ Microsoft Learn MCP를 사용할 수 있습니다.
 |------|------|----------|------|
 | **Instructions** | `.github/copilot-instructions.md` | 매 대화 **자동 로드** | Straightforward 결과 · 페르소나 · 사고 · 소통 · 안전 · 코딩 · Git · MS/GitHub 가치 · 팩트체크 · 출처 |
 | **Skills** | `.github/skills/` | 관련 질문 시 **자동 활성화** 또는 `/skill-name` | 결론 우선 실시간 검색 · 고객·산업별 AI/App Platform 데모 · 적응형 PPTX 생성 |
-| **MCP (사전 번들)** | `.github/mcp.json` · `.vscode/mcp.json` | clone 후 신뢰/Start 승인 시 활성화 | Microsoft Learn MCP — 공식 문서·코드 샘플 검색 |
+| **MCP (사전 번들)** | `.github/mcp.json` · `.vscode/mcp.json` | clone 후 신뢰/Start 승인 시 활성화 | Microsoft Learn MCP — 공식 문서·코드 샘플 검색 (Azure·사내 MCP는 선택 연결) |
 
 > 상시 적용 원칙은 **단일 파일로 통합**해 중복을 줄이고, 상세 워크플로는 관련 작업에서만 스킬로 불러옵니다.
 
@@ -122,6 +122,7 @@ npm install -g @github/copilot
 .github/
 ├── copilot-instructions.md              # 단일 핵심 지침 (매 대화 자동 로드)
 ├── mcp.json                             # Microsoft Learn MCP 사전 번들 (CLI 워크스페이스 자동 로드)
+├── mcp.enghub.example.json              # Microsoft 사내 EngHub MCP 예시 (임직원이 복사해서 사용)
 └── skills/                              # 전문 스킬 (온디맨드)
     ├── web-search/                      # 실시간 웹·공식 문서 검색과 구조화 수집
     │   ├── SKILL.md
@@ -362,15 +363,14 @@ VS Code 환경에서는 저장소와 최종 출력 폴더 밖의 OS 임시 디�
 
 ## MCP 서버 (사전 번들 · clone 후 승인하면 동작)
 
-이 킷의 `web-search` 스킬은 **검색 전략·검증·Fact Ledger 수집 계약·출력 형식**을 맡으며 검색 backend 자체를 제공하지
-않습니다. 실제 범용 검색은 GitHub Copilot의 web search 또는 Research capability를 사용합니다.
-MCP(Model Context Protocol) 서버는 Copilot에 **구조화된 외부 도구 접근**
-(공식 문서·GitHub 이슈/PR/코드)을 붙여 줍니다.
-
-이 킷은 **[Microsoft Learn MCP](https://learn.microsoft.com/training/support/mcp)를 리포에 사전
-번들**합니다. clone하면 설정 파일이 인식되고,
-클라이언트에서 폴더 신뢰 또는 서버 Start를 승인하면 활성화됩니다. 연결 설정만 저장하며 문서 내용을
+MCP(Model Context Protocol) 서버는 Copilot에 **구조화된 외부 도구 접근**(공식 문서·GitHub 이슈/PR/코드)을
+붙여 줍니다. 이 킷은 **[Microsoft Learn MCP](https://learn.microsoft.com/training/support/mcp)를 사전
+번들**하며, clone 후 폴더 신뢰 또는 서버 Start를 승인하면 활성화됩니다. 연결 설정만 저장하고 문서 내용은
 저장소에 복제하지 않습니다.
+
+범용 최신 웹 검색은 MCP가 아니라 GitHub Copilot CLI의 `/research`·Research agent 또는 VS Code Copilot의
+web search capability를 사용합니다. 이 킷의 `web-search` 스킬은 검색 전략·검증·Fact Ledger 계약을 맡고
+검색 backend 자체는 제공하지 않습니다.
 
 ### 번들된 서버
 
@@ -379,6 +379,9 @@ MCP(Model Context Protocol) 서버는 Copilot에 **구조화된 외부 도구 �
 | **GitHub MCP** | 이슈·PR·코드·릴리스 조회/작성 | GitHub 로그인 | **Copilot CLI에 내장** — 설정 불필요 |
 | **Microsoft Learn MCP** | `learn.microsoft.com` 공식 문서·코드 샘플 조회 | **불필요 · 무료 공개 엔드포인트** | **리포에 번들** — 클라이언트 승인 후 활성화 |
 
+> 선택 연결: Azure 리소스 작업은 **Azure MCP**(플러그인), Microsoft 사내 도구는 **EngHub MCP**(예시 파일)를
+> 아래 절에서 각각 연결합니다.
+
 ### 인식과 활성화
 
 - **Copilot CLI** — 리포의 `.github/mcp.json`을 **워크스페이스 서버**로 자동 로드. 첫 실행 시 폴더 신뢰(trust)에 동의하면 활성화됩니다.
@@ -386,18 +389,124 @@ MCP(Model Context Protocol) 서버는 Copilot에 **구조화된 외부 도구 �
 - **VS Code (Copilot Chat · Agent)** — 리포의 `.vscode/mcp.json`을 인식. 파일 상단 **Start** 또는 명령 팔레트 → **MCP: List Servers**로 시작.
   - 확인: Agent 도구 목록에 `microsoft_docs_search` 등이 보이면 정상입니다.
 
-> GitHub·Microsoft Learn 범위에는 별도 서버 설치가 필요하지 않습니다. 범용 최신 웹 검색은 GitHub
-> Copilot CLI의 `/research`·Research agent 또는 VS Code Copilot의 web search capability를 사용합니다.
-
 ### 다른 MCP 서버 추가 (선택)
 
 - **CLI**: `/mcp add`(대화형) 또는 전역 `~/.copilot/mcp-config.json`(루트 키 `mcpServers`). 관리는 `copilot mcp list` / `/mcp show` / `/mcp disable <이름>`.
 - **VS Code**: `.vscode/mcp.json`(루트 키 `servers`).
+- **플러그인 경유**: 일부 플러그인은 자체 MCP 서버를 함께 설치합니다. 이 경우 `mcp-config.json`에는
+  보이지 않고 플러그인 설정으로 관리합니다(아래 Azure MCP 참고).
 
 > **보안**: MCP 서버는 외부 도구를 실행합니다. **신뢰할 수 있는 서버만** 추가하고, 추적되는
 > `.github/mcp.json`이나 `.vscode/mcp.json`에 리터럴 키를 저장하지 마세요. 클라이언트가 지원하는
 > 환경변수/secret/input 치환 또는 사용자 전역 설정을 사용하고, 구체 문법은 해당 클라이언트의
 > 공식 문서를 따르세요.
+
+### Azure MCP 연결 (Azure Skills 플러그인, 선택)
+
+Azure 리소스를 실제로 조회·진단·배포하려면 **[Azure Skills 플러그인](https://github.com/microsoft/azure-skills)**
+을 설치합니다. 이 플러그인은 Azure 스킬과 함께 **Azure MCP Server**(+ Foundry MCP)를 연결하므로,
+이 킷의 MCP 파일에는 별도 항목을 추가하지 않습니다.
+
+| 항목 | 내용 |
+|------|------|
+| 용도 | 리소스 조회, 모니터링·로그 질의, 가격 확인, 배포·진단 워크플로 실행 |
+| 설치 단위 | Copilot CLI 플러그인 (사용자 전역) |
+| MCP 정의 위치 | 플러그인 내부 `.mcp.json` — `npx -y @azure/mcp@latest server start` |
+| 사전 조건 | Node.js 18+, Azure CLI `az login`(배포 워크플로는 `azd auth login`) |
+| 인증 | 로컬 Azure 자격 증명 사용 — 리포에 키를 저장하지 않음 |
+
+**연결 절차 (Copilot CLI)**
+
+1. `/plugin`으로 마켓플레이스 `microsoft/azure-skills`를 추가하고 `azure` 플러그인을 설치합니다.
+2. `az login`으로 대상 구독에 로그인합니다.
+3. CLI를 재시작한 뒤 `azure-` 계열 도구(예: 리소스 그룹 조회)가 로드되는지 확인합니다.
+
+> 플러그인은 사용자 전역에 설치되므로 저장소마다 다시 설정할 필요가 없습니다. 필요 없을 때는
+> `~/.copilot/settings.json`의 `enabledPlugins`에서 비활성화합니다.
+
+### Microsoft 사내 MCP 연결 (EngHub)
+
+**EngHub MCP**(`https://mcp.eng.ms`)는 Microsoft **임직원이 사용할 수 있는 사내 Engineering Hub MCP
+서버**입니다. 개인이 만든 서버가 아니라 사내 공통 엔드포인트이며, corporate 계정과 사내 인증이 있어야
+연결됩니다.
+
+이 킷은 EngHub를 **기본 로드 대상에 넣지 않고 예시 파일로만 번들**합니다. 외부 사용자가 clone했을 때
+불필요한 인증 실패와 시작 지연이 생기지 않게 하기 위해서입니다.
+
+| 항목 | 내용 |
+|------|------|
+| 용도 | 사내 엔지니어링 포털·내부 문서·내부 서비스 도구를 Copilot 세션에서 직접 호출 |
+| 사용 대상 | Microsoft 임직원 (corporate 계정 필요) |
+| 외부 사용자 | 사용 불가 — 공개 문서 조회는 Microsoft Learn MCP를 사용 |
+| 번들 파일 | `.github/mcp.enghub.example.json` (예시 · 자동 로드되지 않음) |
+| 적용 위치 | 워크스페이스 `.github/mcp.json` 또는 VS Code `.vscode/mcp.json` |
+| 인증 | 브라우저 OAuth + corporate 인증 (사내망·VPN 연결이 필요할 수 있음) |
+
+**연결 절차**
+
+1. 사내 네트워크 또는 VPN에 연결하고 corporate 계정 로그인 상태를 확인합니다.
+2. 예시 파일의 `EngHub` 항목을 워크스페이스 `.github/mcp.json`에 병합합니다.
+
+   ```bash
+   cd <이 킷을 적용한 프로젝트 루트>
+   cp .github/mcp.json .github/mcp.json.bak
+   python3 - <<'PY'
+   import json
+   base = json.load(open(".github/mcp.json"))
+   extra = json.load(open(".github/mcp.enghub.example.json"))
+   base["mcpServers"].update(extra["mcpServers"])
+   json.dump(base, open(".github/mcp.json", "w"), indent=2, ensure_ascii=False)
+   open(".github/mcp.json", "a").write("\n")
+   PY
+   ```
+
+   결과는 다음과 같습니다. VS Code에서 쓰려면 `.vscode/mcp.json`의 `servers`에 같은 항목을 추가합니다.
+
+   ```json
+   {
+     "mcpServers": {
+       "microsoft-learn": {
+         "type": "http",
+         "url": "https://learn.microsoft.com/api/mcp",
+         "tools": ["*"]
+       },
+       "EngHub": {
+         "type": "http",
+         "url": "https://mcp.eng.ms",
+         "tools": ["*"]
+       }
+     }
+   }
+   ```
+
+3. CLI를 재시작하면 OAuth 인증이 진행됩니다. 승인 후 `copilot mcp list` 또는 `/mcp show`에서
+   `EngHub`가 연결 상태로 보이고 도구 목록이 로드되는지 확인합니다.
+
+**원복 (사용을 마쳤거나 커밋 전에 되돌릴 때)**
+
+```bash
+git checkout -- .github/mcp.json     # 저장소 기본 상태로 복구
+# 또는 백업 사용: mv .github/mcp.json.bak .github/mcp.json
+```
+
+임시로만 끄려면 `/mcp disable EngHub`를 사용합니다.
+
+> 사내 전용 서버를 추가한 `.github/mcp.json` 변경은 **공개 저장소에 커밋하지 마세요.** 외부 사용자
+> 환경에서는 인증이 실패하고 시작만 느려집니다. 커밋 전에 `git status`로 확인하는 것을 권장합니다.
+
+**문제 해결**
+
+| 증상 | 원인 | 조치 |
+|------|------|------|
+| 시작이 오래 걸리고 EngHub 도구가 보이지 않음 | 사내망 밖에서 인증 실패 | 사내망·VPN 연결 후 CLI 재시작 |
+| 로그에 `HTTP 403 Forbidden` · `Failed to discover authorization server metadata` | corporate 인증이 없거나 만료 | 재로그인 후 재시도. 로그는 `~/.copilot/logs/`에서 확인 |
+| 재인증이 계속 실패 | 만료된 OAuth 캐시 재사용 | `~/.copilot/mcp-oauth-config/`의 해당 항목을 삭제하고 다시 인증 |
+| 당장 필요 없음 | — | `/mcp disable EngHub` 또는 설정에서 제거 |
+
+> EngHub 연결 실패는 **다른 작업을 막지 않습니다.** Microsoft Learn MCP, GitHub MCP, 스킬, 셸·파일
+> 작업은 그대로 동작하며 세션 시작만 지연됩니다.
+
+> **보안**: 사내 데이터·식별자·내부 URL을 외부 서비스나 공개 산출물로 옮기지 마세요.
 
 ---
 
@@ -419,8 +528,9 @@ MCP(Model Context Protocol) 서버는 Copilot에 **구조화된 외부 도구 �
 
 **Q. MCP 서버는 어떻게 붙이나요?**
 Microsoft Learn MCP 설정은 CLI의 `.github/mcp.json`과 VS Code의 `.vscode/mcp.json`에 번들되어 있으며,
-폴더 신뢰 또는 Start 승인 후 활성화됩니다. GitHub MCP는 Copilot CLI에 내장돼 있습니다. 범용 최신 웹
-검색은 GitHub Copilot의 web search 또는 Research capability를 사용합니다.
+폴더 신뢰 또는 Start 승인 후 활성화됩니다. GitHub MCP는 Copilot CLI에 내장돼 있습니다. Azure MCP는
+Azure Skills 플러그인으로, Microsoft 사내 EngHub MCP는 `.github/mcp.enghub.example.json` 예시로
+연결합니다. 범용 최신 웹 검색은 GitHub Copilot의 web search 또는 Research capability를 사용합니다.
 
 ---
 

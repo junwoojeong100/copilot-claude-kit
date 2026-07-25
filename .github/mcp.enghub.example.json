@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "EngHub": {
+      "type": "http",
+      "url": "https://mcp.eng.ms",
+      "tools": ["*"]
+    }
+  }
+}
