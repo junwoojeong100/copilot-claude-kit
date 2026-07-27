@@ -18,14 +18,14 @@ const allRoutes = [
   'appPlatform'
 ];
 const requiredIds = {
-  dashboard: ['dashChart', 'dashFeed', 'dashTable'],
+  dashboard: ['dashPrimaryAction', 'dashChart', 'dashFeed', 'dashTable', 'journeySelect', 'journeyBridge', 'nextScene'],
   operations: ['opsFlow', 'flowMover', 'reopt', 'opsTable'],
   simulator: ['simInputs', 'simGauge', 'simValue', 'simHistogram'],
   improvement: ['runAnalysis', 'analysisSteps', 'factorBars', 'improvementBoard'],
   finance: ['financeLevers', 'marginValue', 'valueDonut', 'financeTable'],
-  github: ['assignIssue', 'devSteps', 'codeDiff', 'issueTable', 'prStatus'],
-  foundry: ['agentList', 'chatTitle', 'chatLog', 'chips', 'chatInput', 'sendBtn', 'orchRun'],
-  appPlatform: ['evalRun', 'evalScore', 'evalTrace', 'controlTable', 'memoryTable']
+  github: ['buyerNext-github', 'scenarioTrace', 'assignIssue', 'devSteps', 'codeDiff', 'issueTable', 'prStatus'],
+  foundry: ['buyerNext-foundry', 'scenarioTrace', 'agentList', 'chatTitle', 'chatLog', 'chips', 'chatInput', 'sendBtn', 'orchRun'],
+  appPlatform: ['buyerNext-appPlatform', 'scenarioTrace', 'evalRun', 'planRemediation', 'evalScore', 'evalProjection', 'evalProjectedScore', 'evalTrace', 'gapList', 'controlTable', 'memoryTable']
 };
 const fullQa = process.env.FULL_QA !== '0';
 const requestedRoutes = (process.env.VERIFY_ROUTES || allRoutes.join(','))
@@ -120,6 +120,7 @@ let browser;
   await page.goto(pathToFileURL(appHtml).href, { waitUntil: 'networkidle0' });
   const qaSpec = await page.evaluate(() => JSON.parse(document.getElementById('demo-spec').textContent));
   const activeRoutes = qaSpec.story.routeScope || allRoutes;
+  const scenarioOriginRoute = qaSpec.story.scenarioTrace.steps[0].route;
   const inactiveRequestedRoutes = requestedRoutes.filter(route => !activeRoutes.includes(route));
   if (!fullQa && inactiveRequestedRoutes.length) {
     throw new Error(
@@ -149,9 +150,13 @@ let browser;
     await page.evaluate(() => {
       document.querySelectorAll('#toasts .toast').forEach(toast => toast.remove());
     });
-    routeResults[route] = await page.evaluate(expectedIds => {
+    const expectedIds = [
+      ...(requiredIds[route] || []),
+      ...(route === scenarioOriginRoute ? ['scenarioTrace'] : [])
+    ];
+    routeResults[route] = await page.evaluate(expectedRouteIds => {
       const rows = [...document.querySelectorAll(
-        '.click-row, .agent-row, .node-card, .detail-card, .impact-card, .board-card, .platform-card, .sovereignty-step'
+        '.click-row, .agent-row, .node-card, .detail-card, .impact-card, .board-card, .platform-card, .sovereignty-step, .business-kpi, .capability-card, .sales-control-row, .scenario-step'
       )];
       const text = document.body.innerText;
       const agentList = document.getElementById('agentList');
@@ -166,10 +171,10 @@ let browser;
         unboundRows: rows
           .filter(row => typeof row.onclick !== 'function')
           .map(row => row.textContent.trim().slice(0, 60)),
-        missingIds: expectedIds.filter(id => !document.getElementById(id)),
+        missingIds: expectedRouteIds.filter(id => !document.getElementById(id)),
         agentRowsAllVisible: !agentList || agentList.scrollHeight <= agentList.clientHeight + 1
       };
-    }, requiredIds[route] || []);
+    }, expectedIds);
 
     const result = routeResults[route];
     if (!/시연 데이터|DEMO DATA/i.test(result.demoBadge)) failures.push(`${route}: demo-data badge missing`);
@@ -182,6 +187,31 @@ let browser;
   }
 
   if (fullQa) {
+    if (hasRoute('dashboard')) {
+      await page.evaluate(() => { location.hash = 'dashboard'; });
+      await sleep(500);
+      const dashboardTarget = qaSpec.dashboard.primaryAction.targetRoute;
+      await page.click('#dashPrimaryAction');
+      await sleep(250);
+      const dashboardRoute = await page.evaluate(() => location.hash.slice(1));
+      if (dashboardRoute !== dashboardTarget) {
+        failures.push(`dashboard: primary action did not navigate to ${dashboardTarget}`);
+      }
+      await page.evaluate(() => { location.hash = 'dashboard'; });
+      await sleep(350);
+      await page.select('#journeySelect', qaSpec.story.defaultJourneyId);
+      const journeyStart = qaSpec.story.guidedJourneys
+        .find(journey => journey.id === qaSpec.story.defaultJourneyId).routes[0];
+      const selectedRoute = await page.evaluate(() => location.hash.slice(1));
+      if (selectedRoute !== journeyStart) failures.push('journey: preset did not navigate to its first route');
+      const nextTarget = qaSpec.story.guidedJourneys
+        .find(journey => journey.id === qaSpec.story.defaultJourneyId).routes[1];
+      await page.click('#nextScene');
+      await sleep(250);
+      const nextRoute = await page.evaluate(() => location.hash.slice(1));
+      if (nextRoute !== nextTarget) failures.push('journey: next-scene CTA did not follow the guided route order');
+    }
+
     if (hasRoute('operations')) {
       await page.evaluate(() => { location.hash = 'operations'; });
       await sleep(650);
@@ -348,20 +378,37 @@ let browser;
       await page.evaluate(() => { location.hash = 'appPlatform'; });
       await sleep(650);
       const evaluationBefore = await page.$eval('#evalScore', element => element.textContent);
+      const initialGaps = await page.$$eval('#gapList .gap-item', elements => elements.length);
+      if (initialGaps !== 0) failures.push('appPlatform: readiness gaps are visible before assessment');
       await page.click('#evalRun');
       await waitForEnabled(
         '#evalRun',
         qaSpec.appPlatform.evaluation.runLines.length * 250 + 2200
       );
-      const evaluationAfter = await page.$eval('#evalScore', element => element.textContent);
+      const evaluationAfterAssessment = await page.$eval('#evalScore', element => element.textContent);
+      const gaps = await page.$$eval('#gapList .gap-item', elements => elements.length);
+      if (evaluationBefore !== evaluationAfterAssessment) {
+        failures.push('appPlatform: assessment changed the score before remediation planning');
+      }
+      if (gaps < 2) failures.push('appPlatform: readiness assessment did not expose configured gaps');
+      await page.click('#planRemediation');
+      await waitForEnabled(
+        '#planRemediation',
+        qaSpec.appPlatform.evaluation.remediationLines.length * 250 + 2200
+      );
+      const currentScoreAfterPlan = await page.$eval('#evalScore', element => element.textContent);
+      const evaluationAfter = await page.$eval('#evalProjectedScore', element => element.textContent);
       const evaluationBeforeNumber = Number(evaluationBefore);
       const evaluationAfterNumber = Number(evaluationAfter);
+      if (currentScoreAfterPlan !== evaluationBefore) {
+        failures.push('appPlatform: remediation plan overwrote the current assessed score');
+      }
       if (
         !Number.isFinite(evaluationBeforeNumber)
         || !Number.isFinite(evaluationAfterNumber)
         || evaluationBeforeNumber === evaluationAfterNumber
       ) {
-        failures.push('appPlatform: platform score did not change numerically');
+        failures.push('appPlatform: remediation plan did not change the projected score');
       }
     }
 

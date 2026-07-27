@@ -4,6 +4,10 @@
 뒤의 3개는 `GitHub Ecosystem`, `Microsoft Foundry`, `App Platform(ACA/AKS)`으로 고정한다. 모든 메뉴를
 노출하되 시연 동선은 목적에 필요한 4~6개 핵심 장면으로 압축한다.
 
+공통 shell은 CEO·COO·CFO·CIO 등 청중별 journey selector, route bridge, `다음 장면` CTA를 제공한다.
+Dashboard primary action과 공통 scenario trace가 업무 예외→Foundry 의사결정→GitHub 변경→App
+Platform 운영을 동일 ID로 연결한다.
+
 ---
 
 ## 화면 1 — 대시보드 (필수)
@@ -37,12 +41,17 @@ primary action은 업무 최적화, 트래픽 전환, rollout, 자동 복구처�
 **주요 기능**: GitHub Issues·Projects, GitHub Copilot, Pull Requests, GitHub Actions, GitHub Advanced
 Security, environment protection. **주요 지표**: lead time, deployment frequency, PR throughput,
 review time, CI success, security coverage.
+화면 상단에는 enabled business outcome, 사업 KPI 2개, buyer next step을 먼저 보여주고 기술 지표와
+Issue-to-PR flow를 뒤에 배치한다.
 
 ## 화면 7 — Microsoft Foundry + Microsoft Agent Framework (고정)
 **목적**: 임원이 직접 질문하고 Agent들이 협업하며 평가·추적되는 모습을 보여준다.
 **주요 기능**: 모델·Agent·도구 연결, prompt/hosted agent, Microsoft Agent Framework orchestration,
 knowledge grounding, evaluation, tracing, safety. **주요 지표**: Agent 성공률, P95 latency, 평가
 커버리지, 근거 기반 응답률, tool-call 성공률.
+초기 viewport에는 Agent 목록보다 의사결정 패키지와 사업 효과를 먼저 보여준다. 통제 증거에는
+Microsoft Entra Agent ID, Microsoft Purview, Azure AI Content Safety, Foundry evaluation/trace를
+구조화해 표시한다.
 **구성**: `.agent-layout`(310px 1fr)[에이전트 목록 + 오케스트레이션 플로우 + "시나리오 실행" 버튼 | 채팅(헤더·로그·추천칩·입력)].
 **★ 필수**: 목록의 **모든 행 클릭 시 그 에이전트로 전환**(헤더·아바타·인사·추천질문·답변). 누락하면 "첫 행만 동작"하는 버그.
 실제 구현은 `runtime/runtime.js`의 `renderAgents()`가 source of truth다. Extension에서도 아래 lifecycle을 유지한다:
@@ -76,12 +85,15 @@ Rich text는 Renderer가 허용한 태그/class만 사용하고, 사용자 입�
 
 ## 화면 8 — App Platform · Azure Container Apps + AKS (고정)
 **목적**: workload별 runtime 선택과 배포·확장·보안·관찰성·비용 상태를 한 화면에서 판단.
-**구성**: `hero` → `.grid-3`[platform readiness | SLO 달성률 | 용량 효율] →
+**구성**: `hero` → enabled business outcome·사업 KPI·buyer next step →
+`.grid-3`[platform readiness | SLO 달성률 | 용량 효율] →
 `.grid-2`[주요 기능 테이블(ACA revision·traffic split·KEDA·scale-to-zero, AKS node pool·HPA·cluster
 autoscaler·GPU·networking, identity·security·observability) | readiness trace + workload 현황] →
 4단계 Build→Deploy→Operate→Optimize 루프.
 **주요 지표**: SLO, latency, error rate, saturation, replica/node utilization, queue lag, deployment
 success, rollback time, cost per workload.
+Readiness action은 점수를 올리지 않고 미해결 Gap과 owner·effort를 노출한다. 별도의 remediation plan
+action에서만 예상 점수와 예상 효과를 표시한다.
 
 ---
 

@@ -31,6 +31,9 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 |---|---|
 | `navigation` | **정확히 8**, ID 고정: dashboard, operations, simulator, improvement, finance, github, foundry, appPlatform |
 | `story.routeScope` | 선택, canonical 순서의 **8개 전체**; 미지정해도 8개 모두 노출 |
+| `story.guidedJourneys` | ≥2, 각 route **4~6개**, `dashboard`로 시작 · `bridges`는 route 수−1 |
+| `story.scenarioTrace.steps` | **정확히 4**: 고객 업무 route → foundry → github → appPlatform |
+| `dashboard.primaryAction` | dashboard 외 고정 route로 이동 |
 | `dashboard.kpis` / `operations.kpis` / `improvement.kpis` / `github.kpis` / `foundry.kpis` | **각 정확히 4** |
 | `dashboard.feed` | ≥4 · `dashboard.cards.items` ≥3 · `stream.values` ≥2 |
 | `operations.flow.nodes` | **4~7** (그리고 `flow.events`도 노드 수만큼 권장) |
@@ -40,6 +43,7 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 | `github.issueHeaders` | ≥5 · `steps` ≥5 · `issues` ≥3(각 `diffLines` ≥2) |
 | `foundry.profiles` | **5~7**(각 `qa` ≥3, 이름 모두 상이) · `orchestration.stages` ≥3 |
 | `appPlatform.cards` | **정확히 3** · `learningLoop.steps` **정확히 4** · `controls.rows`/`memories.rows` ≥N |
+| `github.sales` / `foundry.sales` / `appPlatform.sales` | 사업 KPI **정확히 2**, 차별화 기능 ≥3, 통제 증거 ≥3, buyer next step 필수 |
 
 ## 3. 내부 ID 연동 (반드시 일치)
 - `simulator.inputs[].id` 집합 == 각 `simulator.secondary[].weights`의 키 집합. 모든 `recommendations[].inputId`는 그 집합에 속해야 한다.
@@ -69,7 +73,11 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 - `github.action.durationMs` ≤ **2600** (QA ~2800ms 대기)
 - `operations.action.recommendationBefore` ≠ `recommendationAfter` (재최적화가 실제로 바뀌어야 함)
 - `foundry.orchestration.summary`에 **"의사결정 패키지"**(또는 "decision package") 포함 (QA가 채팅 로그에서 확인)
-- `appPlatform.cards[0].value` ≠ `appPlatform.evaluation.finalScore` (readiness 검사 시 점수가 눈에 띄게 바뀌어야 함 → cards[0].value는 **초기 점수**)
+- `appPlatform.cards[0].value` = `evaluation.initialScore`이고 `finalScore`와는 달라야 한다.
+- readiness 진단은 점수를 유지하고 `gaps`를 노출하며, remediation plan 실행 후에만 projected score를 표시한다.
+- `appPlatform.evaluation.gaps`에 warning/danger 상태의 미해결 Gap이 하나 이상 있어야 한다.
+- Foundry 통제 증거: Entra·Purview·Content Safety, GitHub: AI Controls·Advanced Security,
+  App Platform: Entra·Defender를 반드시 포함한다.
 - `simulator.output.goodThreshold` > `warningThreshold` — 런타임은 **높은 output을 good/green**으로 처리하므로 output은 "신뢰 점수"처럼 **높을수록 좋은 값**으로 설계한다(부정확률처럼 높을수록 나쁜 값 금지).
 
 ## 7. 속도 팁

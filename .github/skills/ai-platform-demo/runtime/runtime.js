@@ -40,6 +40,21 @@
         demoData: '시연 데이터',
         live: '실시간',
         demoPrediction: '시연 예측',
+        businessDecisions: '비즈니스 의사결정',
+        platformEvidence: '플랫폼 근거',
+        journey: '임원 여정',
+        nextScene: '다음 장면',
+        finalAction: '다음 실행',
+        businessOutcome: '가능해지는 사업 성과',
+        businessKpis: '사업 KPI',
+        differentiation: '차별화 기능',
+        controlEvidence: '통제 증거',
+        buyerNextStep: '구매 다음 단계',
+        owner: '담당',
+        timebox: '기간',
+        successCriteria: '성공 기준',
+        scenario: '공통 시나리오',
+        assessmentPending: 'readiness 진단을 실행하면 미해결 Gap이 표시됩니다.',
         brandSubtitle: customer => `${customer} AI 통합 운영`,
         executiveName: customer => `${customer} 임원`,
         ready: appName => `${appName} 준비 완료`
@@ -50,6 +65,21 @@
         demoData: 'DEMO DATA',
         live: 'LIVE',
         demoPrediction: 'DEMO PREDICTION',
+        businessDecisions: 'BUSINESS DECISIONS',
+        platformEvidence: 'PLATFORM EVIDENCE',
+        journey: 'Executive journey',
+        nextScene: 'Next scene',
+        finalAction: 'Next action',
+        businessOutcome: 'Enabled business outcome',
+        businessKpis: 'Business KPIs',
+        differentiation: 'Differentiated capabilities',
+        controlEvidence: 'Control evidence',
+        buyerNextStep: 'Buyer next step',
+        owner: 'Owner',
+        timebox: 'Timebox',
+        successCriteria: 'Success criteria',
+        scenario: 'Shared scenario',
+        assessmentPending: 'Run the readiness assessment to reveal unresolved gaps.',
         brandSubtitle: customer => `${customer} AI Operations`,
         executiveName: customer => `${customer} Executive`,
         ready: appName => `${appName} ready`
@@ -73,6 +103,8 @@
   const routeScope = spec.story.routeScope || REQUIRED_ROUTES;
   const routeById = Object.fromEntries(spec.navigation.map(route => [route.id, route]));
   const navigation = spec.navigation.filter(route => routeScope.includes(route.id));
+  const guidedJourneys = spec.story.guidedJourneys;
+  let currentJourney = guidedJourneys.find(journey => journey.id === spec.story.defaultJourneyId) || guidedJourneys[0];
   const viewTimers = [];
   const viewCleanups = [];
   let sparkSequence = 0;
@@ -254,6 +286,109 @@
     });
   }
 
+  function executiveValueHtml(routeId, sales) {
+    return `
+      <div class="executive-value" id="executiveValue-${escapeHtml(routeId)}">
+        <div>
+          <div class="executive-question">${escapeHtml(sales.executiveQuestion)}</div>
+          <div class="executive-outcome">${escapeHtml(sales.enabledBusinessOutcome)}
+            <span>${uiText.businessOutcome}</span>
+          </div>
+        </div>
+        <div class="business-kpis">
+          ${sales.businessKpis.map(kpi => `
+            <div class="business-kpi" data-title="${escapeHtml(kpi.label)}" data-detail="${escapeHtml(kpi.detail)}">
+              <div class="business-kpi-label">${escapeHtml(kpi.label)}</div>
+              <div class="business-kpi-value">${escapeHtml(kpi.value)}</div>
+            </div>`).join('')}
+        </div>
+        <button class="button" id="buyerNext-${escapeHtml(routeId)}" type="button">${escapeHtml(sales.buyerNextStep.action)}</button>
+      </div>`;
+  }
+
+  function salesEvidenceHtml(routeId, sales) {
+    return `
+      <details class="panel sales-evidence" id="salesEvidence-${escapeHtml(routeId)}">
+        <summary>${uiText.differentiation} · ${uiText.controlEvidence}</summary>
+        <div class="capability-grid">
+          ${sales.differentiatedCapabilities.map(capability => `
+            <div class="capability-card" data-title="${escapeHtml(capability.title)}" data-detail="${escapeHtml(capability.detail)}">
+              <b>${escapeHtml(capability.title)}</b><span>${escapeHtml(capability.detail)}</span>
+            </div>`).join('')}
+        </div>
+        <table class="data-table">
+          <thead><tr>
+            <th>${isKorean ? '서비스' : 'Service'}</th>
+            <th>${isKorean ? '통제' : 'Control'}</th>
+            <th>${isKorean ? '증거' : 'Evidence'}</th>
+            <th>${isKorean ? '상태' : 'Status'}</th>
+          </tr></thead>
+          <tbody>
+            ${sales.controlEvidence.map(item => `
+              <tr class="sales-control-row" data-title="${escapeHtml(item.service)}" data-detail="${escapeHtml(item.evidence)}">
+                <td><strong>${escapeHtml(item.service)}</strong></td>
+                <td>${escapeHtml(item.control)}</td>
+                <td>${escapeHtml(item.evidence)}</td>
+                <td>${statusBadge(item.status)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </details>`;
+  }
+
+  function bindSalesContract(routeId, sales) {
+    $$('.business-kpi').forEach(card => {
+      card.onclick = () => toast(card.dataset.title, card.dataset.detail, '₩');
+    });
+    $$('.capability-card').forEach(card => {
+      card.onclick = () => toast(card.dataset.title, card.dataset.detail, '✦');
+    });
+    $$('.sales-control-row').forEach(row => {
+      row.onclick = () => toast(row.dataset.title, row.dataset.detail, '⬡');
+    });
+    const buyerButton = $(`#buyerNext-${routeId}`);
+    if (buyerButton) {
+      buyerButton.onclick = () => toast(
+        sales.buyerNextStep.action,
+        `${uiText.owner}: ${sales.buyerNextStep.owner} · ${uiText.timebox}: ${sales.buyerNextStep.timebox} · ${uiText.successCriteria}: ${sales.buyerNextStep.successCriteria}`,
+        '→'
+      );
+    }
+  }
+
+  function scenarioTraceHtml(routeId) {
+    const scenario = spec.story.scenarioTrace;
+    return `
+      <div class="scenario-trace" id="scenarioTrace">
+        <div class="scenario-trace-head">
+          <div><span class="scenario-id">${escapeHtml(scenario.id)}</span><div class="scenario-title">${escapeHtml(scenario.title)}</div></div>
+          <span class="hint">${uiText.scenario}</span>
+        </div>
+        <div class="scenario-steps">
+          ${scenario.steps.map(step => `
+            <div class="scenario-step ${step.route === routeId ? 'active' : ''}" data-route="${escapeHtml(step.route)}">
+              <b>${escapeHtml(step.label)}</b>
+              <span>${escapeHtml(step.owner)} · ${escapeHtml(step.timestamp)}</span>
+              ${statusBadge(step.status)}
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  function businessScenarioTraceHtml(routeId) {
+    return spec.story.scenarioTrace.steps[0].route === routeId
+      ? scenarioTraceHtml(routeId)
+      : '';
+  }
+
+  function bindScenarioTrace() {
+    $$('.scenario-step').forEach(step => {
+      step.onclick = () => {
+        location.hash = step.dataset.route;
+      };
+    });
+  }
+
   function updateKpiTicks(routeId, kpis) {
     kpis.forEach((kpi, index) => {
       if (!kpi.tick) return;
@@ -275,7 +410,11 @@
     const data = spec.dashboard;
     return {
       html: `
-        ${heroHtml(data.hero)}
+        ${heroHtml(
+          data.hero,
+          `<button class="button" id="dashPrimaryAction" type="button">${escapeHtml(data.primaryAction.label)}</button>`
+        )}
+        ${businessScenarioTraceHtml('dashboard')}
         ${kpiGridHtml(data.kpis, 'dashboard')}
         <div class="grid grid-2 space-top">
           <div class="panel">
@@ -356,10 +495,15 @@
           feedItems.unshift(feedItems.pop());
           renderFeed();
         }, data.feedIntervalMs || 3600));
+        bindScenarioTrace();
         bindDetailRows('#dashTable .click-row');
         $$('.detail-card').forEach(card => {
           card.onclick = () => toast(card.dataset.title, card.dataset.detail, '✦');
         });
+        $('#dashPrimaryAction').onclick = () => {
+          toast(data.primaryAction.toastTitle, data.primaryAction.toastText, data.primaryAction.icon || '→');
+          location.hash = data.primaryAction.targetRoute;
+        };
       }
     };
   }
@@ -404,6 +548,7 @@
           data.hero,
           `<button class="button" id="reopt" type="button">${escapeHtml(data.action.button)}</button>`
         )}
+        ${businessScenarioTraceHtml('operations')}
         ${kpiGridHtml(data.kpis, 'operations')}
         <div class="grid grid-2 space-top" style="grid-template-columns:1.45fr .75fr">
           <div class="panel">
@@ -477,6 +622,7 @@
           }, data.action.durationMs || 1100));
         };
         bindDetailRows('#opsTable .click-row');
+        bindScenarioTrace();
         $$('.node-card').forEach(card => {
           card.onclick = () => toast(card.dataset.title, card.dataset.detail, '◇');
         });
@@ -489,6 +635,7 @@
     return {
       html: `
         ${heroHtml(data.hero)}
+        ${businessScenarioTraceHtml('simulator')}
         <div class="grid grid-2">
           <div class="panel">
             <div class="panel-head"><h3>${escapeHtml(data.inputsTitle)}</h3><span class="hint">${escapeHtml(data.inputsHint)}</span></div>
@@ -634,6 +781,7 @@
           element.oninput = update;
         });
         update();
+        bindScenarioTrace();
         bindDetailRows('#simHistoryTable .click-row');
       }
     };
@@ -647,6 +795,7 @@
           data.hero,
           `<button class="button" id="runAnalysis" type="button">${escapeHtml(data.action.button)}</button>`
         )}
+        ${businessScenarioTraceHtml('improvement')}
         ${kpiGridHtml(data.kpis, 'improvement')}
         <div class="grid grid-2 space-top">
           <div class="panel">
@@ -730,6 +879,7 @@
           const current = $('#runAnalysis');
           if (current) current.click();
         }, 480));
+        bindScenarioTrace();
         $$('.impact-card').forEach(card => {
           card.onclick = () => toast(card.dataset.title, card.dataset.detail, '◎');
         });
@@ -745,6 +895,7 @@
     return {
       html: `
         ${heroHtml(data.hero)}
+        ${businessScenarioTraceHtml('finance')}
         <div class="grid grid-2">
           <div class="panel">
             <div class="panel-head"><h3>${escapeHtml(data.leversTitle)}</h3><span class="hint">${escapeHtml(data.leversHint)}</span></div>
@@ -854,6 +1005,7 @@
           $(`#finance-input-${lever.id}`).oninput = update;
         });
         update();
+        bindScenarioTrace();
         bindDetailRows('#financeTable .click-row');
       }
     };
@@ -874,6 +1026,8 @@
           data.hero,
           `<button class="button info" id="assignIssue" type="button">${escapeHtml(data.action.button)}</button>`
         )}
+        ${executiveValueHtml('github', data.sales)}
+        ${scenarioTraceHtml('github')}
         ${kpiGridHtml(data.kpis, 'github')}
         <div class="grid grid-2 space-top">
           <div class="panel">
@@ -911,7 +1065,8 @@
             </tbody>
           </table>
           <div class="assumption">${escapeHtml(data.assumption || meta.demoNote)}</div>
-        </div>`,
+        </div>
+        ${salesEvidenceHtml('github', data.sales)}`,
       init() {
         let currentIndex = 0;
         const button = $('#assignIssue');
@@ -938,6 +1093,8 @@
             toast(data.issues[index].id, data.issues[index].title, '⌘');
           };
         });
+        bindSalesContract('github', data.sales);
+        bindScenarioTrace();
         selectIssue(0);
 
         button.onclick = () => {
@@ -997,6 +1154,12 @@
     return {
       html: `
         ${heroHtml(data.hero)}
+        ${executiveValueHtml('foundry', data.sales)}
+        ${scenarioTraceHtml('foundry')}
+        <div class="decision-preview">
+          <div class="decision-preview-title">${escapeHtml(data.decisionPreviewTitle)}</div>
+          <div class="message-body">${data.orchestration.summary}</div>
+        </div>
         ${kpiGridHtml(data.kpis, 'foundry')}
         <div class="agent-layout">
           <div class="stack">
@@ -1036,7 +1199,8 @@
               <button class="button" id="sendBtn" type="button">${escapeHtml(data.sendLabel)}</button>
             </div>
           </div>
-        </div>`,
+        </div>
+        ${salesEvidenceHtml('foundry', data.sales)}`,
       init() {
         let current = 0;
         let conversationVersion = 0;
@@ -1135,6 +1299,8 @@
 
         renderList();
         selectAgent(0);
+        bindSalesContract('foundry', data.sales);
+        bindScenarioTrace();
         $('#sendBtn').onclick = () => {
           const input = $('#chatInput');
           const value = input.value.trim();
@@ -1184,8 +1350,13 @@
       html: `
         ${heroHtml(
           data.hero,
-          `<button class="button violet" id="evalRun" type="button">${escapeHtml(data.evaluation.button)}</button>`
+          `<div class="evaluation-actions">
+             <button class="button violet" id="evalRun" type="button">${escapeHtml(data.evaluation.button)}</button>
+             <button class="button info" id="planRemediation" type="button">${escapeHtml(data.evaluation.planButton)}</button>
+           </div>`
         )}
+        ${executiveValueHtml('appPlatform', data.sales)}
+        ${scenarioTraceHtml('appPlatform')}
         <div class="grid grid-3">
           ${data.cards.map((card, index) => `
             <div class="platform-card" data-title="${escapeHtml(card.title)}" data-detail="${escapeHtml(card.detail)}">
@@ -1202,7 +1373,10 @@
           </div>
           <div class="panel">
             <div class="panel-head"><h3>${escapeHtml(data.evaluation.title)}</h3><span class="hint">${escapeHtml(data.evaluation.hint)}</span></div>
+            <div class="projected-label" id="evalProjection"></div>
+            <div class="projected-score" id="evalProjectedScore"></div>
             <div class="trace" id="evalTrace">${escapeHtml(data.evaluation.readyLines.join('\n'))}</div>
+            <div class="gap-list" id="gapList"><div class="gap-meta">${uiText.assessmentPending}</div></div>
             <div class="divider"></div>
             <div class="section-label">${escapeHtml(data.memories.title)}</div>
             ${tableHtml(data.memories, 'memoryTable')}
@@ -1219,37 +1393,111 @@
               </div>`).join('')}
           </div>
           <div class="assumption">${escapeHtml(data.assumption || meta.demoNote)}</div>
-        </div>`,
+        </div>
+        ${salesEvidenceHtml('appPlatform', data.sales)}`,
       init() {
+        let assessed = false;
+        let phase = 'idle';
+        let phaseVersion = 0;
         $$('.platform-card').forEach(card => {
           card.onclick = () => toast(card.dataset.title, card.dataset.detail, '⬡');
         });
         bindDetailRows('#controlTable .click-row');
         bindDetailRows('#memoryTable .click-row');
+        bindSalesContract('appPlatform', data.sales);
+        bindScenarioTrace();
         $$('.sovereignty-step').forEach(step => {
           step.onclick = () => toast(step.dataset.title, step.dataset.detail, '✦');
         });
         const button = $('#evalRun');
+        const planButton = $('#planRemediation');
+        const setActionState = disabled => {
+          button.disabled = disabled;
+          planButton.disabled = disabled;
+        };
+        const resetAssessment = () => {
+          const score = $('#evalScore');
+          const projection = $('#evalProjection');
+          const projectedScore = $('#evalProjectedScore');
+          const gapList = $('#gapList');
+          if (score) score.textContent = String(data.evaluation.initialScore);
+          if (projection) projection.textContent = '';
+          if (projectedScore) projectedScore.textContent = '';
+          if (gapList) gapList.innerHTML = `<div class="gap-meta">${uiText.assessmentPending}</div>`;
+        };
+        const renderGaps = () => {
+          const gapList = $('#gapList');
+          if (!gapList) return;
+          gapList.innerHTML = data.evaluation.gaps.map(gap => `
+            <div class="gap-item">
+              <div><b>${escapeHtml(gap.title)}</b><div class="gap-meta">${escapeHtml(gap.detail)}</div></div>
+              <div class="gap-meta">${escapeHtml(gap.owner)} · ${escapeHtml(gap.effort)}</div>
+              ${statusBadge(gap.status)}
+            </div>`).join('');
+        };
         button.onclick = () => {
-          button.disabled = true;
+          if (phase === 'assessing' || phase === 'planning') return;
+          phase = 'assessing';
+          assessed = false;
+          const version = ++phaseVersion;
+          setActionState(true);
           button.textContent = data.evaluation.running;
+          planButton.textContent = data.evaluation.planButton;
+          resetAssessment();
           const trace = $('#evalTrace');
           if (trace) trace.textContent = '';
           data.evaluation.runLines.forEach((line, index) => {
             addTimer(setTimeout(() => {
+              if (phaseVersion !== version) return;
               const currentTrace = $('#evalTrace');
               if (currentTrace) currentTrace.textContent += `${index ? '\n' : ''}${line}`;
             }, index * 250));
           });
           addTimer(setTimeout(() => {
-            const score = $('#evalScore');
-            if (score) score.textContent = String(data.evaluation.finalScore);
+            if (phaseVersion !== version) return;
+            assessed = true;
+            phase = 'assessed';
+            renderGaps();
             if (button) {
-              button.disabled = false;
               button.textContent = data.evaluation.complete;
             }
+            setActionState(false);
             toast(data.evaluation.toastTitle, data.evaluation.toastText, '⬡');
           }, data.evaluation.runLines.length * 250 + 200));
+        };
+        planButton.onclick = () => {
+          if (!assessed) {
+            toast(data.evaluation.planBlockedTitle, data.evaluation.planBlockedText, '◇');
+            return;
+          }
+          if (phase === 'assessing' || phase === 'planning') return;
+          phase = 'planning';
+          const version = ++phaseVersion;
+          setActionState(true);
+          planButton.textContent = data.evaluation.planning;
+          const trace = $('#evalTrace');
+          if (trace) trace.textContent = '';
+          data.evaluation.remediationLines.forEach((line, index) => {
+            addTimer(setTimeout(() => {
+              if (phaseVersion !== version) return;
+              const currentTrace = $('#evalTrace');
+              if (currentTrace) currentTrace.textContent += `${index ? '\n' : ''}${line}`;
+            }, index * 250));
+          });
+          addTimer(setTimeout(() => {
+            if (phaseVersion !== version) return;
+            phase = 'projected';
+            const projection = $('#evalProjection');
+            const projectedScore = $('#evalProjectedScore');
+            if (projection) projection.textContent = data.evaluation.projectedLabel;
+            if (projectedScore) projectedScore.textContent = String(data.evaluation.finalScore);
+            if (planButton) {
+              planButton.textContent = data.evaluation.planComplete;
+            }
+            button.textContent = data.evaluation.button;
+            setActionState(false);
+            toast(data.evaluation.planToastTitle, data.evaluation.planToastText, '✦');
+          }, data.evaluation.remediationLines.length * 250 + 200));
         };
       }
     };
@@ -1266,6 +1514,36 @@
     appPlatform: renderAppPlatform
   };
 
+  function updateJourneyChrome(routeId) {
+    const bridge = $('#journeyBridge');
+    const nextButton = $('#nextScene');
+    const index = currentJourney.routes.indexOf(routeId);
+    if (index < 0) {
+      bridge.textContent = spec.story.frame;
+      nextButton.textContent = `${uiText.nextScene}: ${routeById[currentJourney.routes[0]].name}`;
+      nextButton.onclick = () => {
+        location.hash = currentJourney.routes[0];
+      };
+      return;
+    }
+    const nextRoute = currentJourney.routes[index + 1];
+    if (nextRoute) {
+      bridge.textContent = currentJourney.bridges[index];
+      nextButton.textContent = `${uiText.nextScene}: ${routeById[nextRoute].name}`;
+      nextButton.onclick = () => {
+        location.hash = nextRoute;
+      };
+      return;
+    }
+    bridge.textContent = `${currentJourney.finalAction.action} · ${currentJourney.finalAction.successCriteria}`;
+    nextButton.textContent = `${uiText.finalAction}: ${currentJourney.finalAction.action}`;
+    nextButton.onclick = () => toast(
+      currentJourney.finalAction.action,
+      `${uiText.owner}: ${currentJourney.finalAction.owner} · ${uiText.timebox}: ${currentJourney.finalAction.timebox} · ${uiText.successCriteria}: ${currentJourney.finalAction.successCriteria}`,
+      '→'
+    );
+  }
+
   function setupShell() {
     $('#brandMark').textContent = meta.initials;
     $('#brandName').textContent = meta.appName;
@@ -1277,17 +1555,32 @@
     $('#learningValue').textContent = `${formatNumber(spec.dashboard.learningLoop.value)} ${spec.dashboard.learningLoop.unit || ''}`.trim();
     $('#learningValue').dataset.value = String(spec.dashboard.learningLoop.value);
     $('#learningNote').textContent = spec.dashboard.learningLoop.note;
-    $('#nav').innerHTML = navigation.map(route => `
+    const navLink = route => `
       <a data-route="${escapeHtml(route.id)}">
         <span class="nav-icon">${escapeHtml(route.icon)}</span>
         <span class="nav-name">${escapeHtml(route.name)}</span>
         <span class="nav-short">${escapeHtml(route.short)}</span>
-      </a>`).join('');
+      </a>`;
+    $('#nav').innerHTML = `
+      <div class="nav-group-label">${uiText.businessDecisions}</div>
+      ${navigation.slice(0, 5).map(navLink).join('')}
+      <div class="nav-group-label platform">${uiText.platformEvidence}</div>
+      ${navigation.slice(5).map(navLink).join('')}`;
     $$('#nav a').forEach(link => {
       link.onclick = () => {
         location.hash = link.dataset.route;
       };
     });
+    $('#journeyLabel').textContent = uiText.journey;
+    $('#journeySelect').innerHTML = guidedJourneys.map(journey => (
+      `<option value="${escapeHtml(journey.id)}" ${journey.id === currentJourney.id ? 'selected' : ''}>${escapeHtml(journey.label)}</option>`
+    )).join('');
+    $('#journeySelect').onchange = event => {
+      currentJourney = guidedJourneys.find(journey => journey.id === event.target.value) || guidedJourneys[0];
+      const target = currentJourney.routes[0];
+      if (location.hash.slice(1) === target) navigate();
+      else location.hash = target;
+    };
   }
 
   function navigate() {
@@ -1298,6 +1591,7 @@
     $$('#nav a').forEach(link => link.classList.toggle('active', link.dataset.route === routeId));
     $('#topTitle').textContent = route.name;
     $('#topCrumb').textContent = `${meta.appName} · ${route.crumb || route.short}`;
+    updateJourneyChrome(routeId);
     const view = VIEWS[routeId]();
     const host = $('#view');
     host.innerHTML = `<div class="view-enter">${view.html}</div>`;

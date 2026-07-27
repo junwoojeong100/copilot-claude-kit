@@ -129,9 +129,18 @@ def qa_invariants(spec: dict) -> list[str]:
                 and math.isclose(visible_score, final_numeric, rel_tol=0, abs_tol=1e-9)
             ):
                 problems.append(
-                    "appPlatform.cards[0].value equals evaluation.finalScore: the platform score "
-                    "will not visibly change on run — set cards[0].value to the initial score."
+                    "appPlatform.cards[0].value equals evaluation.finalScore: the projected "
+                    "remediation score will not visibly differ from the assessed score."
                 )
+    gaps = app_platform.get("evaluation", {}).get("gaps", [])
+    if gaps and not any(
+        gap.get("status", {}).get("tone") in {"warning", "danger", "warn", "bad"}
+        for gap in gaps
+    ):
+        problems.append(
+            "appPlatform.evaluation.gaps must include at least one unresolved gap: "
+            "assessment should discover work instead of presenting an all-pass result."
+        )
 
     output = spec.get("simulator", {}).get("output", {})
     good = output.get("goodThreshold")

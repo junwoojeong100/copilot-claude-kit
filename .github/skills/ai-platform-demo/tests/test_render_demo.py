@@ -85,6 +85,42 @@ class RenderDemoTests(unittest.TestCase):
             )
         )
 
+    def test_guided_journey_requires_matching_bridges_and_default(self):
+        self.invalid(
+            lambda spec: spec["story"]["guidedJourneys"][0]["bridges"].pop()
+        )
+        self.invalid(
+            lambda spec: spec["story"].update(defaultJourneyId="missing")
+        )
+
+    def test_scenario_trace_connects_business_to_platform_chain(self):
+        self.invalid(
+            lambda spec: spec["story"]["scenarioTrace"]["steps"][2].update(
+                route="appPlatform"
+            )
+        )
+
+    def test_dashboard_requires_action_to_another_route(self):
+        self.invalid(
+            lambda spec: spec["dashboard"]["primaryAction"].update(
+                targetRoute="dashboard"
+            )
+        )
+
+    def test_service_sales_contract_requires_governance_coverage(self):
+        self.invalid(
+            lambda spec: spec["foundry"]["sales"].update(
+                controlEvidence=[
+                    item
+                    for item in spec["foundry"]["sales"]["controlEvidence"]
+                    if item["service"] != "Microsoft Purview"
+                ]
+            )
+        )
+        self.invalid(
+            lambda spec: spec["github"]["sales"]["businessKpis"].pop()
+        )
+
     def test_research_provenance_requires_timezone_timestamp(self):
         valid_research = {
             "checkedAt": "2026-07-23T10:30:00+09:00",
@@ -161,6 +197,14 @@ class RenderDemoTests(unittest.TestCase):
             )
         )
 
+    def test_app_platform_requires_unresolved_readiness_gap(self):
+        self.invalid(
+            lambda spec: [
+                gap["status"].update(tone="success")
+                for gap in spec["appPlatform"]["evaluation"]["gaps"]
+            ]
+        )
+
     def test_equivalent_app_platform_score_formats_are_accepted(self):
         spec = copy.deepcopy(BASE)
         spec["appPlatform"]["evaluation"]["initialScore"] = 90.0
@@ -212,10 +256,33 @@ class RenderDemoTests(unittest.TestCase):
         self.assertIn(f'<meta name="theme-color" content="{canvas}">', html)
         self.assertIn("color-scheme:dark", html)
         self.assertIn("document.body.dataset.theme = 'dark-dimmed'", html)
+        self.assertIn('id="journeyBar"', html)
+        self.assertIn("guidedJourneys", html)
+        self.assertIn("planRemediation", html)
+        self.assertIn("evalProjectedScore", html)
+        self.assertIn("assessmentPending", html)
+        self.assertIn("businessScenarioTraceHtml", html)
         self.assertNotIn("color-scheme:light", html)
         runtime = (SKILL_ROOT / "runtime" / "runtime.js").read_text(encoding="utf-8")
         self.assertIn("escapeHtml(data.margin.unit)", runtime)
         self.assertIn("data.composition.centerSegment ?? 1", runtime)
+
+    def test_schema_enforces_canonical_route_scope_order(self):
+        schema = json.loads(
+            (SKILL_ROOT / "schema" / "demo-spec.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        route_scope = schema["properties"]["story"]["properties"]["routeScope"]
+        self.assertEqual(
+            [item["const"] for item in route_scope["prefixItems"]],
+            render_demo.ROUTE_IDS,
+        )
+        self.assertFalse(route_scope["items"])
+        improvement_contract = schema["properties"]["improvement"]["allOf"][1]
+        github_contract = schema["properties"]["github"]["allOf"][1]
+        self.assertNotIn("sales", improvement_contract["required"])
+        self.assertIn("sales", github_contract["required"])
 
     def test_english_runtime_copy_remains_available(self):
         spec = copy.deepcopy(BASE)

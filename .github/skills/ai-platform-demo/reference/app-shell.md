@@ -25,6 +25,11 @@
       <div class="top-item mono" id="clock">--:--:--</div>
       <button class="notification-button" id="notificationButton" type="button">◇</button>
     </header>
+    <div id="journeyBar">
+      <select id="journeySelect"></select>
+      <div id="journeyBridge"></div>
+      <button id="nextScene"></button>
+    </div>
     <div id="view"></div>
   </div>
 </div>
@@ -36,6 +41,7 @@
 ```js
 const routeScope=spec.story.routeScope || REQUIRED_ROUTES;
 const navigation=spec.navigation.filter(route=>routeScope.includes(route.id));
+const guidedJourneys=spec.story.guidedJourneys;
 const navEl=document.getElementById('nav');
 navEl.innerHTML=navigation.map(route=>`<a data-route="${escapeHtml(route.id)}">
   <span class="nav-icon">${escapeHtml(route.icon)}</span>

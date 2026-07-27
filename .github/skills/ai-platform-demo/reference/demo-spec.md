@@ -61,6 +61,13 @@ Overlay는 정의하지 않는다. 고정값은 `archetype=trusted-executive`, `
 Golden Runtime 데이터 계약은 정확히 8개 항목이며 ID와 순서를 고정한다. 앞의 5개는 고객 주요사업,
 뒤의 3개는 공통 플랫폼 서비스이며 모두 노출한다.
 
+`story`는 추가로 다음을 가진다.
+
+- `guidedJourneys`: 청중별 4~6개 route, transition별 `bridges`, owner·timebox·success criteria가 있는
+  `finalAction`
+- `defaultJourneyId`: 초기 journey
+- `scenarioTrace`: 고객 업무 route 1개 → `foundry` → `github` → `appPlatform` 4단계 공통 trace
+
 ```json
 [
   {"id":"dashboard","icon":"◫","name":"경영 현황","short":"전체"},
@@ -81,6 +88,7 @@ ID와 순서는 고정한다. 앞의 5개 메뉴명·crumb는 `DEMO_FOCUS`와 �
 ## 4. Straightforward content contract
 
 - `dashboard.hero.title`은 제품명이 아니라 고객 결과를 한 문장으로 말한다.
+- `dashboard.primaryAction`은 첫 업무 예외 또는 기본 journey의 다음 장면으로 이동한다.
 - 각 route는 임원 질문 하나와 primary action 하나를 중심으로 구성한다.
 - 클릭 전/후의 KPI·상태·추천은 눈에 띄게 달라야 한다.
 - 제품명은 고객 가치 흐름에서 맡는 역할과 함께 쓴다. 한 화면에 제품 catalog를 만들지 않는다.
@@ -182,7 +190,7 @@ secondary = base + Σ((value - input.value) * weights[input.id])
 
 ### GitHub Ecosystem
 
-- `hero`, `kpis`
+- `hero`, `sales`, `kpis`
 - `steps`: GitHub Issues·Projects, repository research, GitHub Copilot, Pull Request, GitHub Actions,
   GitHub Advanced Security, ACA/AKS delivery 중 focus에 맞는 5개 이상.
   Runtime action의 직접 결과는 autonomous PR 또는 high-risk 실행 계획이며, 후속 CI/CD·runtime 상태는
@@ -193,7 +201,7 @@ secondary = base + Σ((value - input.value) * weights[input.id])
 
 ### Microsoft Foundry
 
-- `hero`, `kpis`
+- `hero`, `sales`, `decisionPreviewTitle`, `kpis`
 - `profiles`: 5~7개. 업무 Agent뿐 아니라 Platform·SRE·Release·FinOps·Security Agent를 사용할 수 있다.
   - `icon`, `name`, `subtitle`, `intro`
   - `qa`: 정확히 3개 권장, 각 `question`, `answer`
@@ -202,13 +210,26 @@ secondary = base + Σ((value - input.value) * weights[input.id])
 
 ### App Platform · ACA/AKS
 
-- `hero`
+- `hero`, `sales`
 - `cards`: platform readiness, SLO 달성률, 용량 효율 3개
 - `controls`: ACA revision·traffic split·KEDA·scale-to-zero, AKS node pool·HPA·Cluster Autoscaler·GPU,
   identity·network·security·observability를 고객 workload에 매핑
 - `memories`: workload별 runtime·capacity·SLO 상태
 - `learningLoop`: Build→Deploy→Operate→Optimize 4단계
-- `evaluation`: readiness `initialScore`, `finalScore`, checks
+- `evaluation`: assessed `initialScore`, projected `finalScore`, `gaps`, assessment `runLines`,
+  `remediationLines`; assessment는 점수를 바꾸지 않고 remediation plan에서만 projected score를 표시
+
+세 플랫폼의 `sales` 공통 구조:
+
+- `executiveQuestion`, `enabledBusinessOutcome`
+- `businessKpis`: 정확히 2개
+- `differentiatedCapabilities`: 3개 이상
+- `controlEvidence`: 서비스·통제·증거·상태
+- `buyerNextStep`: action·owner·timebox·successCriteria
+
+Foundry control evidence에는 Microsoft Entra·Microsoft Purview·Azure AI Content Safety가, GitHub에는
+GitHub AI Controls·GitHub Advanced Security가, App Platform에는 Microsoft Entra·Microsoft Defender가
+포함돼야 한다.
 
 ## 7. Spec 작성 순서
 
@@ -216,8 +237,7 @@ secondary = base + Σ((value - input.value) * weights[input.id])
    `fact-ledger.json`을 새로 만들고 검증된 사실과 DEMO 가정을 분리한다.
    직접 Spec을 작성하는 경우에도 `meta.research`에 현재 Ledger의 `checkedAt`, canonical source 2개 이상,
    Ledger ID를 포함해야 하며 누락된 Spec은 Renderer가 거부한다.
-2. `DEMO_FOCUS`와 핵심 4~6개 시연 동선을 view contract에 정하고 Storyline·audience message를
-   `story`에 잠근다.
+2. `DEMO_FOCUS`, 청중별 guided journey, route bridge, 공통 scenario trace를 `story`에 잠근다.
 3. 디자인은 GitHub soft-dark로 고정되어 base가 제공한다(고객 Overlay에는 `design`을 넣지 않는다).
 4. View Contract의 high-impact route를 고객 Overlay로 변환한다.
 5. Composer로 Industry Pack과 Overlay를 합쳐 전체 Spec을 만든다.

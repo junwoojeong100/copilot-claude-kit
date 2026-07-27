@@ -44,7 +44,59 @@
           "message": "에이전트 신원·증빙·승인을 통제"
         }
       ],
-      "climax": "피크 수요 전에 발전 예측과 증빙 예외가 동시에 발생하고 전문 에이전트들이 납품 의사결정 패키지를 생성합니다."
+      "climax": "피크 수요 전에 발전 예측과 증빙 예외가 동시에 발생하고 전문 에이전트들이 납품 의사결정 패키지를 생성합니다.",
+      "defaultJourneyId": "coo",
+      "guidedJourneys": [
+        {
+          "id": "ceo",
+          "label": "CEO · 포트폴리오 성장",
+          "audience": "CEO",
+          "routes": ["dashboard", "finance", "foundry", "github", "appPlatform"],
+          "bridges": [
+            "글로벌 포트폴리오 신호를 투자와 성장 우선순위로 전환합니다.",
+            "가치 시나리오를 Agent 의사결정 패키지로 구체화합니다.",
+            "승인된 판단을 감사 가능한 소프트웨어 변경으로 연결합니다.",
+            "변경을 운영할 ACA·AKS SLO와 복원력 기준을 확인합니다."
+          ],
+          "finalAction": {"action": "포트폴리오 가치 파일럿 확정", "owner": "CEO · CIO", "timebox": "90일", "successCriteria": "납품·현금·위험 KPI 개선 근거 확보"}
+        },
+        {
+          "id": "coo",
+          "label": "COO · 납품 폐루프",
+          "audience": "COO",
+          "routes": ["dashboard", "operations", "simulator", "foundry", "github", "appPlatform"],
+          "bridges": [
+            "포트폴리오에서 즉시 대응할 납품 예외를 선택합니다.",
+            "발전·ESS·수요 변수를 실행 전에 시뮬레이션합니다.",
+            "예측 결과를 승인 가능한 멀티에이전트 결정으로 통합합니다.",
+            "결정에 필요한 소프트웨어 보호 규칙을 안전하게 준비합니다.",
+            "변경의 배포·확장·복구 준비도를 확인합니다."
+          ],
+          "finalAction": {"action": "납품 신뢰도 파일럿 착수", "owner": "COO · Energy Operations", "timebox": "8주", "successCriteria": "예외 대응시간과 납품 신뢰도 개선을 재현"}
+        },
+        {
+          "id": "cio",
+          "label": "CIO · 통제된 플랫폼",
+          "audience": "CIO",
+          "routes": ["dashboard", "foundry", "github", "appPlatform"],
+          "bridges": [
+            "사업 과제를 통제된 Agent 결정으로 연결합니다.",
+            "Agent 결정이 Issue·PR·보안 gate로 이어지는 증거를 확인합니다.",
+            "승인된 workload의 ACA·AKS 운영 책임을 확인합니다."
+          ],
+          "finalAction": {"action": "플랫폼 준비도 진단 확정", "owner": "CIO · Platform Engineering", "timebox": "4주", "successCriteria": "신원·데이터·배포·SLO Gap과 개선 백로그 확정"}
+        }
+      ],
+      "scenarioTrace": {
+        "id": "PEAK-DELIVERY-018",
+        "title": "피크 수요 전 납품 신뢰도 대응",
+        "steps": [
+          {"route": "operations", "label": "납품 예외 감지", "owner": "COO", "timestamp": "16:40", "status": {"label": "감지", "tone": "warning"}},
+          {"route": "foundry", "label": "의사결정 패키지", "owner": "AI 운영", "timestamp": "16:44", "status": {"label": "준비", "tone": "violet"}},
+          {"route": "github", "label": "보호 규칙 PR", "owner": "Engineering", "timestamp": "16:52", "status": {"label": "검증", "tone": "info"}},
+          {"route": "appPlatform", "label": "배포 · SLO 계획", "owner": "Platform", "timestamp": "17:00", "status": {"label": "계획", "tone": "success"}}
+        ]
+      }
     },
     "dashboard": {
       "hero": {
