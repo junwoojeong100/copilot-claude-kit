@@ -12,11 +12,14 @@ Golden Runtime은 고객 데모의 **동작 엔진**이다. 특정 고객의 색
   `runtime.css`의 `:root`)
 - 단일 HTML shell, 고객 주요사업 5개 + 플랫폼 서비스 3개의 고정 8-route hash router,
   sidebar/topbar, `시연 데이터` 표시
+- Business Decisions / Platform Evidence 메뉴 그룹, 청중별 guided journey selector, route bridge,
+  `다음 장면` CTA
 - route 전환 시 timer/listener cleanup
 - KPI tick, streaming chart, activity feed, toast, moving-object engine
 - slider simulator, root-cause animation, finance what-if, Issue-to-PR flow
 - 모든 agent 행 전환, 추천 질문, 자유 질문 fallback, orchestration sequence
 - App Platform readiness trace와 clickable capability/workload rows
+- 공통 scenario trace와 세 플랫폼 route의 executive value·control evidence·buyer next step
 - SVG chart primitives, HTML escaping, DOM null guard
 - 안정적인 DOM ID와 Puppeteer QA contract
 
@@ -37,11 +40,14 @@ runtime/
 
 - 브랜드명, 앱명, 언어, audience, storyline
 - 앞의 5개 고객 주요사업 route 이름과 domain terminology
+- 청중별 4~6개 guided journey, route bridge, final buyer action
+- 업무 예외→Foundry→GitHub→App Platform 공통 scenario trace
 - KPI label·단위·범위·tick behavior
 - 운영 flow node, simulator input·formula, root-cause factor
 - finance lever·가정, GitHub issue·diff
 - Foundry agent profile·질문·답변·orchestration과 KPI 값
 - App Platform workload·capability·readiness KPI 값
+- GitHub·Foundry·App Platform sales contract와 governance evidence
 
 **원칙:** engine과 visual skin은 고정하지만 domain composition과 narrative는 고객별로 바꾼다.
 
@@ -99,7 +105,10 @@ Renderer는 다음을 수행한다.
 | finance | `financeLevers`, `marginValue`, `valueDonut`, `financeTable` |
 | github | `assignIssue`, `devSteps`, `codeDiff`, `issueTable`, `prStatus` |
 | foundry | `agentList`, `chatTitle`, `chatLog`, `chips`, `chatInput`, `sendBtn`, `orchRun` |
-| appPlatform | `evalRun`, `evalScore`, `evalTrace`, `controlTable`, `memoryTable` |
+| appPlatform | `evalRun`, `planRemediation`, `evalScore`, `evalProjection`, `evalProjectedScore`, `evalTrace`, `gapList`, `controlTable`, `memoryTable` |
+
+공통 shell ID는 `journeySelect`, `journeyBridge`, `nextScene`이다. Dashboard는
+`dashPrimaryAction`, App Platform은 추가로 `planRemediation`, `gapList`, `evalProjection`을 유지한다.
 
 QA는 추가로 확인한다.
 

@@ -40,11 +40,18 @@
       {"id": "simulator", "icon": "△", "name": "에너지 시뮬레이션", "short": "예측", "crumb": "발전 · 저장 · 수요"},
       {"id": "improvement", "icon": "◎", "name": "포트폴리오 개선", "short": "개선", "crumb": "탄소 · 공급 · 신뢰성"},
       {"id": "finance", "icon": "₩", "name": "재무 효과", "short": "재무", "crumb": "자본 배분"},
-      {"id": "github", "icon": "⌘", "name": "GitHub Ecosystem", "short": "GitHub", "crumb": "Copilot · Actions · Advanced Security"},
-      {"id": "foundry", "icon": "✦", "name": "Microsoft Foundry", "short": "Foundry", "crumb": "Agent Framework · 평가 · 관찰성"},
-      {"id": "appPlatform", "icon": "⬡", "name": "App Platform", "short": "ACA · AKS", "crumb": "배포 · 확장 · 운영"}
+      {"id": "github", "icon": "⌘", "name": "GitHub Ecosystem", "short": "통제된 변경", "crumb": "Copilot · Actions · Advanced Security"},
+      {"id": "foundry", "icon": "✦", "name": "Microsoft Foundry", "short": "Agent 결정", "crumb": "Agent Framework · 평가 · 관찰성"},
+      {"id": "appPlatform", "icon": "⬡", "name": "App Platform", "short": "탄력적 운영", "crumb": "배포 · 확장 · 운영"}
     ],
     "dashboard": {
+      "primaryAction": {
+        "label": "글로벌 납품 예외 확인",
+        "targetRoute": "operations",
+        "toastTitle": "우선 대응 흐름 선택",
+        "toastText": "소재·발전·ESS·고객 납품 예외를 확인합니다.",
+        "icon": "→"
+      },
       "kpis": [
         {
           "label": "글로벌 운영 거점",
@@ -389,6 +396,25 @@
         "title": "GitHub Ecosystem · 에너지 소프트웨어를 안전하게 전달",
         "subtitle": "GitHub Issues·Projects, GitHub Copilot, Pull Requests, GitHub Actions, GitHub Advanced Security를 발전 예측·증빙·ESS 소프트웨어 delivery flow에 연결합니다."
       },
+      "sales": {
+        "executiveQuestion": "납품·증빙 결정을 얼마나 빠르고 안전하게 에너지 소프트웨어에 반영할 수 있는가?",
+        "enabledBusinessOutcome": "운영 결정이 감사 가능한 Issue·PR·배포 증거로 이어져 변경 지연과 계통 운영 위험을 낮춥니다.",
+        "businessKpis": [
+          {"label": "결정→변경 리드타임", "value": "−36%", "detail": "예측·증빙 보호 규칙의 시연 리드타임 개선 가정입니다."},
+          {"label": "고위험 사람 주도", "value": "100%", "detail": "실계통 변경은 Copilot이 조사·계획을 지원하고 운영자가 구현·승인합니다."}
+        ],
+        "differentiatedCapabilities": [
+          {"title": "Copilot plan-to-PR", "detail": "예측 스키마·증빙 정책·테스트를 바탕으로 변경 계획과 Draft PR을 준비합니다."},
+          {"title": "GitHub Actions evidence", "detail": "테스트·승인·배포 결과를 동일한 변경 기록에 남깁니다."},
+          {"title": "Advanced Security gate", "detail": "코드·시크릿·의존성 위험을 병합 전에 차단합니다."}
+        ],
+        "controlEvidence": [
+          {"service": "GitHub AI Controls", "control": "Agent session policy", "evidence": "조직 정책과 Agent 세션 감사 범위를 적용합니다.", "status": {"label": "정책 적용", "tone": "success"}},
+          {"service": "GitHub Advanced Security", "control": "Code · secret · dependency scanning", "evidence": "보안 결과를 Pull Request gate로 유지합니다.", "status": {"label": "검증", "tone": "success"}},
+          {"service": "GitHub Environments", "control": "Required reviewer", "evidence": "실계통·생산 배포 전 사람 승인을 요구합니다.", "status": {"label": "승인 필요", "tone": "warning"}}
+        ],
+        "buyerNextStep": {"action": "에너지 변경 파일럿 선정", "owner": "CIO · Energy Engineering", "timebox": "8주", "successCriteria": "리드타임·리뷰시간·보안 gate 개선 증명"}
+      },
       "kpis": [
         {"label": "중앙값 리드타임", "value": 4.2, "decimals": 1, "unit": "일", "delta": "시연 기준 −36%", "direction": "down", "icon": "◷", "color": "brand", "series": [8.9, 8.2, 7.5, 6.7, 5.9, 5.2, 4.7, 4.2]},
         {"label": "에이전트 Pull Request", "value": 34, "decimals": 0, "unit": "월", "delta": "+24건 검토", "direction": "up", "icon": "⑂", "color": "info", "series": [3, 6, 10, 14, 19, 24, 29, 34]},
@@ -477,12 +503,53 @@
       "assumption": "Issue·코드·Pull Request·생산성 지표는 모두 시연 데이터입니다."
     },
     "foundry": {
+      "sales": {
+        "executiveQuestion": "운영·증빙·재무 Agent가 근거와 정책 안에서 하나의 납품 결정을 만들 수 있는가?",
+        "enabledBusinessOutcome": "발전·ESS·증빙·계약 판단을 승인 가능한 의사결정 패키지로 통합합니다.",
+        "businessKpis": [
+          {"label": "납품 신뢰도 효과", "value": "+0.3%p", "detail": "예측·예비율·증빙 조정을 적용한 시연 효과입니다."},
+          {"label": "운전자본 시나리오", "value": "−5일", "detail": "국가 간 인계와 계약 마일스톤을 정렬한 시연 가정입니다."}
+        ],
+        "differentiatedCapabilities": [
+          {"title": "Microsoft Agent Framework", "detail": "전문 Agent, 도구, 승인 단계를 orchestration으로 연결합니다."},
+          {"title": "Grounded Agent", "detail": "권한 기반 증빙·운영 지식으로 답변을 근거화합니다."},
+          {"title": "Evaluation · tracing", "detail": "결정 품질, tool call, latency, 승인 준수를 평가하고 추적합니다."}
+        ],
+        "controlEvidence": [
+          {"service": "Microsoft Entra Agent ID", "control": "Agent별 최소권한", "evidence": "Agent와 tool access를 분리된 identity로 추적합니다.", "status": {"label": "목표 통제", "tone": "info"}},
+          {"service": "Microsoft Purview", "control": "증빙·계약 데이터 정책", "evidence": "민감도·보호·감사 경계를 정의합니다.", "status": {"label": "설계", "tone": "warning"}},
+          {"service": "Azure AI Content Safety", "control": "응답·입력 안전성", "evidence": "외부 응답과 내부 실행 조치를 분리해 평가합니다.", "status": {"label": "평가", "tone": "success"}}
+        ],
+        "buyerNextStep": {"action": "납품 Agent 파일럿 확정", "owner": "COO · CIO", "timebox": "8주", "successCriteria": "평가 통과율·승인시간·납품 신뢰도 효과 증명"}
+      },
+      "decisionPreviewTitle": "경영진이 먼저 보는 납품 의사결정",
       "listTitle": "전문 에이전트",
       "listHint": "모든 행 클릭 가능",
       "governedLabel": "정책 적용",
       "placeholder": "에너지·ESS·증빙·재무·소프트웨어에 대해 질문하세요",
       "sendLabel": "보내기",
       "fallback": "<b>{{agent}}</b>입니다. 에너지·ESS·추적성·재무·소프트웨어 중 하나로 질문을 구체화해 주세요."
+    },
+    "appPlatform": {
+      "sales": {
+        "executiveQuestion": "에너지 API와 Agent workload를 어떤 SLO·비용·복원력 기준으로 운영할 것인가?",
+        "enabledBusinessOutcome": "workload 중요도에 따라 ACA와 AKS를 선택해 배포 실패·복구시간·용량 낭비를 줄입니다.",
+        "businessKpis": [
+          {"label": "핵심 workload SLO", "value": "99.95%", "detail": "납품·증빙 workload의 시연 SLO 기준입니다."},
+          {"label": "복구시간 시나리오", "value": "−35%", "detail": "표준 rollout·probe·관찰성을 적용한 예상 개선 가정입니다."}
+        ],
+        "differentiatedCapabilities": [
+          {"title": "ACA event-driven runtime", "detail": "예측 API와 Agent tool을 revision·KEDA·scale-to-zero로 운영합니다."},
+          {"title": "AKS complex workload", "detail": "실시간 stream과 복잡한 platform workload를 managed Kubernetes로 운영합니다."},
+          {"title": "통합 SLO 관찰성", "detail": "애플리케이션과 Kubernetes 신호를 납품 SLO로 연결합니다."}
+        ],
+        "controlEvidence": [
+          {"service": "Microsoft Entra Workload ID", "control": "Workload별 최소권한", "evidence": "secret 없이 Azure 리소스 접근을 설계합니다.", "status": {"label": "목표 통제", "tone": "info"}},
+          {"service": "Microsoft Defender for Cloud", "control": "Image · runtime threat", "evidence": "취약점과 위협 신호를 배포·운영 gate에 연결합니다.", "status": {"label": "설계", "tone": "warning"}},
+          {"service": "Azure Policy", "control": "Configuration compliance", "evidence": "network·identity·resource drift를 확인합니다.", "status": {"label": "검사", "tone": "success"}}
+        ],
+        "buyerNextStep": {"action": "에너지 workload 진단 착수", "owner": "CIO · Platform Engineering", "timebox": "4주", "successCriteria": "ACA/AKS 배치·SLO·비용·복원력 백로그 확정"}
+      }
     },
     "ambientNotifications": [
       {"title": "소재 운영 에이전트", "text": "청정 전력 투입과 생산계획이 안정 범위입니다.", "icon": "◇"},

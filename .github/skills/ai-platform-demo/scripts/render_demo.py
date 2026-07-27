@@ -470,6 +470,136 @@ def validate_named_items(
             require_number(item, key, item_path)
 
 
+def validate_buyer_next_step(value: Any, path: str) -> None:
+    if not isinstance(value, dict):
+        raise SpecError(f"{path} must be an object")
+    for key in ["action", "owner", "timebox", "successCriteria"]:
+        require_string(value, key, path)
+
+
+def validate_sales_contract(
+    section: dict[str, Any],
+    path: str,
+    *,
+    required_services: tuple[str, ...],
+) -> None:
+    sales = require_mapping(section, "sales", path)
+    require_string(sales, "executiveQuestion", f"{path}.sales")
+    require_string(sales, "enabledBusinessOutcome", f"{path}.sales")
+    business_kpis = require_list(sales, "businessKpis", f"{path}.sales", minimum=2)
+    if len(business_kpis) != 2:
+        raise SpecError(f"{path}.sales.businessKpis must contain exactly 2 items")
+    validate_named_items(
+        business_kpis,
+        f"{path}.sales.businessKpis",
+        ["label", "value", "detail"],
+    )
+    capabilities = require_list(
+        sales,
+        "differentiatedCapabilities",
+        f"{path}.sales",
+        minimum=3,
+    )
+    validate_named_items(
+        capabilities,
+        f"{path}.sales.differentiatedCapabilities",
+        ["title", "detail"],
+    )
+    controls = require_list(sales, "controlEvidence", f"{path}.sales", minimum=3)
+    services: list[str] = []
+    for index, control in enumerate(controls):
+        control_path = f"{path}.sales.controlEvidence[{index}]"
+        if not isinstance(control, dict):
+            raise SpecError(f"{control_path} must be an object")
+        services.append(require_string(control, "service", control_path))
+        require_string(control, "control", control_path)
+        require_string(control, "evidence", control_path)
+        status = require_mapping(control, "status", control_path)
+        require_string(status, "label", f"{control_path}.status")
+        validate_tone(
+            require_string(status, "tone", f"{control_path}.status"),
+            f"{control_path}.status.tone",
+        )
+    service_text = " ".join(services).casefold()
+    missing_services = [
+        service for service in required_services if service.casefold() not in service_text
+    ]
+    if missing_services:
+        raise SpecError(
+            f"{path}.sales.controlEvidence must include: "
+            + ", ".join(missing_services)
+        )
+    validate_buyer_next_step(
+        require_mapping(sales, "buyerNextStep", f"{path}.sales"),
+        f"{path}.sales.buyerNextStep",
+    )
+
+
+def validate_guided_journeys(story: dict[str, Any]) -> None:
+    journeys = require_list(story, "guidedJourneys", "$.story", minimum=2)
+    journey_ids: list[str] = []
+    for index, journey in enumerate(journeys):
+        journey_path = f"$.story.guidedJourneys[{index}]"
+        if not isinstance(journey, dict):
+            raise SpecError(f"{journey_path} must be an object")
+        journey_id = require_string(journey, "id", journey_path)
+        validate_safe_id(journey_id, f"{journey_path}.id")
+        journey_ids.append(journey_id)
+        for key in ["label", "audience"]:
+            require_string(journey, key, journey_path)
+        routes = require_list(journey, "routes", journey_path, minimum=4)
+        if len(routes) > 6 or len(routes) != len(set(routes)):
+            raise SpecError(
+                f"{journey_path}.routes must contain 4-6 unique route IDs"
+            )
+        if routes[0] != "dashboard" or not all(route in ROUTE_IDS for route in routes):
+            raise SpecError(
+                f"{journey_path}.routes must start with dashboard and use fixed route IDs"
+            )
+        bridges = require_string_list(journey, "bridges", journey_path, minimum=3)
+        if len(bridges) != len(routes) - 1:
+            raise SpecError(
+                f"{journey_path}.bridges must contain one bridge per route transition"
+            )
+        validate_buyer_next_step(
+            require_mapping(journey, "finalAction", journey_path),
+            f"{journey_path}.finalAction",
+        )
+    if len(journey_ids) != len(set(journey_ids)):
+        raise SpecError("$.story.guidedJourneys IDs must be unique")
+    default_journey_id = require_string(story, "defaultJourneyId", "$.story")
+    if default_journey_id not in journey_ids:
+        raise SpecError("$.story.defaultJourneyId must reference a guided journey")
+
+
+def validate_scenario_trace(story: dict[str, Any]) -> None:
+    scenario = require_mapping(story, "scenarioTrace", "$.story")
+    for key in ["id", "title"]:
+        require_string(scenario, key, "$.story.scenarioTrace")
+    steps = require_list(scenario, "steps", "$.story.scenarioTrace", minimum=4)
+    if len(steps) != 4:
+        raise SpecError("$.story.scenarioTrace.steps must contain exactly 4 items")
+    routes: list[str] = []
+    for index, step in enumerate(steps):
+        step_path = f"$.story.scenarioTrace.steps[{index}]"
+        if not isinstance(step, dict):
+            raise SpecError(f"{step_path} must be an object")
+        routes.append(require_string(step, "route", step_path))
+        for key in ["label", "owner", "timestamp"]:
+            require_string(step, key, step_path)
+        status = require_mapping(step, "status", step_path)
+        require_string(status, "label", f"{step_path}.status")
+        validate_tone(
+            require_string(status, "tone", f"{step_path}.status"),
+            f"{step_path}.status.tone",
+        )
+    if routes[0] not in ROUTE_IDS[:5] or routes[1:] != ["foundry", "github", "appPlatform"]:
+        raise SpecError(
+            "$.story.scenarioTrace must connect one business route to "
+            "foundry, github, and appPlatform in that order"
+        )
+
+
 def iter_strings(value: Any, path: str = "$"):
     if isinstance(value, str):
         yield path, value
@@ -586,6 +716,8 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "$.story.audienceMessages",
         ["audience", "message"],
     )
+    validate_guided_journeys(story)
+    validate_scenario_trace(story)
     route_scope = story.get("routeScope", ROUTE_IDS)
     if "routeScope" in story:
         route_scope = require_list(story, "routeScope", "$.story", minimum=8)
@@ -610,6 +742,16 @@ def validate_spec(spec: dict[str, Any]) -> None:
     dashboard = require_mapping(spec, "dashboard", "$")
     validate_hero(dashboard, "$.dashboard")
     validate_kpis(dashboard, "$.dashboard")
+    primary_action = require_mapping(dashboard, "primaryAction", "$.dashboard")
+    for key in ["label", "targetRoute", "toastTitle", "toastText", "icon"]:
+        require_string(primary_action, key, "$.dashboard.primaryAction")
+    if (
+        primary_action["targetRoute"] not in ROUTE_IDS
+        or primary_action["targetRoute"] == "dashboard"
+    ):
+        raise SpecError(
+            "$.dashboard.primaryAction.targetRoute must reference another fixed route"
+        )
     stream = require_mapping(dashboard, "stream", "$.dashboard")
     for key in ["title", "label", "color"]:
         require_string(stream, key, "$.dashboard.stream")
@@ -997,6 +1139,11 @@ def validate_spec(spec: dict[str, Any]) -> None:
     github = require_mapping(spec, "github", "$")
     validate_hero(github, "$.github")
     validate_kpis(github, "$.github")
+    validate_sales_contract(
+        github,
+        "$.github",
+        required_services=("GitHub AI Controls", "GitHub Advanced Security"),
+    )
     for key in ["stepsTitle", "stepsHint", "issuesTitle", "issuesHint"]:
         require_string(github, key, "$.github")
     require_string_list(github, "issueHeaders", "$.github", minimum=5)
@@ -1058,6 +1205,16 @@ def validate_spec(spec: dict[str, Any]) -> None:
     foundry = require_mapping(spec, "foundry", "$")
     validate_hero(foundry, "$.foundry")
     validate_kpis(foundry, "$.foundry")
+    validate_sales_contract(
+        foundry,
+        "$.foundry",
+        required_services=(
+            "Microsoft Entra",
+            "Microsoft Purview",
+            "Azure AI Content Safety",
+        ),
+    )
+    require_string(foundry, "decisionPreviewTitle", "$.foundry")
     for key in [
         "listTitle",
         "listHint",
@@ -1112,6 +1269,11 @@ def validate_spec(spec: dict[str, Any]) -> None:
 
     app_platform = require_mapping(spec, "appPlatform", "$")
     validate_hero(app_platform, "$.appPlatform")
+    validate_sales_contract(
+        app_platform,
+        "$.appPlatform",
+        required_services=("Microsoft Entra", "Microsoft Defender"),
+    )
     cards = require_list(app_platform, "cards", "$.appPlatform", minimum=3)
     if len(cards) != 3:
         raise SpecError("$.appPlatform.cards must contain exactly 3 items")
@@ -1154,6 +1316,14 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "complete",
         "toastTitle",
         "toastText",
+        "planButton",
+        "planning",
+        "planComplete",
+        "projectedLabel",
+        "planBlockedTitle",
+        "planBlockedText",
+        "planToastTitle",
+        "planToastText",
     ]:
         require_string(evaluation, key, "$.appPlatform.evaluation")
     require_number(evaluation, "initialScore", "$.appPlatform.evaluation")
@@ -1197,6 +1367,35 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "$.appPlatform.evaluation",
         minimum=4,
     )
+    require_string_list(
+        evaluation,
+        "remediationLines",
+        "$.appPlatform.evaluation",
+        minimum=4,
+    )
+    gaps = require_list(
+        evaluation,
+        "gaps",
+        "$.appPlatform.evaluation",
+        minimum=2,
+    )
+    unresolved_gaps = 0
+    for index, gap in enumerate(gaps):
+        gap_path = f"$.appPlatform.evaluation.gaps[{index}]"
+        if not isinstance(gap, dict):
+            raise SpecError(f"{gap_path} must be an object")
+        for key in ["title", "detail", "owner", "effort"]:
+            require_string(gap, key, gap_path)
+        status = require_mapping(gap, "status", gap_path)
+        require_string(status, "label", f"{gap_path}.status")
+        tone = require_string(status, "tone", f"{gap_path}.status")
+        validate_tone(tone, f"{gap_path}.status.tone")
+        if tone in {"warning", "danger", "warn", "bad"}:
+            unresolved_gaps += 1
+    if unresolved_gaps < 1:
+        raise SpecError(
+            "$.appPlatform.evaluation.gaps must include at least one unresolved gap"
+        )
 
     notification = require_mapping(spec, "notification", "$")
     for key in ["title", "text", "icon"]:

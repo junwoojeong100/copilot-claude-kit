@@ -99,7 +99,8 @@ Industry Pack에 금지되는 것:
 Customer Overlay가 반드시 새로 결정하는 것:
 
 - 고객명·앱명·audience
-- `DEMO_FOCUS`에 맞는 Storyline·핵심 4~6개 시연 동선·climax
+- `DEMO_FOCUS`에 맞는 Storyline·청중별 guided journey·route bridge·climax
+- 업무 예외→Foundry→GitHub→App Platform 공통 scenario trace
 - Pack의 `requiredCustomerPaths`
 - 고객 공식 사실·KPI 현실 범위·GitHub/Foundry/App Platform 답변과 가정
 
@@ -151,9 +152,10 @@ HTTP(S) 원문인지 확인한다.
 - Pack은 초안 가속 장치이며 고객의 storyline을 대신하지 않는다.
 - Hero는 제품 소개가 아니라 고객 결과를 바로 말한다. route마다 임원 질문 하나와 primary action 하나를
   유지한다.
-- 앞의 5개 고객 주요사업 Hero·flow·simulator·finance와 Foundry Agent profiles, focus별 climax는 고객
-  Overlay에서 새로 작성한다.
-- GitHub·Foundry·App Platform의 안정적인 interaction copy는 재사용 가능하지만 KPI와 고객 가치 매핑은 갱신한다.
+- 앞의 5개 고객 주요사업 Hero·dashboard primary action·flow·simulator·finance와 Foundry Agent
+  profiles, focus별 climax는 고객 Overlay에서 새로 작성한다.
+- GitHub·Foundry·App Platform의 안정적인 interaction copy는 재사용 가능하지만 `sales`의 사업 KPI,
+  통제 증거, buyer next step과 고객 가치 매핑은 갱신한다.
 - Microsoft Foundry·Microsoft Agent Framework, GitHub Copilot·GitHub Platform, AKS·Azure Container
   Apps는 제품 catalog가 아니라 지능·delivery·runtime 역할로 연결한다.
 - 최종 browser QA는 고객 주요사업 5개 + 플랫폼 서비스 3개의 8개 route를 모두 검사한다.

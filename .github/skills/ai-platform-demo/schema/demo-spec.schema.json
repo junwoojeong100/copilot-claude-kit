@@ -128,7 +128,14 @@
     },
     "story": {
       "type": "object",
-      "required": ["frame", "audienceMessages", "climax"],
+      "required": [
+        "frame",
+        "audienceMessages",
+        "climax",
+        "guidedJourneys",
+        "defaultJourneyId",
+        "scenarioTrace"
+      ],
       "properties": {
         "frame": {"type": "string", "minLength": 1},
         "audienceMessages": {
@@ -144,23 +151,74 @@
           }
         },
         "climax": {"type": "string", "minLength": 1},
+        "defaultJourneyId": {"type": "string", "minLength": 1},
+        "guidedJourneys": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "audience", "routes", "bridges", "finalAction"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"},
+              "label": {"type": "string", "minLength": 1},
+              "audience": {"type": "string", "minLength": 1},
+              "routes": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 6,
+                "uniqueItems": true,
+                "items": {"enum": ["dashboard", "operations", "simulator", "improvement", "finance", "github", "foundry", "appPlatform"]}
+              },
+              "bridges": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 5,
+                "items": {"type": "string", "minLength": 1}
+              },
+              "finalAction": {"$ref": "#/$defs/buyerNextStep"}
+            }
+          }
+        },
+        "scenarioTrace": {
+          "type": "object",
+          "required": ["id", "title", "steps"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "title": {"type": "string", "minLength": 1},
+            "steps": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "required": ["route", "label", "owner", "timestamp", "status"],
+                "properties": {
+                  "route": {"enum": ["dashboard", "operations", "simulator", "improvement", "finance", "github", "foundry", "appPlatform"]},
+                  "label": {"type": "string", "minLength": 1},
+                  "owner": {"type": "string", "minLength": 1},
+                  "timestamp": {"type": "string", "minLength": 1},
+                  "status": {"type": "object"}
+                }
+              }
+            }
+          }
+        },
         "routeScope": {
           "type": "array",
+          "prefixItems": [
+            {"const": "dashboard"},
+            {"const": "operations"},
+            {"const": "simulator"},
+            {"const": "improvement"},
+            {"const": "finance"},
+            {"const": "github"},
+            {"const": "foundry"},
+            {"const": "appPlatform"}
+          ],
           "minItems": 8,
           "maxItems": 8,
           "uniqueItems": true,
-          "items": {
-            "enum": [
-              "dashboard",
-              "operations",
-              "simulator",
-              "improvement",
-              "finance",
-              "github",
-              "foundry",
-              "appPlatform"
-            ]
-          }
+          "items": false
         }
       }
     },
@@ -184,7 +242,20 @@
       "allOf": [
         {"$ref": "#/$defs/routeSection"},
         {
-          "required": ["kpis", "stream", "feedTitle", "feedHint", "feed", "cards", "table", "learningLoop"]
+          "required": ["primaryAction", "kpis", "stream", "feedTitle", "feedHint", "feed", "cards", "table", "learningLoop"],
+          "properties": {
+            "primaryAction": {
+              "type": "object",
+              "required": ["label", "targetRoute", "toastTitle", "toastText", "icon"],
+              "properties": {
+                "label": {"type": "string", "minLength": 1},
+                "targetRoute": {"enum": ["operations", "simulator", "improvement", "finance", "github", "foundry", "appPlatform"]},
+                "toastTitle": {"type": "string", "minLength": 1},
+                "toastText": {"type": "string", "minLength": 1},
+                "icon": {"type": "string", "minLength": 1}
+              }
+            }
+          }
         }
       ]
     },
@@ -352,6 +423,7 @@
         {
           "required": [
             "kpis",
+            "sales",
             "stepsTitle",
             "stepsHint",
             "steps",
@@ -362,6 +434,7 @@
             "action"
           ],
           "properties": {
+            "sales": {"$ref": "#/$defs/salesContract"},
             "issues": {
               "type": "array",
               "minItems": 3,
@@ -393,6 +466,8 @@
           "type": "object",
           "required": [
             "kpis",
+            "sales",
+            "decisionPreviewTitle",
             "listTitle",
             "listHint",
             "governedLabel",
@@ -403,6 +478,8 @@
             "orchestration"
           ],
           "properties": {
+            "sales": {"$ref": "#/$defs/salesContract"},
+            "decisionPreviewTitle": {"type": "string", "minLength": 1},
             "profiles": {
               "type": "array",
               "minItems": 5,
@@ -438,7 +515,12 @@
     "appPlatform": {
       "allOf": [
         {"$ref": "#/$defs/routeSection"},
-        {"required": ["cards", "controls", "memories", "learningLoop", "evaluation"]}
+        {
+          "required": ["sales", "cards", "controls", "memories", "learningLoop", "evaluation"],
+          "properties": {
+            "sales": {"$ref": "#/$defs/salesContract"}
+          }
+        }
       ]
     },
     "notification": {"$ref": "#/$defs/notification"},
@@ -582,6 +664,72 @@
     },
     "semanticColor": {
       "enum": ["brand", "accent", "info", "success", "warning", "danger", "violet"]
+    },
+    "buyerNextStep": {
+      "type": "object",
+      "required": ["action", "owner", "timebox", "successCriteria"],
+      "properties": {
+        "action": {"type": "string", "minLength": 1},
+        "owner": {"type": "string", "minLength": 1},
+        "timebox": {"type": "string", "minLength": 1},
+        "successCriteria": {"type": "string", "minLength": 1}
+      }
+    },
+    "salesContract": {
+      "type": "object",
+      "required": [
+        "executiveQuestion",
+        "enabledBusinessOutcome",
+        "businessKpis",
+        "differentiatedCapabilities",
+        "controlEvidence",
+        "buyerNextStep"
+      ],
+      "properties": {
+        "executiveQuestion": {"type": "string", "minLength": 1},
+        "enabledBusinessOutcome": {"type": "string", "minLength": 1},
+        "businessKpis": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["label", "value", "detail"],
+            "properties": {
+              "label": {"type": "string", "minLength": 1},
+              "value": {"type": "string", "minLength": 1},
+              "detail": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "differentiatedCapabilities": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["title", "detail"],
+            "properties": {
+              "title": {"type": "string", "minLength": 1},
+              "detail": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "controlEvidence": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["service", "control", "evidence", "status"],
+            "properties": {
+              "service": {"type": "string", "minLength": 1},
+              "control": {"type": "string", "minLength": 1},
+              "evidence": {"type": "string", "minLength": 1},
+              "status": {"$ref": "#/$defs/status"}
+            }
+          }
+        },
+        "buyerNextStep": {"$ref": "#/$defs/buyerNextStep"}
+      }
     },
     "notification": {
       "type": "object",

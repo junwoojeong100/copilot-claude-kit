@@ -52,6 +52,15 @@ class LintSpecTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn("finalScore", result.stdout)
 
+    def test_all_pass_app_platform_assessment_is_caught(self):
+        spec = json.loads(BASE.read_text(encoding="utf-8"))
+        for gap in spec["appPlatform"]["evaluation"]["gaps"]:
+            gap["status"]["tone"] = "success"
+        with tempfile.TemporaryDirectory() as directory:
+            result = run_lint(write_temp(spec, directory))
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("unresolved gap", result.stdout)
+
     def test_english_only_korean_navigation_is_caught(self):
         spec = json.loads(BASE.read_text(encoding="utf-8"))
         spec["navigation"][0].update(

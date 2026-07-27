@@ -69,7 +69,91 @@
         "message": "신원·정책·추적을 갖춘 에이전트 운영 체계 확보"
       }
     ],
-    "climax": "품질 이상을 여섯 Agent가 공동 분석해 공정 보정, 고객 지원, 재무 효과, 코드 변경안을 하나의 승인 패키지로 만든다."
+    "climax": "품질 이상을 여섯 Agent가 공동 분석해 공정 보정, 고객 지원, 재무 효과, 코드 변경안을 하나의 승인 패키지로 만든다.",
+    "defaultJourneyId": "coo",
+    "guidedJourneys": [
+      {
+        "id": "ceo",
+        "label": "CEO · 성장과 실행",
+        "audience": "CEO",
+        "routes": ["dashboard", "finance", "foundry", "github", "appPlatform"],
+        "bridges": [
+          "글로벌 운영 신호를 경제적 가치와 성장 우선순위로 전환합니다.",
+          "가치 시나리오를 전문 Agent의 실행 가능한 의사결정 패키지로 구체화합니다.",
+          "승인된 결정이 안전한 코드 변경과 검증 증거로 이어집니다.",
+          "변경을 운영할 ACA·AKS 준비도와 SLO 책임을 확인합니다."
+        ],
+        "finalAction": {
+          "action": "90일 가치 파일럿 확정",
+          "owner": "CEO · CIO",
+          "timebox": "90일",
+          "successCriteria": "수율·리드타임·운영 위험 KPI 개선 근거 확보"
+        }
+      },
+      {
+        "id": "coo",
+        "label": "COO · 운영 폐루프",
+        "audience": "COO",
+        "routes": ["dashboard", "operations", "simulator", "foundry", "github", "appPlatform"],
+        "bridges": [
+          "전사 신호에서 즉시 조정해야 할 생산 예외를 선택합니다.",
+          "운영 예외를 생산 전 시뮬레이션으로 검증합니다.",
+          "예측 결과를 전문 Agent의 승인 가능한 결정으로 통합합니다.",
+          "결정 패키지에서 필요한 소프트웨어 변경을 안전하게 준비합니다.",
+          "승인된 변경의 배포·확장·복구 준비도를 확인합니다."
+        ],
+        "finalAction": {
+          "action": "운영 시나리오 파일럿 착수",
+          "owner": "COO · 생산혁신 책임자",
+          "timebox": "8주",
+          "successCriteria": "승인 리드타임 단축과 수율 개선을 재현"
+        }
+      },
+      {
+        "id": "cfo",
+        "label": "CFO · 가치와 위험",
+        "audience": "CFO",
+        "routes": ["dashboard", "finance", "foundry", "appPlatform"],
+        "bridges": [
+          "운영 신호를 마진·현금·반복 가치 시나리오로 전환합니다.",
+          "재무 가정을 Agent가 근거와 통제 안에서 검증합니다.",
+          "의사결정 workload의 비용·SLO·복원력 기준을 확인합니다."
+        ],
+        "finalAction": {
+          "action": "가치 검증 워크숍 예약",
+          "owner": "CFO · CIO",
+          "timebox": "2주",
+          "successCriteria": "비용·현금·위험 기준선과 투자 가설 합의"
+        }
+      },
+      {
+        "id": "cio",
+        "label": "CIO · 통제된 AI Platform",
+        "audience": "CIO",
+        "routes": ["dashboard", "foundry", "github", "appPlatform"],
+        "bridges": [
+          "경영 과제를 Agent·데이터·도구의 통제된 결정으로 연결합니다.",
+          "Agent 결정이 감사 가능한 Issue·PR·보안 게이트로 이어집니다.",
+          "승인된 workload의 배포·SLO·보안 운영 책임을 확인합니다."
+        ],
+        "finalAction": {
+          "action": "플랫폼 준비도 진단 확정",
+          "owner": "CIO · Platform Engineering",
+          "timebox": "4주",
+          "successCriteria": "신원·데이터·배포·운영 Gap과 개선 백로그 확정"
+        }
+      }
+    ],
+    "scenarioTrace": {
+      "id": "QUALITY-DRIFT-042",
+      "title": "AI 서버 보드 품질 편차 대응",
+      "steps": [
+        {"route": "operations", "label": "운영 예외 감지", "owner": "COO", "timestamp": "09:12", "status": {"label": "감지", "tone": "warning"}},
+        {"route": "foundry", "label": "의사결정 패키지", "owner": "AI 운영", "timestamp": "09:16", "status": {"label": "준비", "tone": "violet"}},
+        {"route": "github", "label": "Issue · PR 검증", "owner": "Engineering", "timestamp": "09:24", "status": {"label": "검증", "tone": "info"}},
+        {"route": "appPlatform", "label": "배포 · SLO 계획", "owner": "Platform", "timestamp": "09:31", "status": {"label": "계획", "tone": "success"}}
+      ]
+    }
   },
   "navigation": [
     {
@@ -111,21 +195,21 @@
       "id": "github",
       "icon": "⌘",
       "name": "GitHub Ecosystem",
-      "short": "GitHub",
+      "short": "통제된 변경",
       "crumb": "Copilot · Actions · Advanced Security"
     },
     {
       "id": "foundry",
       "icon": "✦",
       "name": "Microsoft Foundry",
-      "short": "Foundry",
+      "short": "Agent 결정",
       "crumb": "Agent Framework · 평가 · 관찰성"
     },
     {
       "id": "appPlatform",
       "icon": "⬡",
       "name": "App Platform",
-      "short": "ACA · AKS",
+      "short": "탄력적 운영",
       "crumb": "배포 · 확장 · 운영"
     }
   ],
@@ -138,6 +222,13 @@
         "label": "글로벌 실시간 시연",
         "tone": "success"
       }
+    },
+    "primaryAction": {
+      "label": "글로벌 생산 예외 확인",
+      "targetRoute": "operations",
+      "toastTitle": "우선 대응 예외 선택",
+      "toastText": "품질 편차와 생산 흐름을 연결한 운영 화면으로 이동합니다.",
+      "icon": "→"
     },
     "kpis": [
       {
@@ -1327,6 +1418,30 @@
       "title": "GitHub Ecosystem · 계획에서 안전한 배포까지",
       "subtitle": "GitHub Issues·Projects, GitHub Copilot, Pull Requests, GitHub Actions, GitHub Advanced Security를 연결해 계획·코드·검증·배포 흐름과 핵심 엔지니어링 지표를 한 화면에서 운영합니다."
     },
+    "sales": {
+      "executiveQuestion": "승인된 운영 결정을 얼마나 빠르고 안전하게 소프트웨어로 전달할 수 있는가?",
+      "enabledBusinessOutcome": "운영 결정이 감사 가능한 Issue·Pull Request·배포 증거로 이어져 변경 지연과 운영 위험을 함께 낮춥니다.",
+      "businessKpis": [
+        {"label": "결정→변경 리드타임", "value": "−41%", "detail": "범위와 검증 기준이 명확한 변경의 시연 리드타임 개선 가정입니다."},
+        {"label": "고위험 사람 주도", "value": "100%", "detail": "안전·생산제어 변경은 Copilot이 조사와 계획을 지원하고 사람이 구현·승인합니다."}
+      ],
+      "differentiatedCapabilities": [
+        {"title": "Copilot plan-to-PR", "detail": "저장소 맥락·지침·테스트를 바탕으로 계획부터 Draft PR까지 연결합니다."},
+        {"title": "GitHub Actions evidence", "detail": "테스트·승인·배포 결과를 동일한 변경 기록에 남깁니다."},
+        {"title": "Advanced Security gate", "detail": "코드·시크릿·의존성 위험을 병합 전에 차단합니다."}
+      ],
+      "controlEvidence": [
+        {"service": "GitHub AI Controls", "control": "Agent availability · session policy", "evidence": "조직 정책과 세션 감사 범위를 적용합니다.", "status": {"label": "정책 적용", "tone": "success"}},
+        {"service": "GitHub Advanced Security", "control": "Code · secret · dependency scanning", "evidence": "보안 검사 결과를 Pull Request gate로 유지합니다.", "status": {"label": "검증", "tone": "success"}},
+        {"service": "GitHub Environments", "control": "Required reviewer · deployment protection", "evidence": "생산 배포 전 승인과 환경 보호 규칙을 적용합니다.", "status": {"label": "승인 필요", "tone": "warning"}}
+      ],
+      "buyerNextStep": {
+        "action": "통제된 변경 파일럿 선정",
+        "owner": "CIO · Engineering",
+        "timebox": "8주",
+        "successCriteria": "리드타임·리뷰시간·보안 gate 통과율 기준선 대비 개선"
+      }
+    },
     "kpis": [
       {
         "label": "중앙값 리드타임",
@@ -1626,6 +1741,32 @@
         "tone": "violet"
       }
     },
+    "sales": {
+      "executiveQuestion": "여러 전문 Agent가 근거·정책·평가 안에서 하나의 책임 있는 결정을 만들 수 있는가?",
+      "enabledBusinessOutcome": "품질·공정·서비스·재무 판단을 하나의 승인 가능한 의사결정 패키지로 통합합니다.",
+      "businessKpis": [
+        {"label": "예상 FPY 효과", "value": "+0.15%p", "detail": "공정 보정과 평가를 적용한 시연 시나리오의 예상 효과입니다."},
+        {"label": "품질비용 시나리오", "value": "−7.8억", "detail": "불량·재작업 감소를 월간 품질비용으로 환산한 시연 가정입니다."}
+      ],
+      "differentiatedCapabilities": [
+        {"title": "Microsoft Agent Framework", "detail": "전문 Agent, 도구, 승인 단계를 명시적인 orchestration으로 연결합니다."},
+        {"title": "Grounded Agent", "detail": "고객 권한과 지식 경계를 유지하며 근거 기반 답변을 생성합니다."},
+        {"title": "Evaluation · tracing", "detail": "응답 품질, tool call, latency, 승인 준수를 지속 평가하고 추적합니다."}
+      ],
+      "controlEvidence": [
+        {"service": "Microsoft Entra Agent ID", "control": "Agent별 신원 · 최소권한", "evidence": "각 Agent와 tool access를 분리된 identity로 추적합니다.", "status": {"label": "목표 통제", "tone": "info"}},
+        {"service": "Microsoft Purview", "control": "민감도 · 데이터 사용 정책", "evidence": "Agent가 사용하는 고객 데이터의 분류·보호·감사 경계를 정의합니다.", "status": {"label": "설계", "tone": "warning"}},
+        {"service": "Azure AI Content Safety", "control": "응답·입력 안전성 평가", "evidence": "도메인 평가셋과 안전 필터 결과를 실행 전 검증합니다.", "status": {"label": "평가", "tone": "success"}},
+        {"service": "Microsoft Foundry", "control": "Evaluation · trace", "evidence": "결정·검색·tool call·latency trace를 보존합니다.", "status": {"label": "추적", "tone": "success"}}
+      ],
+      "buyerNextStep": {
+        "action": "의사결정 Agent 파일럿 확정",
+        "owner": "COO · CIO",
+        "timebox": "8주",
+        "successCriteria": "평가 통과율·승인 리드타임·사업 KPI 효과를 동일 trace로 증명"
+      }
+    },
+    "decisionPreviewTitle": "경영진이 먼저 보는 의사결정 결과",
     "kpis": [
       {
         "label": "Agent 성공률",
@@ -1862,6 +2003,30 @@
       "title": "App Platform · ACA와 AKS를 하나의 운영 포트폴리오로",
       "subtitle": "Azure Container Apps와 Azure Kubernetes Service의 배포·트래픽·확장·보안·관찰성·비용 지표를 함께 보고 workload 특성에 맞는 runtime을 선택합니다."
     },
+    "sales": {
+      "executiveQuestion": "Agent와 애플리케이션 workload를 어떤 SLO·비용·복원력 기준으로 운영할 것인가?",
+      "enabledBusinessOutcome": "업무 중요도에 따라 ACA와 AKS를 선택하고 배포 실패·복구시간·용량 낭비를 줄입니다.",
+      "businessKpis": [
+        {"label": "핵심 workload SLO", "value": "99.95%", "detail": "가용성·지연시간·오류율을 경영 중요도와 연결한 시연 기준입니다."},
+        {"label": "복구시간 시나리오", "value": "−35%", "detail": "표준 probe·rollout·관찰성을 적용한 예상 복구시간 개선 가정입니다."}
+      ],
+      "differentiatedCapabilities": [
+        {"title": "ACA revision 운영", "detail": "traffic split, event-driven scale, scale-to-zero로 API와 Agent tool을 운영합니다."},
+        {"title": "AKS workload control", "detail": "복잡한 microservices, GPU, custom networking을 managed Kubernetes로 운영합니다."},
+        {"title": "통합 SLO 관찰성", "detail": "Azure Monitor, Application Insights, Managed Prometheus 신호를 workload SLO로 연결합니다."}
+      ],
+      "controlEvidence": [
+        {"service": "Microsoft Entra Workload ID", "control": "Workload별 최소권한", "evidence": "ACA·AKS workload가 secret 없이 Azure 리소스에 접근하도록 설계합니다.", "status": {"label": "목표 통제", "tone": "info"}},
+        {"service": "Microsoft Defender for Cloud", "control": "Image · runtime threat", "evidence": "취약점과 runtime 위협 신호를 배포·운영 gate에 연결합니다.", "status": {"label": "설계", "tone": "warning"}},
+        {"service": "Azure Policy", "control": "Configuration · compliance", "evidence": "network, identity, resource configuration drift를 지속 확인합니다.", "status": {"label": "검사", "tone": "success"}}
+      ],
+      "buyerNextStep": {
+        "action": "Workload 배치 진단 착수",
+        "owner": "CIO · Platform Engineering",
+        "timebox": "4주",
+        "successCriteria": "ACA/AKS 배치 원칙·SLO·비용·복원력 개선 백로그 확정"
+      }
+    },
     "cards": [
       {
         "icon": "✓",
@@ -1892,7 +2057,7 @@
         "기능",
         "플랫폼",
         "주요 운영 지표",
-        "Status"
+        "상태"
       ],
       "rows": [
         {
@@ -2094,6 +2259,12 @@
       "button": "⬡ ACA·AKS readiness 검사",
       "running": "플랫폼 검사 중…",
       "complete": "✓ 검사 완료 · 다시 실행",
+      "planButton": "개선 계획 시뮬레이션",
+      "planning": "개선 계획 계산 중…",
+      "planComplete": "✓ 예상 효과 다시 계산",
+      "projectedLabel": "개선 계획 적용 시 예상 readiness",
+      "planBlockedTitle": "먼저 readiness를 진단하세요",
+      "planBlockedText": "현재 Gap을 확인한 뒤 개선 계획의 예상 효과를 계산합니다.",
       "initialScore": 91.8,
       "finalScore": 96.4,
       "readyLines": [
@@ -2104,15 +2275,29 @@
       ],
       "runLines": [
         "[RUN  ] workload identity ..... PASS",
-        "[RUN  ] private ingress ....... PASS",
+        "[RUN  ] private ingress ....... GAP",
         "[RUN  ] autoscaling policy .... PASS",
         "[RUN  ] health probes ......... PASS",
-        "[RUN  ] rollout protection .... PASS",
+        "[RUN  ] rollout protection .... GAP",
         "[RUN  ] SLO telemetry ......... PASS",
-        "[DONE ] score: 96.4 / 100 · 24 checks"
+        "[DONE ] assessed score remains 91.8 / 100"
       ],
-      "toastTitle": "App Platform readiness 통과",
-      "toastText": "ACA·AKS 운영 기준 24개 항목이 통과했습니다."
+      "remediationLines": [
+        "[PLAN ] private ingress owner . Platform Network",
+        "[PLAN ] rollout protection .... Release Engineering",
+        "[PLAN ] effort ................. 4 weeks",
+        "[PLAN ] projected SLO .......... 99.95%",
+        "[DONE ] projected score: 96.4 / 100"
+      ],
+      "gaps": [
+        {"title": "Private ingress 표준화", "detail": "Agent tool endpoint의 public ingress 예외를 제거해야 합니다.", "owner": "Platform Network", "effort": "2주", "status": {"label": "미해결", "tone": "warning"}},
+        {"title": "Progressive delivery gate", "detail": "AKS workload의 자동 rollback 기준과 승인 증거를 표준화해야 합니다.", "owner": "Release Engineering", "effort": "3주", "status": {"label": "미해결", "tone": "warning"}},
+        {"title": "SLO telemetry", "detail": "핵심 workload의 latency·error·saturation 신호가 연결돼 있습니다.", "owner": "SRE", "effort": "완료", "status": {"label": "충족", "tone": "success"}}
+      ],
+      "toastTitle": "Platform readiness 진단 완료",
+      "toastText": "점수는 유지되고 미해결 Gap 2건이 확인됐습니다.",
+      "planToastTitle": "개선 계획 예상 효과",
+      "planToastText": "4주 개선 계획 적용 시 readiness 96.4를 예상합니다."
     },
     "assumption": "ACA·AKS workload, SLO, 용량, 비용 값은 목표 아키텍처를 설명하기 위한 시연 데이터입니다."
   },
