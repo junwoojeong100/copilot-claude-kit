@@ -107,7 +107,8 @@ Renderer는 다음을 수행한다.
 | foundry | `agentList`, `chatTitle`, `chatLog`, `chips`, `chatInput`, `sendBtn`, `orchRun` |
 | appPlatform | `evalRun`, `planRemediation`, `evalScore`, `evalProjection`, `evalProjectedScore`, `evalTrace`, `gapList`, `controlTable`, `memoryTable` |
 
-공통 shell ID는 `journeySelect`, `journeyBridge`, `nextScene`이다. Dashboard는
+공통 shell ID는 `journeyTabs`, `journeyBridge`, `journeyPath`, `nextScene`이다. 역할 탭을 선택하면
+해당 persona의 첫 의사결정 route로 이동하고 전체 route path를 표시한다. Dashboard는
 `dashPrimaryAction`, App Platform은 추가로 `planRemediation`, `gapList`, `evalProjection`을 유지한다.
 
 QA는 추가로 확인한다.

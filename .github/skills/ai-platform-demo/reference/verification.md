@@ -120,7 +120,7 @@ node "<repo-root>/.github/skills/ai-platform-demo/scripts/verify_demo.js"
 - `foundry`의 `agentTitles`에 **모든 에이전트가 서로 다르게** 찍힘(클릭 전환 정상).
 - `github`에는 일반 issue와 high-risk issue가 각각 하나 이상 있어야 하며, 일반 issue는 결과를
   만들고 high-risk issue는 human-led plan으로 남음.
-- `journeySelect`와 `nextScene`이 guided journey 순서를 따르고 `dashPrimaryAction`이 첫 업무 장면으로 이동.
+- `journeyTabs` 선택 시 persona별 첫 의사결정 route로 이동하고 `journeyPath`·`nextScene`이 해당 순서를 따름.
 - `scenarioTrace`가 operations/foundry/github/appPlatform에서 같은 ID와 4단계를 표시.
 - App Platform assessment 후 점수는 유지되고 Gap이 보이며, `planRemediation` 후에만 예상 점수가 변경.
 - 노출 route의 스크린샷을 **이미지로 직접 확인**: 텍스트 잘림/겹침, 차트·게이지·맵·도넛 렌더,

@@ -18,7 +18,7 @@ const allRoutes = [
   'appPlatform'
 ];
 const requiredIds = {
-  dashboard: ['dashPrimaryAction', 'dashChart', 'dashFeed', 'dashTable', 'journeySelect', 'journeyBridge', 'nextScene'],
+  dashboard: ['dashPrimaryAction', 'dashChart', 'dashFeed', 'dashTable', 'journeyTabs', 'journeyBridge', 'journeyPath', 'nextScene'],
   operations: ['opsFlow', 'flowMover', 'reopt', 'opsTable'],
   simulator: ['simInputs', 'simGauge', 'simValue', 'simHistogram'],
   improvement: ['runAnalysis', 'analysisSteps', 'factorBars', 'improvementBoard'],
@@ -156,7 +156,7 @@ let browser;
     ];
     routeResults[route] = await page.evaluate(expectedRouteIds => {
       const rows = [...document.querySelectorAll(
-        '.click-row, .agent-row, .node-card, .detail-card, .impact-card, .board-card, .platform-card, .sovereignty-step, .business-kpi, .capability-card, .sales-control-row, .scenario-step'
+        '.click-row, .agent-row, .node-card, .detail-card, .impact-card, .board-card, .platform-card, .sovereignty-step, .business-kpi, .capability-card, .sales-control-row, .scenario-step, .journey-tab, .journey-path-step'
       )];
       const text = document.body.innerText;
       const agentList = document.getElementById('agentList');
@@ -199,13 +199,16 @@ let browser;
       }
       await page.evaluate(() => { location.hash = 'dashboard'; });
       await sleep(350);
-      await page.select('#journeySelect', qaSpec.story.defaultJourneyId);
-      const journeyStart = qaSpec.story.guidedJourneys
-        .find(journey => journey.id === qaSpec.story.defaultJourneyId).routes[0];
+      const alternateJourney = qaSpec.story.guidedJourneys
+        .find(journey => journey.id !== qaSpec.story.defaultJourneyId);
+      await page.click(`#journeyTabs .journey-tab[data-journey="${alternateJourney.id}"]`);
+      await sleep(250);
+      const journeyStart = alternateJourney.routes[1] || alternateJourney.routes[0];
       const selectedRoute = await page.evaluate(() => location.hash.slice(1));
-      if (selectedRoute !== journeyStart) failures.push('journey: preset did not navigate to its first route');
-      const nextTarget = qaSpec.story.guidedJourneys
-        .find(journey => journey.id === qaSpec.story.defaultJourneyId).routes[1];
+      if (selectedRoute !== journeyStart) failures.push('journey: persona tab did not navigate to its first decision route');
+      const nextTarget = alternateJourney.routes[2] || alternateJourney.routes[1];
+      const visiblePathSteps = await page.$$eval('#journeyPath .journey-path-step', elements => elements.length);
+      if (visiblePathSteps !== alternateJourney.routes.length) failures.push('journey: visible route path does not match the selected persona');
       await page.click('#nextScene');
       await sleep(250);
       const nextRoute = await page.evaluate(() => location.hash.slice(1));
