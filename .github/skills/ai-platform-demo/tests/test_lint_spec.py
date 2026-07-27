@@ -35,18 +35,18 @@ class LintSpecTests(unittest.TestCase):
     def test_qa_invariant_violations_are_caught(self):
         spec = json.loads(BASE.read_text(encoding="utf-8"))
         spec["operations"]["action"]["recommendationAfter"] = spec["operations"]["action"]["recommendationBefore"]
-        spec["agents"]["orchestration"]["summary"] = "자율 대응을 완료했습니다."
+        spec["foundry"]["orchestration"]["summary"] = "자율 대응을 완료했습니다."
         with tempfile.TemporaryDirectory() as directory:
             result = run_lint(write_temp(spec, directory))
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn("recommendationBefore", result.stdout)
         self.assertIn("의사결정 패키지", result.stdout)
 
-    def test_numeric_noop_governance_score_is_caught(self):
+    def test_numeric_noop_app_platform_score_is_caught(self):
         spec = json.loads(BASE.read_text(encoding="utf-8"))
-        spec["governance"]["evaluation"]["initialScore"] = 90.0
-        spec["governance"]["evaluation"]["finalScore"] = 90
-        spec["governance"]["cards"][0]["value"] = "90.0"
+        spec["appPlatform"]["evaluation"]["initialScore"] = 90.0
+        spec["appPlatform"]["evaluation"]["finalScore"] = 90
+        spec["appPlatform"]["cards"][0]["value"] = "90.0"
         with tempfile.TemporaryDirectory() as directory:
             result = run_lint(write_temp(spec, directory))
         self.assertEqual(result.returncode, 1, result.stdout)

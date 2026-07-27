@@ -14,9 +14,9 @@
     "simulator",
     "improvement",
     "finance",
-    "devops",
-    "agents",
-    "governance",
+    "github",
+    "foundry",
+    "appPlatform",
     "notification"
   ],
   "properties": {
@@ -146,7 +146,7 @@
         "climax": {"type": "string", "minLength": 1},
         "routeScope": {
           "type": "array",
-          "minItems": 4,
+          "minItems": 8,
           "maxItems": 8,
           "uniqueItems": true,
           "items": {
@@ -156,9 +156,9 @@
               "simulator",
               "improvement",
               "finance",
-              "devops",
-              "agents",
-              "governance"
+              "github",
+              "foundry",
+              "appPlatform"
             ]
           }
         }
@@ -172,9 +172,9 @@
         {"$ref": "#/$defs/simulatorRoute"},
         {"$ref": "#/$defs/improvementRoute"},
         {"$ref": "#/$defs/financeRoute"},
-        {"$ref": "#/$defs/devopsRoute"},
-        {"$ref": "#/$defs/agentsRoute"},
-        {"$ref": "#/$defs/governanceRoute"}
+        {"$ref": "#/$defs/githubRoute"},
+        {"$ref": "#/$defs/foundryRoute"},
+        {"$ref": "#/$defs/appPlatformRoute"}
       ],
       "minItems": 8,
       "maxItems": 8,
@@ -346,7 +346,7 @@
         }
       ]
     },
-    "devops": {
+    "github": {
       "allOf": [
         {"$ref": "#/$defs/routeSection"},
         {
@@ -386,12 +386,13 @@
         }
       ]
     },
-    "agents": {
+    "foundry": {
       "allOf": [
         {"$ref": "#/$defs/routeSection"},
         {
           "type": "object",
           "required": [
+            "kpis",
             "listTitle",
             "listHint",
             "governedLabel",
@@ -434,7 +435,7 @@
         }
       ]
     },
-    "governance": {
+    "appPlatform": {
       "allOf": [
         {"$ref": "#/$defs/routeSection"},
         {"required": ["cards", "controls", "memories", "learningLoop", "evaluation"]}
@@ -489,22 +490,22 @@
         {"properties": {"id": {"const": "finance"}}}
       ]
     },
-    "devopsRoute": {
+    "githubRoute": {
       "allOf": [
         {"$ref": "#/$defs/route"},
-        {"properties": {"id": {"const": "devops"}}}
+        {"properties": {"id": {"const": "github"}}}
       ]
     },
-    "agentsRoute": {
+    "foundryRoute": {
       "allOf": [
         {"$ref": "#/$defs/route"},
-        {"properties": {"id": {"const": "agents"}}}
+        {"properties": {"id": {"const": "foundry"}}}
       ]
     },
-    "governanceRoute": {
+    "appPlatformRoute": {
       "allOf": [
         {"$ref": "#/$defs/route"},
-        {"properties": {"id": {"const": "governance"}}}
+        {"properties": {"id": {"const": "appPlatform"}}}
       ]
     },
     "hero": {

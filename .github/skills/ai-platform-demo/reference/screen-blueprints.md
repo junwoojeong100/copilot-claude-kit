@@ -1,9 +1,8 @@
 # Screen Blueprints + 산업 매핑
 
-8개 화면의 **기본 골격**과 **산업/focus별 콘텐츠 매핑**. 데이터 골격은 유지하되, 좁은 목적의 데모는
-`story.routeScope`로 결론에 필요한 4~7개만 노출한다. 표의 산업 열과 `DEMO_FOCUS`를 함께 보고 도메인
-3~4개·개발/배포·에이전트·KPI·시뮬레이터·채팅을 채운다. 노출 화면은 임원의 질문 하나와 primary
-action 하나가 즉시 보이는 Straightforward 구조를 우선한다.
+8개 화면의 **기본 골격**과 **산업/focus별 콘텐츠 매핑**. 앞의 5개는 고객 주요사업에 맞게 구성하고,
+뒤의 3개는 `GitHub Ecosystem`, `Microsoft Foundry`, `App Platform(ACA/AKS)`으로 고정한다. 모든 메뉴를
+노출하되 시연 동선은 목적에 필요한 4~6개 핵심 장면으로 압축한다.
 
 ---
 
@@ -31,16 +30,19 @@ primary action은 업무 최적화, 트래픽 전환, rollout, 자동 복구처�
 ## 화면 5 — 재무 인사이트 (권장)
 **구성**: `.grid-2`[What-if 슬라이더(원가 변수) → 큰 마진 숫자+상태 | 원가 도넛] → 이상탐지 테이블(전월비·근거 코멘트·상태 배지). 24시간 감시 톤.
 
-## 화면 6 — 개발·배포 가속 / GitHub Platform (권장, App Platform focus에서는 핵심)
+## 화면 6 — GitHub Ecosystem (고정)
 **구성**: `hero`+"Copilot에 이슈 배정" → KPI 4(리드타임·PR·GitHub Actions·보안검사) →
 `.grid-2`[코드 diff 타이핑(`.code .add/.delete`) | 계획→PR→Actions→AKS/ACA 배포 스텝 +
 이슈 테이블(상태→PR#)].
-**핵심 메시지**: GitHub Copilot·GitHub Platform·GitHub Advanced Security와 AKS/ACA를 연결해
-안전한 변경을 더 짧고 반복 가능한 delivery flow로 만든다.
+**주요 기능**: GitHub Issues·Projects, GitHub Copilot, Pull Requests, GitHub Actions, GitHub Advanced
+Security, environment protection. **주요 지표**: lead time, deployment frequency, PR throughput,
+review time, CI success, security coverage.
 
-## 화면 7 — AI 에이전트 (필수, AI 중심 focus의 하이라이트)
-**목적**: 임원이 직접 질문하고 Agent들이 협업하는 모습. App Platform focus에서는 SRE·Release·
-FinOps·Security Agent가 운영/배포 폐루프를 지원하는 장면으로 쓴다.
+## 화면 7 — Microsoft Foundry + Microsoft Agent Framework (고정)
+**목적**: 임원이 직접 질문하고 Agent들이 협업하며 평가·추적되는 모습을 보여준다.
+**주요 기능**: 모델·Agent·도구 연결, prompt/hosted agent, Microsoft Agent Framework orchestration,
+knowledge grounding, evaluation, tracing, safety. **주요 지표**: Agent 성공률, P95 latency, 평가
+커버리지, 근거 기반 응답률, tool-call 성공률.
 **구성**: `.agent-layout`(310px 1fr)[에이전트 목록 + 오케스트레이션 플로우 + "시나리오 실행" 버튼 | 채팅(헤더·로그·추천칩·입력)].
 **★ 필수**: 목록의 **모든 행 클릭 시 그 에이전트로 전환**(헤더·아바타·인사·추천질문·답변). 누락하면 "첫 행만 동작"하는 버그.
 실제 구현은 `runtime/runtime.js`의 `renderAgents()`가 source of truth다. Extension에서도 아래 lifecycle을 유지한다:
@@ -72,23 +74,24 @@ Rich text는 Renderer가 허용한 태그/class만 사용하고, 사용자 입�
 `escapeHtml`을 거친다. **오케스트레이션**은 중앙 `.flow-node.core` + 도메인 노드로 구성하고,
 "시나리오 실행" 시 노드 순차 `hot` + `<animateMotion>` 펄스 + assistant bubble을 사용한다.
 
-## 화면 8 — 거버넌스 (필수)
-**목적**: AI와 App Platform 전반의 신원·정책·증거·고객 소유 데이터를 한곳에서 통제.
-**구성**: `hero` → `.grid-3`[고객 평가셋 점수 | 제도적 기억/증거 | 정책 범위] →
-`.grid-2`[보안 통제 테이블(Microsoft Entra ID·Microsoft Purview·Azure AI Content Safety·Microsoft Defender·GitHub AI Controls·GitHub Advanced Security·AKS/ACA policy·observability) |
-평가 trace + 고객 소유 memory] → 4단계 Learning Loop.
-이 화면의 골격은 산업과 무관하게 고정하되, 통제 항목·상태·설명은 고객의 검증된 현재 환경 또는
-명시적인 목표 아키텍처 가정에 맞춘다. 제품을 나열하는 것만으로 현재 배포 상태를 주장하지 않는다.
+## 화면 8 — App Platform · Azure Container Apps + AKS (고정)
+**목적**: workload별 runtime 선택과 배포·확장·보안·관찰성·비용 상태를 한 화면에서 판단.
+**구성**: `hero` → `.grid-3`[platform readiness | SLO 달성률 | 용량 효율] →
+`.grid-2`[주요 기능 테이블(ACA revision·traffic split·KEDA·scale-to-zero, AKS node pool·HPA·cluster
+autoscaler·GPU·networking, identity·security·observability) | readiness trace + workload 현황] →
+4단계 Build→Deploy→Operate→Optimize 루프.
+**주요 지표**: SLO, latency, error rate, saturation, replica/node utilization, queue lag, deployment
+success, rollback time, cost per workload.
 
 ---
 
 ## Focus → route scope와 중심 역할
 
-| `DEMO_FOCUS` | 운영·시뮬레이터·개선 | 개발·배포 | AI 에이전트 | Climax |
+| `DEMO_FOCUS` | 고객 주요사업 5개 | GitHub Ecosystem | Foundry · Agent Framework | App Platform · ACA/AKS |
 |---|---|---|---|---|
-| **균형형** | 고객 핵심 업무와 platform signal | Copilot→PR→Actions→runtime | 업무·플랫폼 Agent 협업 | 업무 결정이 코드·배포·운영·학습으로 닫힘 |
-| **AI 중심** | Agent가 사용할 업무 context와 action | Agent 변경의 안전한 delivery | Foundry·Agent Framework 중심 | 멀티에이전트 의사결정 패키지 + 거버넌스 |
-| **App Platform·CI/CD 중심** | AKS/ACA workload·traffic·capacity·Incident | GitHub Platform 중심 delivery | SRE·Release·FinOps·Security 지원 | 승인된 변경이 Actions→AKS/ACA→운영 signal로 폐루프 |
+| **균형형** | 핵심 업무와 가치 흐름 | 계획→PR→Actions | 업무 Agent 협업 | workload 운영과 SLO |
+| **AI 중심** | Agent context와 action | Agent 변경의 안전한 delivery | 평가·오케스트레이션 중심 | Agent runtime과 tool endpoint |
+| **App Platform·CI/CD 중심** | workload·traffic·capacity·incident | GitHub delivery 중심 | SRE·Release·FinOps 지원 | Actions→ACA/AKS→운영 signal 폐루프 |
 
 제품 역할은 모든 focus에서 이어지지만 화면마다 제품 catalog를 만들지 않는다. `Microsoft Foundry +
 Microsoft Agent Framework`, `GitHub Copilot + GitHub Platform`, `AKS + Azure Container Apps`를

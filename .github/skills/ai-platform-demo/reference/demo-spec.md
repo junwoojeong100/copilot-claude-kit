@@ -24,9 +24,9 @@ Pack이 없거나 bespoke 구조가 더 빠르고 정확할 때만 전체 Spec�
   "simulator": {},
   "improvement": {},
   "finance": {},
-  "devops": {},
-  "agents": {},
-  "governance": {},
+  "github": {},
+  "foundry": {},
+  "appPlatform": {},
   "notification": {}
 }
 ```
@@ -58,8 +58,8 @@ Overlay는 정의하지 않는다. 고정값은 `archetype=trusted-executive`, `
 
 ## 3. Navigation
 
-Golden Runtime 데이터 계약은 정확히 8개 항목이며 ID와 순서를 고정한다. 사용자에게 노출할 route는
-`story.routeScope`로 별도 선택한다.
+Golden Runtime 데이터 계약은 정확히 8개 항목이며 ID와 순서를 고정한다. 앞의 5개는 고객 주요사업,
+뒤의 3개는 공통 플랫폼 서비스이며 모두 노출한다.
 
 ```json
 [
@@ -68,14 +68,14 @@ Golden Runtime 데이터 계약은 정확히 8개 항목이며 ID와 순서를 �
   {"id":"simulator","icon":"△","name":"예측 시뮬레이션","short":"예측"},
   {"id":"improvement","icon":"◎","name":"개선 과제","short":"개선"},
   {"id":"finance","icon":"₩","name":"재무 효과","short":"재무"},
-  {"id":"devops","icon":"⌘","name":"개발·배포","short":"GitHub"},
-  {"id":"agents","icon":"✦","name":"AI 에이전트","short":"협업"},
-  {"id":"governance","icon":"⬡","name":"통합 거버넌스","short":"통제"}
+  {"id":"github","icon":"⌘","name":"GitHub Ecosystem","short":"GitHub"},
+  {"id":"foundry","icon":"✦","name":"Microsoft Foundry","short":"Foundry"},
+  {"id":"appPlatform","icon":"⬡","name":"App Platform","short":"ACA · AKS"}
 ]
 ```
 
-ID와 순서는 고정이지만 메뉴명·crumb는 `DEMO_FOCUS`와 고객 업무에 맞게 바꾼다. 기본은 8개를 모두
-노출한다. 좁은 목적이면 `story.routeScope`에 canonical 순서로 `dashboard`부터 4~7개를 지정한다.
+ID와 순서는 고정한다. 앞의 5개 메뉴명·crumb는 `DEMO_FOCUS`와 고객 업무에 맞게 바꾸고, 뒤의 3개
+플랫폼 메뉴는 공식 서비스명을 유지한다. `story.routeScope`를 쓰면 canonical 순서의 8개 전체를 넣는다.
 메뉴·제목·버튼·상태는 `meta.language`를 따르며 공식명 또는 일반 약어는 원문을 유지한다.
 
 ## 4. Straightforward content contract
@@ -84,7 +84,7 @@ ID와 순서는 고정이지만 메뉴명·crumb는 `DEMO_FOCUS`와 고객 업�
 - 각 route는 임원 질문 하나와 primary action 하나를 중심으로 구성한다.
 - 클릭 전/후의 KPI·상태·추천은 눈에 띄게 달라야 한다.
 - 제품명은 고객 가치 흐름에서 맡는 역할과 함께 쓴다. 한 화면에 제품 catalog를 만들지 않는다.
-- 8개 route 데이터는 유지하되, `story.routeScope`와 핵심 4~6개 장면은 목적에 맞춰 정한다.
+- 8개 route는 항상 노출하되 핵심 4~6개 시연 장면은 목적에 맞춰 정한다.
 
 ## 5. 공통 data shapes
 
@@ -180,34 +180,35 @@ secondary = base + Σ((value - input.value) * weights[input.id])
 - `composition`: 4개 segment
 - `watchlist`
 
-### DevOps
+### GitHub Ecosystem
 
 - `hero`, `kpis`
-- `steps`: repository research·계획·코드/PR·GitHub Actions·AKS/ACA delivery 중 focus에 맞는 5개 이상.
+- `steps`: GitHub Issues·Projects, repository research, GitHub Copilot, Pull Request, GitHub Actions,
+  GitHub Advanced Security, ACA/AKS delivery 중 focus에 맞는 5개 이상.
   Runtime action의 직접 결과는 autonomous PR 또는 high-risk 실행 계획이며, 후속 CI/CD·runtime 상태는
   steps와 운영 route의 primary action으로 이어서 표현한다.
 - `issues`: 3개 이상
   - `id`, `title`, `product`, `type`, `risk`, `status`, `diffLines`, `highRisk`
   - `highRisk=false`와 `highRisk=true` issue를 각각 하나 이상 포함해 autonomous와 human-led 경로를 모두 검증
 
-### Agents
+### Microsoft Foundry
 
-- `hero`
+- `hero`, `kpis`
 - `profiles`: 5~7개. 업무 Agent뿐 아니라 Platform·SRE·Release·FinOps·Security Agent를 사용할 수 있다.
   - `icon`, `name`, `subtitle`, `intro`
   - `qa`: 정확히 3개 권장, 각 `question`, `answer`
 - `orchestration`: `intro`, `stages`, `summary`
 - 모든 profile 이름은 서로 달라야 한다.
 
-### Governance
+### App Platform · ACA/AKS
 
 - `hero`
-- `cards`: 3개
-- `controls`: Microsoft Entra ID, Microsoft Purview, Azure AI Content Safety, Microsoft Defender,
-  GitHub AI Controls, GitHub Advanced Security, AKS/ACA policy, observability 등을 고객 맥락에 매핑
-- `memories`: 고객 소유 평가셋·패턴·playbook
-- `learningLoop`: 4단계
-- `evaluation`: `initialScore`, `finalScore`, `checks`
+- `cards`: platform readiness, SLO 달성률, 용량 효율 3개
+- `controls`: ACA revision·traffic split·KEDA·scale-to-zero, AKS node pool·HPA·Cluster Autoscaler·GPU,
+  identity·network·security·observability를 고객 workload에 매핑
+- `memories`: workload별 runtime·capacity·SLO 상태
+- `learningLoop`: Build→Deploy→Operate→Optimize 4단계
+- `evaluation`: readiness `initialScore`, `finalScore`, checks
 
 ## 7. Spec 작성 순서
 

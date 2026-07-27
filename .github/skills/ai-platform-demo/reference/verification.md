@@ -74,7 +74,7 @@ Verifier는 기본 Chromium sandbox를 유지한다. sandbox를 제공할 수 �
 아래는 verifier contract의 요약이다. 실제 source of truth는 `scripts/verify_demo.js`이며 복사본을
 세션 폴더에 만들지 않는다.
 ```js
-const allRoutes=['dashboard','operations','simulator','improvement','finance','devops','agents','governance'];
+const allRoutes=['dashboard','operations','simulator','improvement','finance','github','foundry','appPlatform'];
 const fullQa=process.env.FULL_QA!=='0';
 const activeRoutes=qaSpec.story.routeScope || allRoutes;
 const routes=fullQa
@@ -105,7 +105,7 @@ NODE_PATH="$PUPPETEER_HOME/node_modules" \
 PUPPETEER_CACHE_DIR="$PUPPETEER_HOME/chromium" \
 APP_HTML="<absolute-path>/<APP>.html" \
 SHOTS_DIR="<session>/<app>-work/shots-targeted" \
-VERIFY_ROUTES="finance,agents" \
+VERIFY_ROUTES="finance,foundry" \
 FULL_QA=0 \
 node "<repo-root>/.github/skills/ai-platform-demo/scripts/verify_demo.js"
 ```
@@ -116,8 +116,8 @@ node "<repo-root>/.github/skills/ai-platform-demo/scripts/verify_demo.js"
 
 ## 3. 합격 기준
 - Verifier JSON 결과의 `errors`와 `failures`가 모두 빈 배열(콘솔/페이지 오류 0건) — 빠른 전환 후에도.
-- `agents`가 노출되면 `agentTitles`에 **모든 에이전트가 서로 다르게** 찍힘(클릭 전환 정상).
-- `devops`가 노출되면 일반 issue와 high-risk issue가 각각 하나 이상 있어야 하며, 일반 issue는 결과를
+- `foundry`의 `agentTitles`에 **모든 에이전트가 서로 다르게** 찍힘(클릭 전환 정상).
+- `github`에는 일반 issue와 high-risk issue가 각각 하나 이상 있어야 하며, 일반 issue는 결과를
   만들고 high-risk issue는 human-led plan으로 남음.
 - 노출 route의 스크린샷을 **이미지로 직접 확인**: 텍스트 잘림/겹침, 차트·게이지·맵·도넛 렌더,
   KPI에 `NaN`/`undefined` 없음, 토프바·사이드바·푸터 겹침 없음.

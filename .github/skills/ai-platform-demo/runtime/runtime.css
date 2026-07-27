@@ -419,15 +419,15 @@ input[type=range]::-webkit-slider-thumb{
   background:var(--canvas);color:var(--ink);outline:none;font-size:13.7px;
 }
 .composer input:focus{border-color:var(--brand)}
-.governance-card{
+.platform-card{
   padding:16px;border:1px solid var(--line);border-radius:calc(var(--radius) * .82);
   background:linear-gradient(145deg,var(--surface-alt),color-mix(in srgb,var(--brand) 4%,transparent));cursor:pointer;
 }
-.governance-card:hover{border-color:color-mix(in srgb,var(--brand) 30%,transparent)}
-.governance-icon{font-size:21px}
-.governance-title{font-size:13.7px;font-weight:800;margin-top:9px}
-.governance-value{font-size:33px;font-weight:950;margin-top:8px}
-.governance-sub{font-size:11.5px;color:var(--ink-faint);line-height:1.45;margin-top:4px}
+.platform-card:hover{border-color:color-mix(in srgb,var(--brand) 30%,transparent)}
+.platform-icon{font-size:21px}
+.platform-title{font-size:13.7px;font-weight:800;margin-top:9px}
+.platform-value{font-size:33px;font-weight:950;margin-top:8px}
+.platform-sub{font-size:11.5px;color:var(--ink-faint);line-height:1.45;margin-top:4px}
 .sovereignty{display:grid;grid-template-columns:repeat(4,1fr);align-items:center;gap:9px}
 .sovereignty-step{
   position:relative;padding:14px 10px;border:1px solid var(--line);border-radius:11px;

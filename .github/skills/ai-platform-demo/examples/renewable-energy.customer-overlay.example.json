@@ -21,7 +21,7 @@
       "appName": "Northstar Nexus",
       "initials": "NE",
       "language": "ko",
-      "infrastructureLabel": "Microsoft Foundry · 참조 아키텍처",
+      "infrastructureLabel": "GitHub · Microsoft Foundry · ACA/AKS 참조 아키텍처",
       "demoNote": "모든 고객명·운영·재무·예측 수치는 Composition 예제를 위한 시연 데이터입니다."
     },
     "story": {
@@ -170,7 +170,7 @@
         }
       }
     },
-    "agents": {
+    "foundry": {
       "hero": {
         "icon": "✦",
         "title": "Northstar AI 에이전트 · 전문성을 하나의 결정으로",
@@ -331,11 +331,11 @@
         "toastText": "운영·공급망·재무·개발 의사결정 패키지가 생성되었습니다."
       }
     },
-    "governance": {
+    "appPlatform": {
       "hero": {
         "icon": "⬡",
-        "title": "신뢰·데이터 주권 · 고객 운영 지식은 고객이 소유",
-        "subtitle": "신원·통제된 검색·증빙·승인·추적을 목표 아키텍처로 매핑합니다."
+        "title": "App Platform · 에너지 workload를 ACA와 AKS로 운영",
+        "subtitle": "포트폴리오 API와 event-driven 서비스는 Azure Container Apps로, 실시간 분석과 복잡한 platform workload는 AKS로 운영하는 목표 아키텍처를 보여줍니다."
       }
     }
   }

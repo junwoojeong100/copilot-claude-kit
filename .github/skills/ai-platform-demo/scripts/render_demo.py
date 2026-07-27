@@ -27,9 +27,9 @@ REQUIRED_SECTIONS = [
     "simulator",
     "improvement",
     "finance",
-    "devops",
-    "agents",
-    "governance",
+    "github",
+    "foundry",
+    "appPlatform",
     "notification",
 ]
 
@@ -39,9 +39,9 @@ ROUTE_IDS = [
     "simulator",
     "improvement",
     "finance",
-    "devops",
-    "agents",
-    "governance",
+    "github",
+    "foundry",
+    "appPlatform",
 ]
 
 FIXED_DESIGN = {
@@ -232,21 +232,21 @@ def sanitize_rich_fields(spec: dict[str, Any]) -> dict[str, Any]:
     finance = sanitized.get("finance")
     clean(finance, "explanation", "$.finance.explanation")
 
-    agents = sanitized.get("agents")
-    if isinstance(agents, dict):
-        clean(agents, "fallback", "$.agents.fallback")
-        for profile_index, profile in enumerate(agents.get("profiles") or []):
-            clean(profile, "intro", f"$.agents.profiles[{profile_index}].intro")
+    foundry = sanitized.get("foundry")
+    if isinstance(foundry, dict):
+        clean(foundry, "fallback", "$.foundry.fallback")
+        for profile_index, profile in enumerate(foundry.get("profiles") or []):
+            clean(profile, "intro", f"$.foundry.profiles[{profile_index}].intro")
             if isinstance(profile, dict):
                 for qa_index, item in enumerate(profile.get("qa") or []):
                     clean(
                         item,
                         "answer",
-                        f"$.agents.profiles[{profile_index}].qa[{qa_index}].answer",
+                        f"$.foundry.profiles[{profile_index}].qa[{qa_index}].answer",
                     )
-        orchestration = agents.get("orchestration")
-        clean(orchestration, "intro", "$.agents.orchestration.intro")
-        clean(orchestration, "summary", "$.agents.orchestration.summary")
+        orchestration = foundry.get("orchestration")
+        clean(orchestration, "intro", "$.foundry.orchestration.intro")
+        clean(orchestration, "summary", "$.foundry.orchestration.summary")
 
     return sanitized
 
@@ -588,16 +588,10 @@ def validate_spec(spec: dict[str, Any]) -> None:
     )
     route_scope = story.get("routeScope", ROUTE_IDS)
     if "routeScope" in story:
-        route_scope = require_list(story, "routeScope", "$.story", minimum=4)
-    expected_scope = [route_id for route_id in ROUTE_IDS if route_id in route_scope]
-    if (
-        len(route_scope) > len(ROUTE_IDS)
-        or route_scope != expected_scope
-        or route_scope[0] != "dashboard"
-    ):
+        route_scope = require_list(story, "routeScope", "$.story", minimum=8)
+    if route_scope != ROUTE_IDS:
         raise SpecError(
-            "$.story.routeScope must contain 4-8 unique route IDs in canonical order, "
-            "starting with dashboard"
+            "$.story.routeScope must contain all 8 route IDs in canonical order"
         )
 
     navigation = require_list(spec, "navigation", "$", minimum=8)
@@ -1000,18 +994,18 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "$.finance.watchlist",
     )
 
-    devops = require_mapping(spec, "devops", "$")
-    validate_hero(devops, "$.devops")
-    validate_kpis(devops, "$.devops")
+    github = require_mapping(spec, "github", "$")
+    validate_hero(github, "$.github")
+    validate_kpis(github, "$.github")
     for key in ["stepsTitle", "stepsHint", "issuesTitle", "issuesHint"]:
-        require_string(devops, key, "$.devops")
-    require_string_list(devops, "issueHeaders", "$.devops", minimum=5)
-    devops_steps = require_list(devops, "steps", "$.devops", minimum=5)
-    validate_named_items(devops_steps, "$.devops.steps", ["title", "text"])
-    issues = require_list(devops, "issues", "$.devops", minimum=3)
+        require_string(github, key, "$.github")
+    require_string_list(github, "issueHeaders", "$.github", minimum=5)
+    github_steps = require_list(github, "steps", "$.github", minimum=5)
+    validate_named_items(github_steps, "$.github.steps", ["title", "text"])
+    issues = require_list(github, "issues", "$.github", minimum=3)
     issue_risk_modes: list[bool] = []
     for index, issue in enumerate(issues):
-        issue_path = f"$.devops.issues[{index}]"
+        issue_path = f"$.github.issues[{index}]"
         for key in ["id", "title", "product", "type", "risk", "context"]:
             require_string(issue, key, issue_path)
         issue_risk_modes.append(require_boolean(issue, "highRisk", issue_path))
@@ -1028,9 +1022,9 @@ def validate_spec(spec: dict[str, Any]) -> None:
                 )
     if not any(issue_risk_modes) or all(issue_risk_modes):
         raise SpecError(
-            "$.devops.issues must include at least one autonomous and one high-risk issue"
+            "$.github.issues must include at least one autonomous and one high-risk issue"
         )
-    devops_action = require_mapping(devops, "action", "$.devops")
+    github_action = require_mapping(github, "action", "$.github")
     for key in [
         "button",
         "running",
@@ -1055,14 +1049,15 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "prToastTitle",
         "prToastText",
     ]:
-        require_string(devops_action, key, "$.devops.action")
-    require_number(devops_action, "prBase", "$.devops.action")
-    require_number(devops_action, "durationMs", "$.devops.action")
-    if not 0 < devops_action["durationMs"] <= 15000:
-        raise SpecError("$.devops.action.durationMs must be between 0 and 15000")
+        require_string(github_action, key, "$.github.action")
+    require_number(github_action, "prBase", "$.github.action")
+    require_number(github_action, "durationMs", "$.github.action")
+    if not 0 < github_action["durationMs"] <= 15000:
+        raise SpecError("$.github.action.durationMs must be between 0 and 15000")
 
-    agents = require_mapping(spec, "agents", "$")
-    validate_hero(agents, "$.agents")
+    foundry = require_mapping(spec, "foundry", "$")
+    validate_hero(foundry, "$.foundry")
+    validate_kpis(foundry, "$.foundry")
     for key in [
         "listTitle",
         "listHint",
@@ -1071,13 +1066,13 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "sendLabel",
         "fallback",
     ]:
-        require_string(agents, key, "$.agents")
-    profiles = require_list(agents, "profiles", "$.agents", minimum=5)
+        require_string(foundry, key, "$.foundry")
+    profiles = require_list(foundry, "profiles", "$.foundry", minimum=5)
     if len(profiles) > 7:
-        raise SpecError("$.agents.profiles supports at most 7 agents")
+        raise SpecError("$.foundry.profiles supports at most 7 agents")
     profile_names = []
     for index, profile in enumerate(profiles):
-        profile_path = f"$.agents.profiles[{index}]"
+        profile_path = f"$.foundry.profiles[{index}]"
         profile_names.append(require_string(profile, "name", profile_path))
         require_string(profile, "icon", profile_path)
         require_string(profile, "subtitle", profile_path)
@@ -1088,8 +1083,8 @@ def validate_spec(spec: dict[str, Any]) -> None:
             require_string(item, "question", item_path)
             require_string(item, "answer", item_path)
     if len(profile_names) != len(set(profile_names)):
-        raise SpecError("$.agents.profiles names must be unique")
-    orchestration = require_mapping(agents, "orchestration", "$.agents")
+        raise SpecError("$.foundry.profiles names must be unique")
+    orchestration = require_mapping(foundry, "orchestration", "$.foundry")
     for key in [
         "title",
         "button",
@@ -1101,56 +1096,56 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "toastTitle",
         "toastText",
     ]:
-        require_string(orchestration, key, "$.agents.orchestration")
-    stages = require_list(orchestration, "stages", "$.agents.orchestration", minimum=3)
+        require_string(orchestration, key, "$.foundry.orchestration")
+    stages = require_list(orchestration, "stages", "$.foundry.orchestration", minimum=3)
     for index, stage in enumerate(stages):
-        stage_path = f"$.agents.orchestration.stages[{index}]"
+        stage_path = f"$.foundry.orchestration.stages[{index}]"
         if not isinstance(stage, dict):
             raise SpecError(f"{stage_path} must be an object")
         agent_index = stage.get("agentIndex")
         if not isinstance(agent_index, int) or not 0 <= agent_index < len(profiles):
             raise SpecError(
-                f"$.agents.orchestration.stages[{index}].agentIndex is out of range"
+                f"$.foundry.orchestration.stages[{index}].agentIndex is out of range"
             )
         for key in ["icon", "name", "text"]:
             require_string(stage, key, stage_path)
 
-    governance = require_mapping(spec, "governance", "$")
-    validate_hero(governance, "$.governance")
-    cards = require_list(governance, "cards", "$.governance", minimum=3)
+    app_platform = require_mapping(spec, "appPlatform", "$")
+    validate_hero(app_platform, "$.appPlatform")
+    cards = require_list(app_platform, "cards", "$.appPlatform", minimum=3)
     if len(cards) != 3:
-        raise SpecError("$.governance.cards must contain exactly 3 items")
+        raise SpecError("$.appPlatform.cards must contain exactly 3 items")
     validate_named_items(
         cards,
-        "$.governance.cards",
+        "$.appPlatform.cards",
         ["icon", "title", "value", "sub", "detail"],
     )
     validate_table(
-        require_mapping(governance, "controls", "$.governance"),
-        "$.governance.controls",
+        require_mapping(app_platform, "controls", "$.appPlatform"),
+        "$.appPlatform.controls",
         minimum_rows=5,
     )
     validate_table(
-        require_mapping(governance, "memories", "$.governance"),
-        "$.governance.memories",
+        require_mapping(app_platform, "memories", "$.appPlatform"),
+        "$.appPlatform.memories",
     )
-    governance_loop = require_mapping(governance, "learningLoop", "$.governance")
-    require_string(governance_loop, "title", "$.governance.learningLoop")
-    require_string(governance_loop, "hint", "$.governance.learningLoop")
-    governance_steps = require_list(
-        governance_loop,
+    platform_loop = require_mapping(app_platform, "learningLoop", "$.appPlatform")
+    require_string(platform_loop, "title", "$.appPlatform.learningLoop")
+    require_string(platform_loop, "hint", "$.appPlatform.learningLoop")
+    platform_steps = require_list(
+        platform_loop,
         "steps",
-        "$.governance.learningLoop",
+        "$.appPlatform.learningLoop",
         minimum=4,
     )
-    if len(governance_steps) != 4:
-        raise SpecError("$.governance.learningLoop.steps must contain exactly 4 items")
+    if len(platform_steps) != 4:
+        raise SpecError("$.appPlatform.learningLoop.steps must contain exactly 4 items")
     validate_named_items(
-        governance_steps,
-        "$.governance.learningLoop.steps",
+        platform_steps,
+        "$.appPlatform.learningLoop.steps",
         ["icon", "title", "sub", "detail"],
     )
-    evaluation = require_mapping(governance, "evaluation", "$.governance")
+    evaluation = require_mapping(app_platform, "evaluation", "$.appPlatform")
     for key in [
         "title",
         "hint",
@@ -1160,14 +1155,14 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "toastTitle",
         "toastText",
     ]:
-        require_string(evaluation, key, "$.governance.evaluation")
-    require_number(evaluation, "initialScore", "$.governance.evaluation")
-    require_number(evaluation, "finalScore", "$.governance.evaluation")
+        require_string(evaluation, key, "$.appPlatform.evaluation")
+    require_number(evaluation, "initialScore", "$.appPlatform.evaluation")
+    require_number(evaluation, "finalScore", "$.appPlatform.evaluation")
     try:
         visible_initial_score = float(cards[0]["value"])
     except (TypeError, ValueError) as error:
         raise SpecError(
-            "$.governance.cards[0].value must be a numeric display string"
+            "$.appPlatform.cards[0].value must be a numeric display string"
         ) from error
     if (
         not math.isfinite(visible_initial_score)
@@ -1179,7 +1174,7 @@ def validate_spec(spec: dict[str, Any]) -> None:
         )
     ):
         raise SpecError(
-            "$.governance.cards[0].value must equal evaluation.initialScore"
+            "$.appPlatform.cards[0].value must equal evaluation.initialScore"
         )
     if math.isclose(
         float(evaluation["initialScore"]),
@@ -1188,18 +1183,18 @@ def validate_spec(spec: dict[str, Any]) -> None:
         abs_tol=1e-9,
     ):
         raise SpecError(
-            "$.governance.evaluation.finalScore must differ from initialScore"
+            "$.appPlatform.evaluation.finalScore must differ from initialScore"
         )
     require_string_list(
         evaluation,
         "readyLines",
-        "$.governance.evaluation",
+        "$.appPlatform.evaluation",
         minimum=3,
     )
     require_string_list(
         evaluation,
         "runLines",
-        "$.governance.evaluation",
+        "$.appPlatform.evaluation",
         minimum=4,
     )
 
@@ -1322,7 +1317,7 @@ def main() -> int:
         "archetype": spec["design"]["archetype"],
         "routes": len(spec["story"].get("routeScope", spec["navigation"])),
         "dataRoutes": len(spec["navigation"]),
-        "agents": len(spec["agents"]["profiles"]),
+        "agents": len(spec["foundry"]["profiles"]),
         "valid": True,
     }
 

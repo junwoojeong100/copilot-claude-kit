@@ -25,8 +25,11 @@ import render_demo  # noqa: E402
 ORCH_SUMMARY_RE = re.compile(r"decision package|의사결정 패키지", re.IGNORECASE)
 HANGUL_RE = re.compile(r"[가-힣]")
 KOREAN_COPY_EXCEPTIONS = {
+    "aca",
+    "aks",
     "ai",
     "api",
+    "app platform",
     "copilot",
     "crm",
     "devops",
@@ -34,9 +37,12 @@ KOREAN_COPY_EXCEPTIONS = {
     "esg",
     "ess",
     "finops",
+    "foundry",
     "github advanced security",
     "github ai controls",
     "github copilot",
+    "github ecosystem",
+    "github",
     "kpi",
     "mes",
     "microsoft entra id",
@@ -47,6 +53,8 @@ KOREAN_COPY_EXCEPTIONS = {
     "pr",
     "scm",
     "soc",
+    "aca · aks",
+    "copilot · actions · advanced security",
 }
 
 
@@ -98,16 +106,16 @@ def qa_invariants(spec: dict) -> list[str]:
             "action will not visibly change the recommendation."
         )
 
-    orchestration = spec.get("agents", {}).get("orchestration", {})
+    orchestration = spec.get("foundry", {}).get("orchestration", {})
     if not ORCH_SUMMARY_RE.search(str(orchestration.get("summary", ""))):
         problems.append(
-            "agents.orchestration.summary must contain '의사결정 패키지' (or 'decision package'): "
+            "foundry.orchestration.summary must contain '의사결정 패키지' (or 'decision package'): "
             "browser QA checks the chat log for that phrase after orchestration runs."
         )
 
-    governance = spec.get("governance", {})
-    cards = governance.get("cards", [])
-    final_score = governance.get("evaluation", {}).get("finalScore")
+    app_platform = spec.get("appPlatform", {})
+    cards = app_platform.get("cards", [])
+    final_score = app_platform.get("evaluation", {}).get("finalScore")
     if cards and final_score is not None:
         try:
             visible_score = float(cards[0].get("value"))
@@ -121,7 +129,7 @@ def qa_invariants(spec: dict) -> list[str]:
                 and math.isclose(visible_score, final_numeric, rel_tol=0, abs_tol=1e-9)
             ):
                 problems.append(
-                    "governance.cards[0].value equals evaluation.finalScore: the evaluation score "
+                    "appPlatform.cards[0].value equals evaluation.finalScore: the platform score "
                     "will not visibly change on run — set cards[0].value to the initial score."
                 )
 

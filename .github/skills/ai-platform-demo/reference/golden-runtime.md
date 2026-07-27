@@ -10,13 +10,13 @@ Golden Runtime은 고객 데모의 **동작 엔진**이다. 특정 고객의 색
 
 - 고정 GitHub Primer Dark Dimmed 계열 soft-dark 디자인(색·타이포·radius·shadow·spacing =
   `runtime.css`의 `:root`)
-- 단일 HTML shell, 8-route 데이터 계약, `story.routeScope` 기반 4~8-route hash router,
+- 단일 HTML shell, 고객 주요사업 5개 + 플랫폼 서비스 3개의 고정 8-route hash router,
   sidebar/topbar, `시연 데이터` 표시
 - route 전환 시 timer/listener cleanup
 - KPI tick, streaming chart, activity feed, toast, moving-object engine
 - slider simulator, root-cause animation, finance what-if, Issue-to-PR flow
 - 모든 agent 행 전환, 추천 질문, 자유 질문 fallback, orchestration sequence
-- governance evaluation trace와 clickable detail rows
+- App Platform readiness trace와 clickable capability/workload rows
 - SVG chart primitives, HTML escaping, DOM null guard
 - 안정적인 DOM ID와 Puppeteer QA contract
 
@@ -35,13 +35,13 @@ runtime/
 
 다음 항목은 `demo-spec.json`에서 고객별로 결정한다(= 메뉴와 데이터). 디자인은 GitHub soft-dark로 고정.
 
-- 브랜드명, 앱명, 언어, audience, storyline, 노출 route 범위
-- route 이름과 domain terminology (= 메뉴)
+- 브랜드명, 앱명, 언어, audience, storyline
+- 앞의 5개 고객 주요사업 route 이름과 domain terminology
 - KPI label·단위·범위·tick behavior
 - 운영 flow node, simulator input·formula, root-cause factor
 - finance lever·가정, GitHub issue·diff
-- agent profile·질문·답변·orchestration
-- governance control·memory asset
+- Foundry agent profile·질문·답변·orchestration과 KPI 값
+- App Platform workload·capability·readiness KPI 값
 
 **원칙:** engine과 visual skin은 고정하지만 domain composition과 narrative는 고객별로 바꾼다.
 
@@ -79,7 +79,7 @@ python3 -B .github/skills/ai-platform-demo/scripts/render_demo.py \
 
 Renderer는 다음을 수행한다.
 
-1. spec 필수 구조와 8개 route data, 4~8개 `story.routeScope`를 검증한다.
+1. spec 필수 구조와 고정 8개 route data·순서를 검증한다.
 2. `runtime.css`, `runtime.js`, 고객 spec을 `shell.tmpl`에 inline한다.
 3. Rich text를 strict tag/class allowlist로 sanitize하고 event handler·SVG·URL·style을 거부한다.
 4. `</script>`, U+2028/U+2029를 안전하게 escape하고 non-finite number를 거부한다.
@@ -97,9 +97,9 @@ Renderer는 다음을 수행한다.
 | simulator | `simInputs`, `simGauge`, `simValue`, `simHistogram` |
 | improvement | `runAnalysis`, `analysisSteps`, `factorBars`, `improvementBoard` |
 | finance | `financeLevers`, `marginValue`, `valueDonut`, `financeTable` |
-| devops | `assignIssue`, `devSteps`, `codeDiff`, `issueTable`, `prStatus` |
-| agents | `agentList`, `chatTitle`, `chatLog`, `chips`, `chatInput`, `sendBtn`, `orchRun` |
-| governance | `evalRun`, `evalScore`, `evalTrace`, `controlTable`, `memoryTable` |
+| github | `assignIssue`, `devSteps`, `codeDiff`, `issueTable`, `prStatus` |
+| foundry | `agentList`, `chatTitle`, `chatLog`, `chips`, `chatInput`, `sendBtn`, `orchRun` |
+| appPlatform | `evalRun`, `evalScore`, `evalTrace`, `controlTable`, `memoryTable` |
 
 QA는 추가로 확인한다.
 

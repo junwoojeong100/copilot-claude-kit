@@ -15,8 +15,8 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 - `dashboard.hero.title`에서 고객 결과를 한 문장으로 먼저 말한다. 회사 소개·제품 목록·아키텍처 설명으로
   시작하지 않는다.
 - 각 route는 임원 질문 하나와 primary action 하나만 강조하고, 클릭 전/후 상태가 눈에 띄게 달라야 한다.
-- `DEMO_FOCUS`가 App Platform·CI/CD 중심이면 DevOps→운영 route가 climax를 담당하고, Agent route는
-  Platform·SRE·Release 지원 역할로 배치한다.
+- `DEMO_FOCUS`가 App Platform·CI/CD 중심이면 GitHub→App Platform route가 climax를 담당하고,
+  Foundry route의 Platform·SRE·Release Agent가 운영 폐루프를 지원한다.
 
 - 메뉴, hero, KPI명, 버튼, 상태, 표 머리글, 토스트, 에이전트 문구는 `meta.language`를 따른다.
 - `meta.language`가 `ko`이면 자연스러운 한글을 기본으로 쓴다. linter가 메뉴와 hero를 검사한다.
@@ -29,17 +29,17 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 ## 2. 배열 개수 (검증기 강제)
 | 위치 | 개수 |
 |---|---|
-| `navigation` | **정확히 8**, ID 고정: dashboard, operations, simulator, improvement, finance, devops, agents, governance |
-| `story.routeScope` | 선택, canonical 순서의 **4~8개**, `dashboard`로 시작; 미지정 시 8개 모두 노출 |
-| `dashboard.kpis` / `operations.kpis` / `improvement.kpis` / `devops.kpis` | **각 정확히 4** |
+| `navigation` | **정확히 8**, ID 고정: dashboard, operations, simulator, improvement, finance, github, foundry, appPlatform |
+| `story.routeScope` | 선택, canonical 순서의 **8개 전체**; 미지정해도 8개 모두 노출 |
+| `dashboard.kpis` / `operations.kpis` / `improvement.kpis` / `github.kpis` / `foundry.kpis` | **각 정확히 4** |
 | `dashboard.feed` | ≥4 · `dashboard.cards.items` ≥3 · `stream.values` ≥2 |
 | `operations.flow.nodes` | **4~7** (그리고 `flow.events`도 노드 수만큼 권장) |
 | `simulator.inputs` | ≥2(권장 3) · `secondary` ≥3 · `recommendations` ≥1 |
 | `improvement.steps` | ≥5 · `factors` ≥4 · `impacts` ≥4 · `board.columns` **정확히 3**(각 `items` ≥1) |
 | `finance.levers` | ≥3 · `summaryMetrics` ≥3 · `composition.segments` **정확히 4** |
-| `devops.issueHeaders` | ≥5 · `steps` ≥5 · `issues` ≥3(각 `diffLines` ≥2) |
-| `agents.profiles` | **5~7**(각 `qa` ≥3, 이름 모두 상이) · `orchestration.stages` ≥3 |
-| `governance.cards` | **정확히 3** · `learningLoop.steps` **정확히 4** · `controls.rows`/`memories.rows` ≥N |
+| `github.issueHeaders` | ≥5 · `steps` ≥5 · `issues` ≥3(각 `diffLines` ≥2) |
+| `foundry.profiles` | **5~7**(각 `qa` ≥3, 이름 모두 상이) · `orchestration.stages` ≥3 |
+| `appPlatform.cards` | **정확히 3** · `learningLoop.steps` **정확히 4** · `controls.rows`/`memories.rows` ≥N |
 
 ## 3. 내부 ID 연동 (반드시 일치)
 - `simulator.inputs[].id` 집합 == 각 `simulator.secondary[].weights`의 키 집합. 모든 `recommendations[].inputId`는 그 집합에 속해야 한다.
@@ -66,10 +66,10 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 브라우저 QA(`verify_demo.js`)는 인터랙션 완료를 시간 내에 확인한다. 아래를 지키면 첫 렌더에 통과한다.
 - `operations.action.durationMs` ≤ **1200** (QA가 ~1300ms 후 권고문 재확인)
 - `improvement.action.durationMs` ≤ **2000** (막대가 durationMs에 채워짐, QA ~2200ms 확인)
-- `devops.action.durationMs` ≤ **2600** (QA ~2800ms 대기)
+- `github.action.durationMs` ≤ **2600** (QA ~2800ms 대기)
 - `operations.action.recommendationBefore` ≠ `recommendationAfter` (재최적화가 실제로 바뀌어야 함)
-- `agents.orchestration.summary`에 **"의사결정 패키지"**(또는 "decision package") 포함 (QA가 채팅 로그에서 확인)
-- `governance.cards[0].value` ≠ `governance.evaluation.finalScore` (평가 실행 시 점수가 눈에 띄게 바뀌어야 함 → cards[0].value는 **초기 점수**)
+- `foundry.orchestration.summary`에 **"의사결정 패키지"**(또는 "decision package") 포함 (QA가 채팅 로그에서 확인)
+- `appPlatform.cards[0].value` ≠ `appPlatform.evaluation.finalScore` (readiness 검사 시 점수가 눈에 띄게 바뀌어야 함 → cards[0].value는 **초기 점수**)
 - `simulator.output.goodThreshold` > `warningThreshold` — 런타임은 **높은 output을 good/green**으로 처리하므로 output은 "신뢰 점수"처럼 **높을수록 좋은 값**으로 설계한다(부정확률처럼 높을수록 나쁜 값 금지).
 
 ## 7. 속도 팁

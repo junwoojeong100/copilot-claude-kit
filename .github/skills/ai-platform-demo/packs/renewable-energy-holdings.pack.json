@@ -11,10 +11,10 @@
       "simulator.inputs",
       "improvement.hero",
       "finance.hero",
-      "agents.hero",
-      "agents.profiles",
-      "agents.orchestration",
-      "governance.hero"
+      "foundry.hero",
+      "foundry.profiles",
+      "foundry.orchestration",
+      "appPlatform.hero"
     ],
     "forbidOutputTerms": [
       "Boards per hour",
@@ -40,9 +40,9 @@
       {"id": "simulator", "icon": "△", "name": "에너지 시뮬레이션", "short": "예측", "crumb": "발전 · 저장 · 수요"},
       {"id": "improvement", "icon": "◎", "name": "포트폴리오 개선", "short": "개선", "crumb": "탄소 · 공급 · 신뢰성"},
       {"id": "finance", "icon": "₩", "name": "재무 효과", "short": "재무", "crumb": "자본 배분"},
-      {"id": "devops", "icon": "⌘", "name": "개발 가속", "short": "Copilot", "crumb": "에너지 소프트웨어"},
-      {"id": "agents", "icon": "✦", "name": "AI 에이전트", "short": "협업", "crumb": "멀티에이전트 운영"},
-      {"id": "governance", "icon": "⬡", "name": "신뢰·데이터 주권", "short": "통제", "crumb": "증빙 · 신원 · 평가"}
+      {"id": "github", "icon": "⌘", "name": "GitHub Ecosystem", "short": "GitHub", "crumb": "Copilot · Actions · Advanced Security"},
+      {"id": "foundry", "icon": "✦", "name": "Microsoft Foundry", "short": "Foundry", "crumb": "Agent Framework · 평가 · 관찰성"},
+      {"id": "appPlatform", "icon": "⬡", "name": "App Platform", "short": "ACA · AKS", "crumb": "배포 · 확장 · 운영"}
     ],
     "dashboard": {
       "kpis": [
@@ -383,11 +383,11 @@
       "explanation": "<b>시나리오 가치 마진 {{value}}</b><br>계약 커버리지·저탄소 프리미엄·운전자본을 비교합니다.",
       "assumption": "모든 재무 값은 시연용 가정치입니다."
     },
-    "devops": {
+    "github": {
       "hero": {
         "icon": "⌘",
-        "title": "에너지 소프트웨어 개발 가속 · Issue에서 검증된 Pull Request까지",
-        "subtitle": "GitHub Copilot cloud agent가 발전 예측·증빙·ESS 소프트웨어를 조사하고 계획·테스트·변경 준비를 수행합니다."
+        "title": "GitHub Ecosystem · 에너지 소프트웨어를 안전하게 전달",
+        "subtitle": "GitHub Issues·Projects, GitHub Copilot, Pull Requests, GitHub Actions, GitHub Advanced Security를 발전 예측·증빙·ESS 소프트웨어 delivery flow에 연결합니다."
       },
       "kpis": [
         {"label": "중앙값 리드타임", "value": 4.2, "decimals": 1, "unit": "일", "delta": "시연 기준 −36%", "direction": "down", "icon": "◷", "color": "brand", "series": [8.9, 8.2, 7.5, 6.7, 5.9, 5.2, 4.7, 4.2]},
@@ -476,82 +476,13 @@
       ],
       "assumption": "Issue·코드·Pull Request·생산성 지표는 모두 시연 데이터입니다."
     },
-    "agents": {
+    "foundry": {
       "listTitle": "전문 에이전트",
       "listHint": "모든 행 클릭 가능",
       "governedLabel": "정책 적용",
       "placeholder": "에너지·ESS·증빙·재무·소프트웨어에 대해 질문하세요",
       "sendLabel": "보내기",
       "fallback": "<b>{{agent}}</b>입니다. 에너지·ESS·추적성·재무·소프트웨어 중 하나로 질문을 구체화해 주세요."
-    },
-    "governance": {
-      "cards": [
-        {"icon": "◈", "title": "고객 전용 평가", "value": "92.6", "sub": "에너지·증빙 검사", "detail": "납품·증빙·탄소·승인·롤백을 평가합니다."},
-        {"icon": "▤", "title": "통제된 증빙", "value": "16,820", "sub": "패턴 · 증빙 · 플레이북", "detail": "운영 패턴과 증빙 패키지를 버전 관리합니다."},
-        {"icon": "⬡", "title": "정책 적용 범위", "value": "100%", "sub": "참조 아키텍처 범위", "detail": "신원·검색·도구·승인·추적 통제를 포함합니다."}
-      ],
-      "controls": {
-        "title": "전사 통제 체계",
-        "hint": "행을 클릭해 상세 보기",
-        "headers": ["통제 영역", "Microsoft / GitHub 서비스", "시연 정책", "상태"],
-        "rows": [
-          {"cells": ["신원", "Microsoft Entra Agent ID · RBAC", "에이전트별 최소 권한"], "status": {"label": "적용", "tone": "success"}, "detailTitle": "에이전트 신원", "detail": "각 에이전트에 범위가 제한된 신원과 권한을 부여합니다.", "icon": "⬡"},
-          {"cells": ["지식", "Foundry IQ · Azure AI Search", "ACL 기반 근거 검색"], "status": {"label": "적용", "tone": "success"}, "detailTitle": "지식 근거화", "detail": "접근 권한 필터를 적용해 증빙과 운영 지식을 검색합니다.", "icon": "▤"},
-          {"cells": ["데이터", "Microsoft Purview", "분류 · 보호 · 감사"], "status": {"label": "설계", "tone": "info"}, "detailTitle": "데이터 거버넌스", "detail": "민감도와 AI 데이터 보안 태세 통제를 매핑합니다.", "icon": "◈"},
-          {"cells": ["안전", "Azure AI Content Safety", "필터 · 평가 · 레드팀"], "status": {"label": "적용", "tone": "success"}, "detailTitle": "안전성 평가", "detail": "외부 응답과 내부 실행 조치를 분리해 평가합니다.", "icon": "✓"},
-          {"cells": ["실행 환경", "Microsoft Defender · VNet 격리", "위협·보안 태세 신호"], "status": {"label": "설계", "tone": "info"}, "detailTitle": "실행 환경 보안", "detail": "실행 환경과 도구 연결을 감시합니다.", "icon": "⬡"},
-          {"cells": ["개발", "GitHub AI Controls · GitHub Advanced Security", "세션 감사 · 병합 게이트"], "status": {"label": "적용", "tone": "success"}, "detailTitle": "개발 거버넌스", "detail": "에이전트 세션과 코드 변경에 리뷰를 요구합니다.", "icon": "⌘"},
-          {"cells": ["관찰성", "Foundry · Application Insights", "모든 의사결정 추적"], "status": {"label": "적용", "tone": "success"}, "detailTitle": "관찰성", "detail": "의사결정·검색·도구·승인·지연시간을 추적합니다.", "icon": "✦"}
-        ]
-      },
-      "memories": {
-        "title": "고객 소유 증빙 자산",
-        "hint": "고객 소유 자산",
-        "headers": ["자산", "수량", "소유권"],
-        "rows": [
-          {"cells": ["에너지 급전 패턴", "4,980"], "status": {"label": "고객 소유", "tone": "success"}, "detailTitle": "급전 패턴", "detail": "예측·예비율·부하 증가 패턴을 저장합니다.", "icon": "△"},
-          {"cells": ["추적성 증빙 세트", "3,860"], "status": {"label": "고객 소유", "tone": "success"}, "detailTitle": "증빙 세트", "detail": "소재·에너지·소유권·납품 증빙을 저장합니다.", "icon": "⬡"},
-          {"cells": ["프로젝트 플레이북", "2,140"], "status": {"label": "고객 소유", "tone": "success"}, "detailTitle": "프로젝트 플레이북", "detail": "마일스톤·계통 연계·정비 의사결정을 저장합니다.", "icon": "◎"},
-          {"cells": ["에이전트 평가 사례", "5,840"], "status": {"label": "고객 소유", "tone": "success"}, "detailTitle": "평가 사례", "detail": "납품·탄소·승인·롤백 사례를 저장합니다.", "icon": "◈"}
-        ]
-      },
-      "learningLoop": {
-        "title": "고객 소유 학습 루프",
-        "hint": "단계를 클릭해 상세 보기",
-        "steps": [
-          {"icon": "◇", "title": "감지", "sub": "소재 · 에너지 · 프로젝트", "detail": "운영·증빙·프로젝트 신호를 수집합니다."},
-          {"icon": "△", "title": "시뮬레이션", "sub": "에너지·포트폴리오 모델", "detail": "실행 전에 납품·탄소·위험가치를 비교합니다."},
-          {"icon": "⬡", "title": "승인", "sub": "정책 기반 실행", "detail": "운영·재무·컴플라이언스 책임자가 단계별 조치를 승인합니다."},
-          {"icon": "✦", "title": "학습", "sub": "축적되는 고객 지식재산", "detail": "검증된 결과를 증빙·패턴·플레이북·평가 자산으로 전환합니다."}
-        ]
-      },
-      "evaluation": {
-        "title": "평가 실행 내역",
-        "hint": "시연 결과",
-        "button": "⬡ 고객 전용 평가 실행",
-        "running": "평가 실행 중…",
-        "complete": "✓ 평가 완료 · 다시 실행",
-        "initialScore": 92.6,
-        "finalScore": 95.2,
-        "readyLines": [
-          "[준비] 평가 세트: energy-private-v12",
-          "[준비] 검사: 납품 / 증빙 / 탄소 / 승인 / 롤백",
-          "[준비] 경계: 고객 소유 평가 자산",
-          "[대기] 고객 전용 평가 실행"
-        ],
-        "runLines": [
-          "[실행] 에이전트 신원 ........ 통과",
-          "[실행] 증빙 검색 ............ 통과",
-          "[실행] 납품 판단 ............ 통과",
-          "[실행] 탄소 주장 보호 ....... 통과",
-          "[실행] 실행 승인 ............ 통과",
-          "[실행] 계통 롤백 ............ 통과",
-          "[완료] 점수: 95.2 / 100"
-        ],
-        "toastTitle": "고객 전용 평가 통과",
-        "toastText": "에너지·증빙 검사를 통과했습니다."
-      },
-      "assumption": "현재 고객 배포 현황에 대한 주장이 아닌 목표 아키텍처 시연입니다."
     },
     "ambientNotifications": [
       {"title": "소재 운영 에이전트", "text": "청정 전력 투입과 생산계획이 안정 범위입니다.", "icon": "◇"},
