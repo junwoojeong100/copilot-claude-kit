@@ -672,7 +672,7 @@ def main() -> int:
         "researchLedgerIds": customer_metadata["research"].get("ledgerIds", []),
         "routes": len(composed["story"].get("routeScope", composed["navigation"])),
         "dataRoutes": len(composed["navigation"]),
-        "agents": len(composed["agents"]["profiles"]),
+        "agents": len(composed["foundry"]["profiles"]),
         "specOutput": str(output),
         "specBytes": output.stat().st_size,
     }

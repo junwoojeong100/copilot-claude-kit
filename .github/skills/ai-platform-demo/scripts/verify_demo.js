@@ -13,9 +13,9 @@ const allRoutes = [
   'simulator',
   'improvement',
   'finance',
-  'devops',
-  'agents',
-  'governance'
+  'github',
+  'foundry',
+  'appPlatform'
 ];
 const requiredIds = {
   dashboard: ['dashChart', 'dashFeed', 'dashTable'],
@@ -23,9 +23,9 @@ const requiredIds = {
   simulator: ['simInputs', 'simGauge', 'simValue', 'simHistogram'],
   improvement: ['runAnalysis', 'analysisSteps', 'factorBars', 'improvementBoard'],
   finance: ['financeLevers', 'marginValue', 'valueDonut', 'financeTable'],
-  devops: ['assignIssue', 'devSteps', 'codeDiff', 'issueTable', 'prStatus'],
-  agents: ['agentList', 'chatTitle', 'chatLog', 'chips', 'chatInput', 'sendBtn', 'orchRun'],
-  governance: ['evalRun', 'evalScore', 'evalTrace', 'controlTable', 'memoryTable']
+  github: ['assignIssue', 'devSteps', 'codeDiff', 'issueTable', 'prStatus'],
+  foundry: ['agentList', 'chatTitle', 'chatLog', 'chips', 'chatInput', 'sendBtn', 'orchRun'],
+  appPlatform: ['evalRun', 'evalScore', 'evalTrace', 'controlTable', 'memoryTable']
 };
 const fullQa = process.env.FULL_QA !== '0';
 const requestedRoutes = (process.env.VERIFY_ROUTES || allRoutes.join(','))
@@ -151,7 +151,7 @@ let browser;
     });
     routeResults[route] = await page.evaluate(expectedIds => {
       const rows = [...document.querySelectorAll(
-        '.click-row, .agent-row, .node-card, .detail-card, .impact-card, .board-card, .governance-card, .sovereignty-step'
+        '.click-row, .agent-row, .node-card, .detail-card, .impact-card, .board-card, .platform-card, .sovereignty-step'
       )];
       const text = document.body.innerText;
       const agentList = document.getElementById('agentList');
@@ -232,24 +232,24 @@ let browser;
       if (marginBefore === marginAfter) failures.push('finance: lever did not change margin');
     }
 
-    if (hasRoute('devops')) {
-      await page.evaluate(() => { location.hash = 'devops'; });
+    if (hasRoute('github')) {
+      await page.evaluate(() => { location.hash = 'github'; });
       await sleep(650);
       const issueIndexes = await page.evaluate(() => {
-        const data = JSON.parse(document.getElementById('demo-spec').textContent).devops;
+        const data = JSON.parse(document.getElementById('demo-spec').textContent).github;
         return {
           autonomous: data.issues.findIndex(issue => !issue.highRisk),
           highRisk: data.issues.findIndex(issue => issue.highRisk)
         };
       });
-      if (issueIndexes.autonomous < 0) failures.push('devops: no autonomous issue configured');
-      if (issueIndexes.highRisk < 0) failures.push('devops: no high-risk issue configured');
+      if (issueIndexes.autonomous < 0) failures.push('github: no autonomous issue configured');
+      if (issueIndexes.highRisk < 0) failures.push('github: no high-risk issue configured');
       if (issueIndexes.autonomous >= 0) {
         await page.click(`#issueTable tbody tr[data-index="${issueIndexes.autonomous}"]`);
         await page.click('#assignIssue');
-        await waitForEnabled('#assignIssue', qaSpec.devops.action.durationMs + 2000);
+        await waitForEnabled('#assignIssue', qaSpec.github.action.durationMs + 2000);
         const autonomous = await page.evaluate(index => {
-          const data = JSON.parse(document.getElementById('demo-spec').textContent).devops;
+          const data = JSON.parse(document.getElementById('demo-spec').textContent).github;
           const issue = data.issues[index];
           return {
             actual: {
@@ -269,15 +269,15 @@ let browser;
           };
         }, issueIndexes.autonomous);
         if (JSON.stringify(autonomous.actual) !== JSON.stringify(autonomous.expected)) {
-          failures.push(`devops: autonomous result mismatch ${JSON.stringify(autonomous)}`);
+          failures.push(`github: autonomous result mismatch ${JSON.stringify(autonomous)}`);
         }
       }
       if (issueIndexes.highRisk >= 0) {
         await page.click(`#issueTable tbody tr[data-index="${issueIndexes.highRisk}"]`);
         await page.click('#assignIssue');
-        await waitForEnabled('#assignIssue', qaSpec.devops.action.durationMs + 2000);
+        await waitForEnabled('#assignIssue', qaSpec.github.action.durationMs + 2000);
         const highRisk = await page.evaluate(index => {
-          const data = JSON.parse(document.getElementById('demo-spec').textContent).devops;
+          const data = JSON.parse(document.getElementById('demo-spec').textContent).github;
           const issue = data.issues[index];
           return {
             actual: {
@@ -295,13 +295,13 @@ let browser;
           };
         }, issueIndexes.highRisk);
         if (JSON.stringify(highRisk.actual) !== JSON.stringify(highRisk.expected)) {
-          failures.push(`devops: high-risk result mismatch ${JSON.stringify(highRisk)}`);
+          failures.push(`github: high-risk result mismatch ${JSON.stringify(highRisk)}`);
         }
       }
     }
 
-    if (hasRoute('agents')) {
-      await page.evaluate(() => { location.hash = 'agents'; });
+    if (hasRoute('foundry')) {
+      await page.evaluate(() => { location.hash = 'foundry'; });
       await sleep(700);
       agentTitles = await page.evaluate(() => {
         const titles = [];
@@ -312,7 +312,7 @@ let browser;
         return titles;
       });
       if (agentTitles.length < 5 || new Set(agentTitles).size !== agentTitles.length) {
-        failures.push(`agents: row switching failed ${JSON.stringify(agentTitles)}`);
+        failures.push(`foundry: row switching failed ${JSON.stringify(agentTitles)}`);
       }
       await page.$eval('#chatInput', element => { element.value = '전환 중 응답 테스트'; });
       await page.$eval('#sendBtn', button => button.click());
@@ -320,7 +320,7 @@ let browser;
       await sleep(1150);
       const switchedChatCount = await page.$$eval('#chatLog .message', elements => elements.length);
       if (switchedChatCount !== 1) {
-        failures.push(`agents: delayed response leaked across agent switch (${switchedChatCount} messages)`);
+        failures.push(`foundry: delayed response leaked across agent switch (${switchedChatCount} messages)`);
       }
       await page.$eval('#chatInput', element => { element.value = '자유 질문 테스트'; });
       await page.$eval('#sendBtn', button => button.click());
@@ -332,26 +332,26 @@ let browser;
         { timeout: 3000 }
       ).catch(() => {});
       const chatCount = await page.$$eval('#chatLog .message', elements => elements.length);
-      if (chatCount < 3) failures.push(`agents: chat response missing (${chatCount} messages)`);
+      if (chatCount < 3) failures.push(`foundry: chat response missing (${chatCount} messages)`);
       await page.click('#orchRun');
       await waitForEnabled(
         '#orchRun',
-        800 + qaSpec.agents.orchestration.stages.length * 520 + 2000
+        800 + qaSpec.foundry.orchestration.stages.length * 520 + 2000
       );
       const orchestrationText = await page.$eval('#chatLog', element => element.textContent);
       if (!/decision package|의사결정 패키지/i.test(orchestrationText)) {
-        failures.push('agents: orchestration summary missing');
+        failures.push('foundry: orchestration summary missing');
       }
     }
 
-    if (hasRoute('governance')) {
-      await page.evaluate(() => { location.hash = 'governance'; });
+    if (hasRoute('appPlatform')) {
+      await page.evaluate(() => { location.hash = 'appPlatform'; });
       await sleep(650);
       const evaluationBefore = await page.$eval('#evalScore', element => element.textContent);
       await page.click('#evalRun');
       await waitForEnabled(
         '#evalRun',
-        qaSpec.governance.evaluation.runLines.length * 250 + 2200
+        qaSpec.appPlatform.evaluation.runLines.length * 250 + 2200
       );
       const evaluationAfter = await page.$eval('#evalScore', element => element.textContent);
       const evaluationBeforeNumber = Number(evaluationBefore);
@@ -361,7 +361,7 @@ let browser;
         || !Number.isFinite(evaluationAfterNumber)
         || evaluationBeforeNumber === evaluationAfterNumber
       ) {
-        failures.push('governance: evaluation score did not change numerically');
+        failures.push('appPlatform: platform score did not change numerically');
       }
     }
 

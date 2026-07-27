@@ -59,25 +59,29 @@ class RenderDemoTests(unittest.TestCase):
             spec = render_demo.sanitize_rich_fields(spec)
             render_demo.validate_spec(spec)
 
-    def test_route_scope_supports_focused_demos(self):
+    def test_route_scope_supports_exactly_eight_menus(self):
         spec = copy.deepcopy(BASE)
-        spec["story"]["routeScope"] = [
-            "dashboard",
-            "operations",
-            "agents",
-            "governance",
-        ]
+        spec["story"]["routeScope"] = render_demo.ROUTE_IDS
         render_demo.validate_spec(render_demo.sanitize_rich_fields(spec))
 
-    def test_route_scope_requires_dashboard_and_canonical_order(self):
+    def test_route_scope_requires_all_routes_in_canonical_order(self):
         self.invalid(
             lambda spec: spec["story"].update(
-                routeScope=["operations", "dashboard", "agents", "governance"]
+                routeScope=[
+                    "operations",
+                    "dashboard",
+                    "simulator",
+                    "improvement",
+                    "finance",
+                    "github",
+                    "foundry",
+                    "appPlatform",
+                ]
             )
         )
         self.invalid(
             lambda spec: spec["story"].update(
-                routeScope=["dashboard", "operations", "agents"]
+                routeScope=render_demo.ROUTE_IDS[:-1]
             )
         )
 
@@ -144,41 +148,41 @@ class RenderDemoTests(unittest.TestCase):
             lambda spec: spec["operations"]["action"].update(durationMs=15001)
         )
 
-    def test_governance_initial_score_matches_visible_card(self):
+    def test_app_platform_initial_score_matches_visible_card(self):
         self.invalid(
-            lambda spec: spec["governance"]["cards"][0].update(value="91.0")
+            lambda spec: spec["appPlatform"]["cards"][0].update(value="91.0")
         )
 
-    def test_governance_evaluation_must_change_numerically(self):
+    def test_app_platform_evaluation_must_change_numerically(self):
         self.invalid(
-            lambda spec: spec["governance"]["evaluation"].update(
+            lambda spec: spec["appPlatform"]["evaluation"].update(
                 initialScore=90.0,
                 finalScore=90,
             )
         )
 
-    def test_equivalent_governance_score_formats_are_accepted(self):
+    def test_equivalent_app_platform_score_formats_are_accepted(self):
         spec = copy.deepcopy(BASE)
-        spec["governance"]["evaluation"]["initialScore"] = 90.0
-        spec["governance"]["cards"][0]["value"] = "90"
+        spec["appPlatform"]["evaluation"]["initialScore"] = 90.0
+        spec["appPlatform"]["cards"][0]["value"] = "90"
         spec = render_demo.sanitize_rich_fields(spec)
         render_demo.validate_spec(spec)
 
-    def test_devops_requires_autonomous_and_high_risk_paths(self):
+    def test_github_requires_autonomous_and_high_risk_paths(self):
         self.invalid(
             lambda spec: [
-                issue.update(highRisk=True) for issue in spec["devops"]["issues"]
+                issue.update(highRisk=True) for issue in spec["github"]["issues"]
             ]
         )
         self.invalid(
             lambda spec: [
-                issue.update(highRisk=False) for issue in spec["devops"]["issues"]
+                issue.update(highRisk=False) for issue in spec["github"]["issues"]
             ]
         )
 
     def test_rich_text_rejects_active_content(self):
         spec = copy.deepcopy(BASE)
-        spec["agents"]["profiles"][0]["qa"][0]["answer"] = (
+        spec["foundry"]["profiles"][0]["qa"][0]["answer"] = (
             '<img src=x onerror="alert(1)">'
         )
         with self.assertRaises(render_demo.SpecError):

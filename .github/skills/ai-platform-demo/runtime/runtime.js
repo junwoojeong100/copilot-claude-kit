@@ -7,9 +7,9 @@
     'simulator',
     'improvement',
     'finance',
-    'devops',
-    'agents',
-    'governance'
+    'github',
+    'foundry',
+    'appPlatform'
   ];
 
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -866,15 +866,15 @@
     }).join('\n');
   }
 
-  function renderDevOps() {
-    const data = spec.devops;
+  function renderGitHub() {
+    const data = spec.github;
     return {
       html: `
         ${heroHtml(
           data.hero,
           `<button class="button info" id="assignIssue" type="button">${escapeHtml(data.action.button)}</button>`
         )}
-        ${kpiGridHtml(data.kpis, 'devops')}
+        ${kpiGridHtml(data.kpis, 'github')}
         <div class="grid grid-2 space-top">
           <div class="panel">
             <div class="panel-head"><h3 id="diffTitle"></h3><span class="badge info" id="prStatus"></span></div>
@@ -988,8 +988,8 @@
     });
   }
 
-  function renderAgents() {
-    const data = spec.agents;
+  function renderFoundry() {
+    const data = spec.foundry;
     const positions = orchestrationPositions(data.profiles.length);
     const lines = positions.map(position => (
       `<line x1="150" y1="114" x2="${position.left * 3}" y2="${position.top * 2.28}"/>`
@@ -997,6 +997,7 @@
     return {
       html: `
         ${heroHtml(data.hero)}
+        ${kpiGridHtml(data.kpis, 'foundry')}
         <div class="agent-layout">
           <div class="stack">
             <div class="panel">
@@ -1177,8 +1178,8 @@
     };
   }
 
-  function renderGovernance() {
-    const data = spec.governance;
+  function renderAppPlatform() {
+    const data = spec.appPlatform;
     return {
       html: `
         ${heroHtml(
@@ -1187,11 +1188,11 @@
         )}
         <div class="grid grid-3">
           ${data.cards.map((card, index) => `
-            <div class="governance-card" data-title="${escapeHtml(card.title)}" data-detail="${escapeHtml(card.detail)}">
-              <div class="governance-icon">${escapeHtml(card.icon)}</div>
-              <div class="governance-title">${escapeHtml(card.title)}</div>
-              <div class="governance-value" ${index === 0 ? 'id="evalScore"' : ''}>${escapeHtml(card.value)}</div>
-              <div class="governance-sub">${escapeHtml(card.sub)}</div>
+            <div class="platform-card" data-title="${escapeHtml(card.title)}" data-detail="${escapeHtml(card.detail)}">
+              <div class="platform-icon">${escapeHtml(card.icon)}</div>
+              <div class="platform-title">${escapeHtml(card.title)}</div>
+              <div class="platform-value" ${index === 0 ? 'id="evalScore"' : ''}>${escapeHtml(card.value)}</div>
+              <div class="platform-sub">${escapeHtml(card.sub)}</div>
             </div>`).join('')}
         </div>
         <div class="grid grid-2 space-top">
@@ -1220,7 +1221,7 @@
           <div class="assumption">${escapeHtml(data.assumption || meta.demoNote)}</div>
         </div>`,
       init() {
-        $$('.governance-card').forEach(card => {
+        $$('.platform-card').forEach(card => {
           card.onclick = () => toast(card.dataset.title, card.dataset.detail, '⬡');
         });
         bindDetailRows('#controlTable .click-row');
@@ -1260,9 +1261,9 @@
     simulator: renderSimulator,
     improvement: renderImprovement,
     finance: renderFinance,
-    devops: renderDevOps,
-    agents: renderAgents,
-    governance: renderGovernance
+    github: renderGitHub,
+    foundry: renderFoundry,
+    appPlatform: renderAppPlatform
   };
 
   function setupShell() {

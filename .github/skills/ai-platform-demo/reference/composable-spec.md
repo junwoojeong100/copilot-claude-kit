@@ -49,7 +49,7 @@ Composition은 조사 캐시의 대체 수단이 아니다.
       "dashboard.hero",
       "operations.flow.nodes",
       "simulator.inputs",
-      "agents.profiles"
+      "foundry.profiles"
     ],
     "forbidOutputTerms": ["SPI", "First-Pass Yield", "Example Customer"]
   },
@@ -62,8 +62,8 @@ Industry Pack이 제공할 수 있는 것:
 - 산업 route 명칭과 terminology
 - KPI·simulator·finance formula의 기본 범위
 - 운영 flow와 improvement factor
-- Agent 역할·질문 구조
-- governance control mapping의 기본 구조
+- Foundry Agent 역할·질문 구조
+- GitHub·App Platform 화면의 산업별 workload terminology
 
 Industry Pack에 금지되는 것:
 
@@ -101,7 +101,7 @@ Customer Overlay가 반드시 새로 결정하는 것:
 - 고객명·앱명·audience
 - `DEMO_FOCUS`에 맞는 Storyline·핵심 4~6개 시연 동선·climax
 - Pack의 `requiredCustomerPaths`
-- 고객 공식 사실·KPI 현실 범위·DevOps/Agent 답변
+- 고객 공식 사실·KPI 현실 범위·GitHub/Foundry/App Platform 답변과 가정
 
 ## 3. Merge 규칙
 
@@ -151,8 +151,9 @@ HTTP(S) 원문인지 확인한다.
 - Pack은 초안 가속 장치이며 고객의 storyline을 대신하지 않는다.
 - Hero는 제품 소개가 아니라 고객 결과를 바로 말한다. route마다 임원 질문 하나와 primary action 하나를
   유지한다.
-- Hero, 핵심 운영 flow, simulator, DevOps/Agent profiles, focus별 climax는 고객 Overlay에서 새로 작성한다.
-- Governance와 DevOps의 안정적인 interaction copy는 재사용 가능하지만 고객 가치 매핑은 갱신한다.
+- 앞의 5개 고객 주요사업 Hero·flow·simulator·finance와 Foundry Agent profiles, focus별 climax는 고객
+  Overlay에서 새로 작성한다.
+- GitHub·Foundry·App Platform의 안정적인 interaction copy는 재사용 가능하지만 KPI와 고객 가치 매핑은 갱신한다.
 - Microsoft Foundry·Microsoft Agent Framework, GitHub Copilot·GitHub Platform, AKS·Azure Container
   Apps는 제품 catalog가 아니라 지능·delivery·runtime 역할로 연결한다.
-- 최종 browser QA는 `story.routeScope`에 노출된 4~8개 route를 모두 검사한다.
+- 최종 browser QA는 고객 주요사업 5개 + 플랫폼 서비스 3개의 8개 route를 모두 검사한다.

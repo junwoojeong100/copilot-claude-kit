@@ -6,7 +6,7 @@
     "appName": "Contoso Precision IQ",
     "initials": "CP",
     "language": "ko",
-    "infrastructureLabel": "Microsoft Foundry · 참조 아키텍처",
+    "infrastructureLabel": "GitHub · Microsoft Foundry · ACA/AKS 참조 아키텍처",
     "demoNote": "모든 회사명·라인·수치·재무 결과는 Golden Runtime 검증을 위한 시연용 가정치입니다.",
     "research": {
       "checkedAt": "2026-07-23T10:30:00+09:00",
@@ -108,25 +108,25 @@
       "crumb": "경영 시나리오"
     },
     {
-      "id": "devops",
+      "id": "github",
       "icon": "⌘",
-      "name": "개발 가속",
-      "short": "Copilot",
-      "crumb": "GitHub Copilot"
+      "name": "GitHub Ecosystem",
+      "short": "GitHub",
+      "crumb": "Copilot · Actions · Advanced Security"
     },
     {
-      "id": "agents",
+      "id": "foundry",
       "icon": "✦",
-      "name": "AI 에이전트",
-      "short": "협업",
-      "crumb": "멀티에이전트 운영"
+      "name": "Microsoft Foundry",
+      "short": "Foundry",
+      "crumb": "Agent Framework · 평가 · 관찰성"
     },
     {
-      "id": "governance",
+      "id": "appPlatform",
       "icon": "⬡",
-      "name": "신뢰·데이터 주권",
-      "short": "통제",
-      "crumb": "신원 · 데이터 · 평가"
+      "name": "App Platform",
+      "short": "ACA · AKS",
+      "crumb": "배포 · 확장 · 운영"
     }
   ],
   "dashboard": {
@@ -1321,11 +1321,11 @@
     "explanation": "<b>Scenario margin {{value}}</b><br>제품 mix, software/service attach, 고객 품질비용 절감 가정을 함께 비교합니다.",
     "assumption": "모든 재무 값은 Golden Runtime interaction을 검증하기 위한 데모 가정입니다."
   },
-  "devops": {
+  "github": {
     "hero": {
       "icon": "⌘",
-      "title": "개발 가속 · Issue에서 검증된 Pull Request까지",
-      "subtitle": "GitHub Copilot cloud agent가 저장소를 조사하고 계획·코드·테스트·PR을 비동기로 수행합니다. GitHub AI Controls, GitHub Advanced Security, 리뷰 승인 정책이 사람의 책임 경계를 유지합니다."
+      "title": "GitHub Ecosystem · 계획에서 안전한 배포까지",
+      "subtitle": "GitHub Issues·Projects, GitHub Copilot, Pull Requests, GitHub Actions, GitHub Advanced Security를 연결해 계획·코드·검증·배포 흐름과 핵심 엔지니어링 지표를 한 화면에서 운영합니다."
     },
     "kpis": [
       {
@@ -1409,28 +1409,28 @@
         ]
       }
     ],
-    "stepsTitle": "Copilot cloud agent 작업",
-    "stepsHint": "GitHub Actions 기반 환경",
+    "stepsTitle": "GitHub delivery flow",
+    "stepsHint": "계획 · 코드 · 보안 · CI/CD",
     "steps": [
       {
-        "title": "저장소 조사",
-        "text": "custom instructions, telemetry schema, tests 파악"
+        "title": "Issues · Projects로 계획",
+        "text": "업무 우선순위, 담당자, 완료 기준을 저장소 작업과 연결"
       },
       {
-        "title": "구현 계획 작성",
-        "text": "drift guard와 rollback 경계 정의"
+        "title": "GitHub Copilot으로 조사·계획",
+        "text": "custom instructions, 코드, 테스트, 의존성을 바탕으로 변경 계획 작성"
       },
       {
-        "title": "브랜치에서 구현",
-        "text": "typed threshold config와 audit event 추가"
+        "title": "브랜치·Pull Request에서 협업",
+        "text": "코드 변경, 리뷰 대화, 승인 책임 경계를 하나의 기록으로 유지"
       },
       {
-        "title": "테스트·보안 게이트 실행",
-        "text": "단위·통합 테스트, 코드 스캐닝, 시크릿 스캐닝"
+        "title": "Actions·Advanced Security 검증",
+        "text": "CI/CD, code scanning, secret scanning, dependency review 실행"
       },
       {
-        "title": "Draft Pull Request 생성",
-        "text": "변경 근거, 리스크, 검증 결과 첨부"
+        "title": "승인된 변경을 배포",
+        "text": "환경 보호 규칙과 배포 증거를 유지하며 ACA·AKS로 전달"
       }
     ],
     "issuesTitle": "개발 작업 목록",
@@ -1616,16 +1616,62 @@
     },
     "assumption": "코드, issue, PR, 시간 지표는 모두 데모입니다. Agent는 승인 없이 production에 배포하지 않습니다."
   },
-  "agents": {
+  "foundry": {
     "hero": {
       "icon": "✦",
-      "title": "AI 에이전트 · 한 질문에 전문 에이전트가 협업",
-      "subtitle": "Microsoft Foundry Agent Service의 prompt agent와 hosted agent 패턴을 가정한 시연입니다. 각 에이전트는 고객의 권한·평가셋·도구 정책 안에서만 동작하며 실행 조치는 승인 단계를 거칩니다.",
+      "title": "Microsoft Foundry · Agent를 설계하고 평가해 운영까지",
+      "subtitle": "Microsoft Foundry와 Microsoft Agent Framework로 모델·지식·도구·멀티에이전트 오케스트레이션을 구성하고, 평가·추적·안전 지표를 함께 운영합니다.",
       "badge": {
-        "label": "Agent Framework · A2A",
+        "label": "Foundry · Agent Framework",
         "tone": "violet"
       }
     },
+    "kpis": [
+      {
+        "label": "Agent 성공률",
+        "value": 94.6,
+        "decimals": 1,
+        "unit": "%",
+        "delta": "+3.2%p 평가 개선",
+        "direction": "up",
+        "icon": "✓",
+        "color": "success",
+        "series": [86.2, 87.8, 89.1, 90.4, 91.6, 92.8, 93.7, 94.6]
+      },
+      {
+        "label": "응답 지연시간 P95",
+        "value": 1.8,
+        "decimals": 1,
+        "unit": "초",
+        "delta": "−0.7초 최적화",
+        "direction": "down",
+        "icon": "◷",
+        "color": "brand",
+        "series": [3.4, 3.1, 2.9, 2.6, 2.4, 2.2, 2.0, 1.8]
+      },
+      {
+        "label": "평가 커버리지",
+        "value": 87,
+        "decimals": 0,
+        "unit": "%",
+        "delta": "품질 · 안전 · 도구",
+        "direction": "up",
+        "icon": "◈",
+        "color": "violet",
+        "series": [58, 63, 68, 73, 77, 81, 84, 87]
+      },
+      {
+        "label": "근거 기반 응답",
+        "value": 96.2,
+        "decimals": 1,
+        "unit": "%",
+        "delta": "권한 기반 grounding",
+        "direction": "up",
+        "icon": "▤",
+        "color": "info",
+        "series": [88.4, 89.8, 91.2, 92.6, 93.7, 94.8, 95.5, 96.2]
+      }
+    ],
     "listTitle": "전문 에이전트",
     "listHint": "모든 행 클릭 가능",
     "governedLabel": "정책 적용",
@@ -1810,265 +1856,265 @@
       "toastText": "품질·공정·서비스·재무·개발 의사결정 패키지가 생성되었습니다."
     }
   },
-  "governance": {
+  "appPlatform": {
     "hero": {
       "icon": "⬡",
-      "title": "신뢰·데이터 주권 · 모델은 활용하고 전문성은 소유",
-      "subtitle": "Microsoft Foundry Agent Service, Microsoft Entra ID, Azure AI Search, Azure AI Content Safety, Microsoft Purview, Microsoft Defender, Application Insights, GitHub AI Controls를 통제 계층으로 매핑합니다."
+      "title": "App Platform · ACA와 AKS를 하나의 운영 포트폴리오로",
+      "subtitle": "Azure Container Apps와 Azure Kubernetes Service의 배포·트래픽·확장·보안·관찰성·비용 지표를 함께 보고 workload 특성에 맞는 runtime을 선택합니다."
     },
     "cards": [
       {
-        "icon": "◈",
-        "title": "고객 전용 평가",
-        "value": "93.4",
-        "sub": "도메인 검사 24개 · 시연 점수",
-        "detail": "고객 소유의 defect, false-call, escape, rollback 항목으로 Agent 품질을 평가합니다."
+        "icon": "✓",
+        "title": "Platform readiness",
+        "value": "91.8",
+        "sub": "보안 · 복원력 · 운영 점수",
+        "detail": "ACA와 AKS workload의 배포, scaling, network, identity, observability 기준을 종합한 시연 점수입니다."
       },
       {
-        "icon": "▤",
-        "title": "통제된 운영 기억",
-        "value": "24,680",
-        "sub": "패턴 · 플레이북 · 평가 항목",
-        "detail": "검증된 공정 패턴, 서비스 해결책, 평가 결과를 versioned asset으로 관리합니다."
+        "icon": "◇",
+        "title": "SLO 달성률",
+        "value": "99.95%",
+        "sub": "핵심 workload 월간 기준",
+        "detail": "가용성, 오류율, 지연시간, 복구시간을 workload별 SLO와 비교합니다."
       },
       {
-        "icon": "⬡",
-        "title": "정책 적용 범위",
-        "value": "100%",
-        "sub": "참조 아키텍처 적용 범위",
-        "detail": "Agent identity, data access, tool permission, action approval, audit trace를 포함한 시연 정책 범위입니다."
+        "icon": "₩",
+        "title": "용량 효율",
+        "value": "82%",
+        "sub": "요청 대비 사용량 · 시연값",
+        "detail": "ACA scale-to-zero와 AKS autoscaler·node pool 최적화를 통해 요청 용량과 실제 사용량의 차이를 관리합니다."
       }
     ],
     "controls": {
-      "title": "전사 통제 체계",
-      "hint": "제품별 역할 매핑 · 행 클릭 가능",
+      "title": "주요 App Platform 기능",
+      "hint": "ACA · AKS 역할과 운영 지표 · 행 클릭 가능",
       "headers": [
-        "Control",
-        "Microsoft / GitHub service",
-        "Demo policy",
+        "기능",
+        "플랫폼",
+        "주요 운영 지표",
         "Status"
       ],
       "rows": [
         {
           "cells": [
-            "Identity",
-            "Microsoft Entra Agent ID · RBAC",
-            "Per-agent least privilege"
+            "Serverless containers",
+            "Azure Container Apps",
+            "Revision · traffic split · scale-to-zero"
           ],
           "status": {
             "label": "적용",
             "tone": "success"
           },
-          "detailTitle": "Agent identity",
-          "detail": "hosted agent별 전용 identity와 최소권한 RBAC를 적용하는 참조 패턴입니다.",
+          "detailTitle": "Azure Container Apps",
+          "detail": "HTTP·event-driven workload를 revision 단위로 배포하고 traffic split, KEDA 기반 autoscaling, scale-to-zero를 사용합니다.",
           "icon": "⬡"
         },
         {
           "cells": [
-            "Knowledge",
-            "Azure AI Search",
-            "ACL-aware retrieval"
+            "Managed Kubernetes",
+            "Azure Kubernetes Service",
+            "Node · pod · GPU · autoscaler"
           ],
           "status": {
             "label": "적용",
             "tone": "success"
           },
-          "detailTitle": "Knowledge grounding",
-          "detail": "Manual, inspection library, service case를 색인하고 권한 필터를 적용합니다.",
+          "detailTitle": "Azure Kubernetes Service",
+          "detail": "복잡한 microservices, GPU, custom networking, Kubernetes API가 필요한 workload를 managed cluster에서 운영합니다.",
           "icon": "▤"
         },
         {
           "cells": [
-            "Data",
-            "Microsoft Purview",
-            "Classify · protect · audit"
+            "Progressive delivery",
+            "ACA revisions · AKS rollout",
+            "배포 성공률 · rollback 시간"
           ],
           "status": {
             "label": "설계",
             "tone": "info"
           },
-          "detailTitle": "Data governance",
-          "detail": "Sensitivity, DSPM for AI, audit/compliance 기능을 데이터 통제 계층으로 매핑합니다.",
+          "detailTitle": "Progressive delivery",
+          "detail": "GitHub Actions와 환경 보호 규칙을 연결해 canary, blue-green, staged rollout과 rollback 증거를 관리합니다.",
           "icon": "◈"
         },
         {
           "cells": [
-            "Safety",
-            "Azure AI Content Safety",
-            "Filter · evaluate · red team"
+            "Autoscaling",
+            "KEDA · HPA · Cluster Autoscaler",
+            "처리량 · replica · queue lag"
           ],
           "status": {
             "label": "적용",
             "tone": "success"
           },
-          "detailTitle": "Safety evaluation",
-          "detail": "Azure AI Content Safety와 private domain evaluation을 결합하는 시연 패턴입니다.",
+          "detailTitle": "Autoscaling",
+          "detail": "요청량, queue, CPU·memory, custom metric에 따라 application과 cluster 용량을 단계적으로 확장합니다.",
           "icon": "✓"
         },
         {
           "cells": [
-            "Runtime",
-            "Microsoft Defender · VNet isolation",
-            "Threat and posture signals"
+            "Identity · network",
+            "Workload Identity · VNet · Private Link",
+            "권한 · ingress · egress"
           ],
           "status": {
             "label": "설계",
             "tone": "info"
           },
-          "detailTitle": "Runtime security",
-          "detail": "Defender와 network isolation을 runtime 및 연결 도구의 보안 통제로 매핑합니다.",
+          "detailTitle": "Identity and network",
+          "detail": "Microsoft Entra Workload ID, managed identity, private ingress, egress control로 workload와 dependency 경계를 관리합니다.",
           "icon": "⬡"
         },
         {
           "cells": [
-            "Engineering",
-            "GitHub AI Controls · GitHub Advanced Security",
-            "Session audit · merge gate"
+            "Security posture",
+            "Defender for Cloud · Azure Policy",
+            "취약점 · 구성 drift · compliance"
           ],
           "status": {
             "label": "적용",
             "tone": "success"
           },
-          "detailTitle": "Engineering governance",
-          "detail": "GitHub AI Controls, GitHub Advanced Security, required review로 code change를 관리합니다.",
+          "detailTitle": "Security posture",
+          "detail": "이미지 취약점, runtime threat, Kubernetes·container configuration drift와 policy 준수 상태를 추적합니다.",
           "icon": "⌘"
         },
         {
           "cells": [
             "Observability",
-            "Foundry · Application Insights",
-            "Trace every decision"
+            "Azure Monitor · App Insights · Managed Prometheus",
+            "SLO · latency · error · saturation"
           ],
           "status": {
             "label": "적용",
             "tone": "success"
           },
           "detailTitle": "Observability",
-          "detail": "Foundry traces와 Application Insights를 통해 decision, tool call, latency를 추적합니다.",
+          "detail": "application trace, log, metric, Kubernetes signal을 연결해 SLO와 incident 원인을 확인합니다.",
           "icon": "✦"
         }
       ]
     },
     "memories": {
-      "title": "고객 소유 지식 자산",
-      "hint": "고객 소유 자산",
+      "title": "Workload 운영 현황",
+      "hint": "runtime · capacity · SLO",
       "headers": [
-        "Asset",
-        "Count",
-        "Ownership"
+        "Workload",
+        "Runtime",
+        "상태"
       ],
       "rows": [
         {
           "cells": [
-            "Measurement pattern library",
-            "8,420"
+            "Executive API",
+            "ACA · 3 revisions"
           ],
           "status": {
-            "label": "고객 소유",
+            "label": "SLO 충족",
             "tone": "success"
           },
-          "detailTitle": "Measurement pattern library",
-          "detail": "Height, volume, area, shape의 검증된 분포와 product-family 기준을 저장합니다.",
+          "detailTitle": "Executive API",
+          "detail": "Azure Container Apps의 revision traffic split과 HTTP autoscaling으로 운영하는 시연 workload입니다.",
           "icon": "△"
         },
         {
           "cells": [
-            "Improvement playbooks",
-            "1,428"
+            "Operations stream",
+            "AKS · 12 pods"
           ],
           "status": {
-            "label": "고객 소유",
+            "label": "정상",
             "tone": "success"
           },
-          "detailTitle": "Improvement playbooks",
-          "detail": "검증된 파라미터 조합, 적용 범위, rollback 조건을 version 관리합니다.",
+          "detailTitle": "Operations stream",
+          "detail": "AKS node pool과 HPA로 실시간 event processing 처리량을 유지합니다.",
           "icon": "◎"
         },
         {
           "cells": [
-            "Service resolution memory",
-            "6,214"
+            "Foundry tool gateway",
+            "ACA · min 2"
           ],
           "status": {
-            "label": "고객 소유",
+            "label": "보호됨",
             "tone": "success"
           },
-          "detailTitle": "Service resolution memory",
-          "detail": "설치 장비의 해결 패턴을 권한 경계에 맞게 재사용합니다.",
+          "detailTitle": "Foundry tool gateway",
+          "detail": "managed identity와 private ingress를 적용한 Agent tool endpoint 시연입니다.",
           "icon": "◇"
         },
         {
           "cells": [
-            "Agent evaluation cases",
-            "8,618"
+            "Batch evaluation",
+            "AKS · spot pool"
           ],
           "status": {
-            "label": "고객 소유",
+            "label": "최적화",
             "tone": "success"
           },
-          "detailTitle": "Agent evaluation cases",
-          "detail": "Agent 답변과 액션의 품질·안전·승인 준수 여부를 검증합니다.",
+          "detailTitle": "Batch evaluation",
+          "detail": "중단 허용 batch 평가를 별도 node pool에 배치해 비용과 우선순위를 관리합니다.",
           "icon": "⬡"
         }
       ]
     },
     "learningLoop": {
-      "title": "고객 소유 학습 루프",
-      "hint": "각 단계를 클릭해 설명 확인",
+      "title": "App Platform 운영 루프",
+      "hint": "각 단계를 클릭해 주요 기능 확인",
       "steps": [
         {
-          "icon": "◇",
-          "title": "측정",
-          "sub": "정량 데이터",
-          "detail": "Inspection이 높이·체적·면적·형상의 정량 데이터를 생성합니다."
+          "icon": "⌘",
+          "title": "Build",
+          "sub": "GitHub Actions · 공급망 보안",
+          "detail": "코드, dependency, image를 검증하고 배포 가능한 artifact와 provenance를 생성합니다."
         },
         {
           "icon": "◈",
-          "title": "평가",
-          "sub": "고객 소유 테스트",
-          "detail": "Private evaluation이 품질, false-call, escape, approval 준수를 검증합니다."
+          "title": "Deploy",
+          "sub": "ACA revision · AKS rollout",
+          "detail": "workload 특성에 따라 ACA 또는 AKS를 선택하고 staged rollout과 환경 승인을 적용합니다."
         },
         {
           "icon": "◎",
-          "title": "실행",
-          "sub": "정책 기반 실행",
-          "detail": "승인된 공정 액션과 Copilot PR만 staged execution으로 진행합니다."
+          "title": "Operate",
+          "sub": "SLO · security · resilience",
+          "detail": "가용성, latency, error, saturation, threat와 configuration drift를 함께 감시합니다."
         },
         {
           "icon": "✦",
-          "title": "학습",
-          "sub": "축적되는 도메인 지식재산",
-          "detail": "검증 결과가 pattern, playbook, evaluation case로 누적됩니다."
+          "title": "Optimize",
+          "sub": "autoscale · cost · capacity",
+          "detail": "scale-to-zero, HPA, Cluster Autoscaler, node pool과 request/limit를 조정합니다."
         }
       ]
     },
     "evaluation": {
-      "title": "평가 실행 내역",
+      "title": "Platform readiness 검사",
       "hint": "실행 결과는 시연 데이터",
-      "button": "⬡ Private evaluation 실행",
-      "running": "평가 실행 중…",
-      "complete": "✓ 평가 완료 · 다시 실행",
-      "initialScore": 93.4,
-      "finalScore": 95.1,
+      "button": "⬡ ACA·AKS readiness 검사",
+      "running": "플랫폼 검사 중…",
+      "complete": "✓ 검사 완료 · 다시 실행",
+      "initialScore": 91.8,
+      "finalScore": 96.4,
       "readyLines": [
-        "[READY] evaluation-set: customer-private-v12",
-        "[READY] checks: defect / false-call / escape / approval / rollback",
-        "[READY] data boundary: customer-owned evaluation assets",
-        "[WAIT ] click Private evaluation"
+        "[READY] scope: Azure Container Apps / AKS",
+        "[READY] checks: deployment / scale / network / identity / SLO",
+        "[READY] metrics: latency / error / saturation / cost",
+        "[WAIT ] click platform readiness"
       ],
       "runLines": [
-        "[RUN  ] identity-scope ........ PASS",
-        "[RUN  ] retrieval-acl ........ PASS",
-        "[RUN  ] false-call reasoning . PASS",
-        "[RUN  ] escape-risk guard .... PASS",
-        "[RUN  ] action approval ...... PASS",
-        "[RUN  ] rollback telemetry ... PASS",
-        "[DONE ] score: 95.1 / 100 · 24 checks"
+        "[RUN  ] workload identity ..... PASS",
+        "[RUN  ] private ingress ....... PASS",
+        "[RUN  ] autoscaling policy .... PASS",
+        "[RUN  ] health probes ......... PASS",
+        "[RUN  ] rollout protection .... PASS",
+        "[RUN  ] SLO telemetry ......... PASS",
+        "[DONE ] score: 96.4 / 100 · 24 checks"
       ],
-      "toastTitle": "Private evaluation 통과",
-      "toastText": "24개 데모 항목이 통과했습니다. Score 95.1"
+      "toastTitle": "App Platform readiness 통과",
+      "toastText": "ACA·AKS 운영 기준 24개 항목이 통과했습니다."
     },
-    "assumption": "이 화면은 목표 아키텍처 데모이며 특정 고객의 현재 Microsoft 제품 배포 상태를 주장하지 않습니다."
+    "assumption": "ACA·AKS workload, SLO, 용량, 비용 값은 목표 아키텍처를 설명하기 위한 시연 데이터입니다."
   },
   "ambientNotifications": [
     {
@@ -2082,8 +2128,8 @@
       "icon": "◎"
     },
     {
-      "title": "고객 전용 평가",
-      "text": "24개 domain check가 준비되었습니다.",
+      "title": "App Platform readiness",
+      "text": "ACA·AKS 운영 기준 24개 검사가 준비되었습니다.",
       "icon": "⬡"
     },
     {

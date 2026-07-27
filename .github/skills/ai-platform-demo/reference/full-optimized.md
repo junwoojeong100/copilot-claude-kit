@@ -85,7 +85,7 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/ai-platform-demo/puppeteer/
 
 ## 6. 검증 최적화
 
-1. 최초 빌드 후 `FULL_QA=1`로 노출된 4~8개 화면, 스트레스 전환, 모든 에이전트, 채팅을 한 브라우저
+1. 최초 빌드 후 `FULL_QA=1`로 고정 8개 화면, 스트레스 전환, 모든 에이전트, 채팅을 한 브라우저
    세션에서 검사한다.
 2. 노출 route의 스크린샷과 오류를 모두 검토해 `defects.md`에 모은다.
 3. 결함을 한 번에 수정한다.

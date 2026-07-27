@@ -460,8 +460,8 @@ class ComposeDemoSpecTests(unittest.TestCase):
             self.assertEqual(spec["design"]["archetype"], "trusted-executive")
             self.assertEqual(len(spec["meta"]["research"]["sources"]), 2)
             self.assertNotIn("Contoso", spec_output.read_text(encoding="utf-8"))
-            self.assertIn("에너지", spec["agents"]["placeholder"])
-            self.assertNotIn("품질·공정", spec["agents"]["placeholder"])
+            self.assertIn("에너지", spec["foundry"]["placeholder"])
+            self.assertNotIn("품질·공정", spec["foundry"]["placeholder"])
             lint_result = subprocess.run(
                 [sys.executable, "-B", str(SCRIPTS / "lint_spec.py"), str(spec_output)],
                 check=False,
