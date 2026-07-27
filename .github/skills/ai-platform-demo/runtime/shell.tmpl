@@ -53,11 +53,14 @@
         </button>
       </header>
       <div id="journeyBar">
-        <label class="journey-picker" for="journeySelect">
+        <div class="journey-picker">
           <span id="journeyLabel"></span>
-          <select id="journeySelect"></select>
-        </label>
-        <div class="journey-bridge" id="journeyBridge"></div>
+          <div class="journey-tabs" id="journeyTabs" role="tablist"></div>
+        </div>
+        <div class="journey-copy">
+          <div class="journey-bridge" id="journeyBridge"></div>
+          <div class="journey-path" id="journeyPath"></div>
+        </div>
         <button class="button small" id="nextScene" type="button"></button>
       </div>
       <section id="view" aria-live="polite"></section>

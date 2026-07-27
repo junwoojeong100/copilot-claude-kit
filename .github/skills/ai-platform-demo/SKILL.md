@@ -41,7 +41,8 @@ Puppeteer·Chromium만 외부 공용 캐시에 유지하고, 최종 출력 위�
 - 첫 화면에서 고객 결과 한 문장, KPI 4개, primary action 1개를 보여준다.
 - 각 route는 임원의 질문 하나에 답하고 행동 하나를 강조한다.
 - 메뉴는 항상 8개를 노출한다. 기본 시연 동선은 이 중 4~6개 핵심 장면으로 끝낸다.
-- CEO·COO·CFO·CIO 등 청중별 `story.guidedJourneys`와 `다음 장면` CTA를 제공한다.
+- CEO·COO·CFO·CIO 등 청중별 `story.guidedJourneys`, 보이는 route path, `다음 장면` CTA를 제공한다.
+  역할 탭을 선택하면 해당 persona의 첫 의사결정 화면으로 즉시 이동한다.
 - 업무 예외 → Foundry 의사결정 → GitHub 변경 → ACA/AKS 운영을 같은 `scenarioTrace.id`로 연결한다.
 - 제품 catalog로 시작하지 않는다. 고객 가치 → 업무 흐름 → 담당 서비스 순으로 설명한다.
 - 고객의 현재 도입이 확인되지 않은 서비스는 `목표 아키텍처` 또는 `시연 가정`으로 표시한다.

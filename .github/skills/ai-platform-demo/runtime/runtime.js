@@ -42,7 +42,7 @@
         demoPrediction: '시연 예측',
         businessDecisions: '비즈니스 의사결정',
         platformEvidence: '플랫폼 근거',
-        journey: '임원 여정',
+        journey: '임원 관점',
         nextScene: '다음 장면',
         finalAction: '다음 실행',
         businessOutcome: '가능해지는 사업 성과',
@@ -67,7 +67,7 @@
         demoPrediction: 'DEMO PREDICTION',
         businessDecisions: 'BUSINESS DECISIONS',
         platformEvidence: 'PLATFORM EVIDENCE',
-        journey: 'Executive journey',
+        journey: 'Executive lens',
         nextScene: 'Next scene',
         finalAction: 'Next action',
         businessOutcome: 'Enabled business outcome',
@@ -1516,8 +1516,19 @@
 
   function updateJourneyChrome(routeId) {
     const bridge = $('#journeyBridge');
+    const path = $('#journeyPath');
     const nextButton = $('#nextScene');
     const index = currentJourney.routes.indexOf(routeId);
+    path.innerHTML = currentJourney.routes.map(journeyRoute => `
+      <button class="journey-path-step ${journeyRoute === routeId ? 'active' : ''}"
+              type="button" data-route="${escapeHtml(journeyRoute)}">
+        ${escapeHtml(routeById[journeyRoute].name)}
+      </button>`).join('');
+    $$('#journeyPath .journey-path-step').forEach(step => {
+      step.onclick = () => {
+        location.hash = step.dataset.route;
+      };
+    });
     if (index < 0) {
       bridge.textContent = spec.story.frame;
       nextButton.textContent = `${uiText.nextScene}: ${routeById[currentJourney.routes[0]].name}`;
@@ -1572,15 +1583,24 @@
       };
     });
     $('#journeyLabel').textContent = uiText.journey;
-    $('#journeySelect').innerHTML = guidedJourneys.map(journey => (
-      `<option value="${escapeHtml(journey.id)}" ${journey.id === currentJourney.id ? 'selected' : ''}>${escapeHtml(journey.label)}</option>`
-    )).join('');
-    $('#journeySelect').onchange = event => {
-      currentJourney = guidedJourneys.find(journey => journey.id === event.target.value) || guidedJourneys[0];
-      const target = currentJourney.routes[0];
-      if (location.hash.slice(1) === target) navigate();
-      else location.hash = target;
+    const renderJourneyTabs = () => {
+      $('#journeyTabs').innerHTML = guidedJourneys.map(journey => `
+        <button class="journey-tab ${journey.id === currentJourney.id ? 'active' : ''}"
+                type="button" role="tab" aria-selected="${journey.id === currentJourney.id}"
+                data-journey="${escapeHtml(journey.id)}" title="${escapeHtml(journey.label)}">
+          ${escapeHtml(journey.audience)}
+        </button>`).join('');
+      $$('#journeyTabs .journey-tab').forEach(tab => {
+        tab.onclick = () => {
+          currentJourney = guidedJourneys.find(journey => journey.id === tab.dataset.journey) || guidedJourneys[0];
+          renderJourneyTabs();
+          const target = currentJourney.routes[1] || currentJourney.routes[0];
+          if (location.hash.slice(1) === target) navigate();
+          else location.hash = target;
+        };
+      });
     };
+    renderJourneyTabs();
   }
 
   function navigate() {

@@ -159,12 +159,24 @@ button{border:0}
   background:color-mix(in srgb,var(--canvas-alt) 72%,var(--surface));
 }
 .journey-picker{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-faint);font-weight:800}
-.journey-picker select{
-  max-width:190px;padding:7px 30px 7px 9px;border:1px solid var(--line);border-radius:8px;
-  background:var(--surface);color:var(--ink);font-weight:750;outline:none;
+.journey-tabs{display:flex;align-items:center;gap:3px;padding:3px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+.journey-tab{
+  min-width:42px;padding:5px 8px;border-radius:6px;background:transparent;color:var(--ink-faint);
+  font-size:11.5px;font-weight:850;cursor:pointer;transition:.15s;
 }
-.journey-picker select:focus{border-color:var(--brand)}
+.journey-tab:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.journey-tab.active{background:var(--brand-emphasis);color:var(--on-emphasis);box-shadow:0 3px 10px rgba(0,0,0,.2)}
+.journey-copy{min-width:0}
 .journey-bridge{font-size:13px;color:var(--ink-muted);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.journey-path{display:flex;align-items:center;gap:4px;margin-top:4px;overflow:hidden}
+.journey-path-step{
+  padding:2px 6px;border-radius:5px;background:transparent;color:var(--ink-faint);
+  font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap;
+}
+.journey-path-step::after{content:"›";margin-left:7px;color:var(--line)}
+.journey-path-step:last-child::after{display:none}
+.journey-path-step:hover{color:var(--ink)}
+.journey-path-step.active{background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand)}
 #view{flex:1;overflow:auto;padding:21px 24px 32px;scroll-behavior:smooth}
 .view-enter{animation:view-in .35s ease}
 @keyframes view-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
@@ -529,7 +541,8 @@ input[type=range]::-webkit-slider-thumb{
   .agent-layout{grid-template-columns:1fr}
   .top-item{display:none}
   .node-cards{grid-template-columns:repeat(2,1fr)}
-  #journeyBar{grid-template-columns:1fr auto;padding:8px 14px}.journey-bridge{display:none}
+  #journeyBar{grid-template-columns:1fr auto;padding:8px 14px}.journey-copy{display:none}
+  .journey-picker{min-width:0}.journey-tabs{overflow-x:auto}.journey-tab{flex:none}
   .executive-value{grid-template-columns:1fr}.business-kpis{grid-template-columns:repeat(2,1fr)}
   .scenario-steps{grid-template-columns:repeat(2,1fr)}
 }

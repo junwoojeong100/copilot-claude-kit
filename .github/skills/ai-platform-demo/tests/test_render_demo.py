@@ -257,6 +257,8 @@ class RenderDemoTests(unittest.TestCase):
         self.assertIn("color-scheme:dark", html)
         self.assertIn("document.body.dataset.theme = 'dark-dimmed'", html)
         self.assertIn('id="journeyBar"', html)
+        self.assertIn('id="journeyTabs"', html)
+        self.assertIn('id="journeyPath"', html)
         self.assertIn("guidedJourneys", html)
         self.assertIn("planRemediation", html)
         self.assertIn("evalProjectedScore", html)

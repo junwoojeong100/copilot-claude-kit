@@ -26,8 +26,9 @@
       <button class="notification-button" id="notificationButton" type="button">◇</button>
     </header>
     <div id="journeyBar">
-      <select id="journeySelect"></select>
+      <div id="journeyTabs" role="tablist"></div>
       <div id="journeyBridge"></div>
+      <div id="journeyPath"></div>
       <button id="nextScene"></button>
     </div>
     <div id="view"></div>
