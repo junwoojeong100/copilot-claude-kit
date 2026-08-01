@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-import tempfile
+import shutil
 import unittest
 from pathlib import Path
 
@@ -16,9 +16,11 @@ import pptx_helpers as H  # noqa: E402
 
 class PptxHelpersTests(unittest.TestCase):
     def setUp(self):
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.addCleanup(self.temp_dir.cleanup)
-        self.work_dir = Path(self.temp_dir.name)
+        root = Path(__file__).resolve().parent / ".test-work"
+        self.work_dir = root / self._testMethodName
+        shutil.rmtree(self.work_dir, ignore_errors=True)
+        self.work_dir.mkdir(parents=True)
+        self.addCleanup(shutil.rmtree, self.work_dir, True)
 
     def test_builds_and_reopens_deck(self):
         prs, blank = H.new_deck()
@@ -56,6 +58,7 @@ class PptxHelpersTests(unittest.TestCase):
 
     def test_default_font_is_overridable_string(self):
         self.assertIsInstance(H.DEFAULT_FONT, str)
+        self.assertNotIn("Apple", H.DEFAULT_FONT)
 
     def test_shadow_produces_single_effectlst(self):
         """그림자는 effectLst를 중복 생성하지 않아야 한다(PowerPoint repair 방지)."""

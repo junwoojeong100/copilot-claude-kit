@@ -5,6 +5,10 @@ import unittest
 from pathlib import Path
 
 import fitz
+from pptx import Presentation
+from pptx.chart.data import ChartData
+from pptx.enum.chart import XL_CHART_TYPE
+from pptx.util import Inches
 
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
@@ -14,6 +18,7 @@ from rendered_overlap import (  # noqa: E402
     assign_spans_to_shapes,
     detect_span_overflow,
     detect_span_overlaps,
+    shape_records,
 )
 
 
@@ -42,8 +47,75 @@ class RenderedOverlapTests(unittest.TestCase):
             }
         ]
         assigned, unmapped = assign_spans_to_shapes(spans, shapes)
-        self.assertEqual(unmapped, 0)
+        self.assertEqual(unmapped, [])
         self.assertEqual(assigned[0]["shape_index"], 1)
+
+    def test_group_children_and_table_cells_are_individually_mapped(self):
+        prs = Presentation()
+        prs.slide_width = Inches(13.333)
+        prs.slide_height = Inches(7.5)
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        group = slide.shapes.add_group_shape()
+        child = group.shapes.add_textbox(
+            Inches(1), Inches(1), Inches(2), Inches(0.5)
+        )
+        child.text = "Grouped text"
+        table = slide.shapes.add_table(
+            1, 2, Inches(4), Inches(1), Inches(4), Inches(1)
+        ).table
+        table.cell(0, 0).text = "Left cell"
+        table.cell(0, 1).text = "Right cell"
+        table.cell(0, 0).merge(table.cell(0, 1))
+
+        document = fitz.open()
+        page = document.new_page(width=960, height=540)
+        records, unsupported = shape_records(prs, slide, page)
+        names = [record["shape"] for record in records]
+        self.assertTrue(any("Grouped text" == record["text"] for record in records))
+        self.assertTrue(any("cell 1,1" in name for name in names))
+        self.assertFalse(any("cell 1,2" in name for name in names))
+        merged = next(record for record in records if "cell 1,1" in record["shape"])
+        self.assertGreater(merged["rect"].width, 250)
+        self.assertEqual(unsupported, [])
+        document.close()
+
+    def test_rotated_group_is_classified_for_visual_review(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        group = slide.shapes.add_group_shape()
+        textbox = group.shapes.add_textbox(
+            Inches(1), Inches(1), Inches(2), Inches(1)
+        )
+        textbox.text = "Rotated group"
+        group.rotation = 30
+        document = fitz.open()
+        page = document.new_page(width=960, height=540)
+
+        records, unsupported = shape_records(prs, slide, page)
+
+        self.assertEqual(records, [])
+        self.assertEqual(unsupported[0]["kind"], "transformed_group")
+        document.close()
+
+    def test_charts_are_explicitly_classified_for_visual_review(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        data = ChartData()
+        data.categories = ["A", "B"]
+        data.add_series("Series", [1, 2])
+        slide.shapes.add_chart(
+            XL_CHART_TYPE.COLUMN_CLUSTERED,
+            Inches(1),
+            Inches(1),
+            Inches(5),
+            Inches(3),
+            data,
+        )
+        document = fitz.open()
+        page = document.new_page(width=960, height=540)
+        _, unsupported = shape_records(prs, slide, page)
+        self.assertEqual(unsupported[0]["kind"], "chart")
+        document.close()
 
     def test_distinct_text_frames_with_rendered_collision_are_reported(self):
         shapes = [

@@ -8,6 +8,9 @@ from pathlib import Path
 
 import fitz
 from pptx import Presentation
+from pptx.enum.shapes import MSO_SHAPE_TYPE
+
+from qa_exceptions import annotate
 
 
 def normalize_text(text: str) -> str:
@@ -20,41 +23,225 @@ def distance_to_rect(rect: fitz.Rect, x: float, y: float) -> float:
     return math.hypot(dx, dy)
 
 
-def shape_records(prs: Presentation, slide, page: fitz.Page) -> list[dict]:
+def page_rect(
+    prs: Presentation,
+    page: fitz.Page,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+) -> fitz.Rect:
     x_scale = page.rect.width / prs.slide_width
     y_scale = page.rect.height / prs.slide_height
+    return fitz.Rect(
+        page.rect.x0 + left * x_scale,
+        page.rect.y0 + top * y_scale,
+        page.rect.x0 + (left + width) * x_scale,
+        page.rect.y0 + (top + height) * y_scale,
+    )
+
+
+def group_transform(
+    shape,
+    parent_transform: tuple[float, float, float, float, float, float] | None,
+) -> tuple[float, float, float, float, float, float]:
+    xfrm = shape._element.grpSpPr.xfrm
+    child_width = max(float(xfrm.chExt.cx), 1.0)
+    child_height = max(float(xfrm.chExt.cy), 1.0)
+    left, top, width, height = absolute_bounds(shape, parent_transform)
+    return (
+        left,
+        top,
+        width / child_width,
+        height / child_height,
+        float(xfrm.chOff.x),
+        float(xfrm.chOff.y),
+    )
+
+
+def group_has_unsupported_transform(shape) -> bool:
+    xfrm = shape._element.grpSpPr.xfrm
+    rotation = int(xfrm.get("rot") or 0)
+    flip_h = str(xfrm.get("flipH") or "").casefold() in {"1", "true"}
+    flip_v = str(xfrm.get("flipV") or "").casefold() in {"1", "true"}
+    return rotation % 21600000 != 0 or flip_h or flip_v
+
+
+def absolute_bounds(
+    shape,
+    transform: tuple[float, float, float, float, float, float] | None,
+) -> tuple[float, float, float, float]:
+    if transform is None:
+        return float(shape.left), float(shape.top), float(shape.width), float(shape.height)
+    origin_x, origin_y, scale_x, scale_y, offset_x, offset_y = transform
+    return (
+        origin_x + (float(shape.left) - offset_x) * scale_x,
+        origin_y + (float(shape.top) - offset_y) * scale_y,
+        float(shape.width) * scale_x,
+        float(shape.height) * scale_y,
+    )
+
+
+def table_records(
+    prs: Presentation,
+    shape,
+    page: fitz.Page,
+    bounds: tuple[float, float, float, float],
+    z_index: int,
+    name_prefix: str,
+) -> list[dict]:
+    left, top, width, height = bounds
+    table_width = max(sum(float(column.width) for column in shape.table.columns), 1.0)
+    table_height = max(sum(float(row.height) for row in shape.table.rows), 1.0)
+    width_scale = width / table_width
+    height_scale = height / table_height
     records: list[dict] = []
-    for z_index, shape in enumerate(slide.shapes):
-        if getattr(shape, "has_table", False):
-            text = " ".join(
-                cell.text.strip()
-                for row in shape.table.rows
-                for cell in row.cells
-                if cell.text.strip()
-            )
-        elif getattr(shape, "has_text_frame", False):
-            text = " ".join(shape.text.split())
-        else:
-            continue
-        normalized = normalize_text(text)
-        if not normalized:
-            continue
-        records.append(
-            {
-                "z_index": z_index,
-                "shape": getattr(shape, "name", f"shape-{shape.shape_id}"),
-                "shape_id": shape.shape_id,
-                "text": text,
-                "normalized": normalized,
-                "rect": fitz.Rect(
-                    page.rect.x0 + shape.left * x_scale,
-                    page.rect.y0 + shape.top * y_scale,
-                    page.rect.x0 + (shape.left + shape.width) * x_scale,
-                    page.rect.y0 + (shape.top + shape.height) * y_scale,
-                ),
-            }
-        )
+    row_top = top
+    for row_index, row in enumerate(shape.table.rows):
+        column_left = left
+        for column_index, column in enumerate(shape.table.columns):
+            cell = shape.table.cell(row_index, column_index)
+            if cell.is_spanned:
+                column_left += float(column.width) * width_scale
+                continue
+            text = " ".join(cell.text.split())
+            if text:
+                normalized = normalize_text(text)
+                cell_width = sum(
+                    float(shape.table.columns[index].width)
+                    for index in range(
+                        column_index,
+                        min(
+                            column_index + int(cell.span_width),
+                            len(shape.table.columns),
+                        ),
+                    )
+                )
+                cell_height = sum(
+                    float(shape.table.rows[index].height)
+                    for index in range(
+                        row_index,
+                        min(
+                            row_index + int(cell.span_height),
+                            len(shape.table.rows),
+                        ),
+                    )
+                )
+                records.append(
+                    {
+                        "z_index": z_index,
+                        "shape": (
+                            f"{name_prefix} cell {row_index + 1},{column_index + 1}"
+                        ),
+                        "shape_id": shape.shape_id,
+                        "text": text,
+                        "normalized": normalized,
+                        "rect": page_rect(
+                            prs,
+                            page,
+                            column_left,
+                            row_top,
+                            cell_width * width_scale,
+                            cell_height * height_scale,
+                        ),
+                        "kind": "table_cell",
+                    }
+                )
+            column_left += float(column.width) * width_scale
+        row_top += float(row.height) * height_scale
     return records
+
+
+def shape_records(prs: Presentation, slide, page: fitz.Page) -> tuple[list[dict], list[dict]]:
+    records: list[dict] = []
+    unsupported: list[dict] = []
+
+    def visit(
+        shapes,
+        *,
+        transform: tuple[float, float, float, float, float, float] | None = None,
+        prefix: str = "",
+    ) -> None:
+        for z_index, shape in enumerate(shapes):
+            shape_name = getattr(shape, "name", f"shape-{shape.shape_id}")
+            qualified_name = f"{prefix}/{shape_name}" if prefix else shape_name
+            bounds = absolute_bounds(shape, transform)
+            if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
+                if group_has_unsupported_transform(shape):
+                    unsupported.append(
+                        {
+                            "kind": "transformed_group",
+                            "shape": qualified_name,
+                            "reason": (
+                                "Rotated or flipped group text mapping requires "
+                                "visual review."
+                            ),
+                        }
+                    )
+                    continue
+                visit(
+                    shape.shapes,
+                    transform=group_transform(shape, transform),
+                    prefix=qualified_name,
+                )
+                continue
+            if getattr(shape, "has_chart", False):
+                unsupported.append(
+                    {
+                        "kind": "chart",
+                        "shape": qualified_name,
+                        "reason": "Chart-rendered labels require visual review.",
+                    }
+                )
+                continue
+            if (
+                shape.shape_type
+                in {
+                    MSO_SHAPE_TYPE.DIAGRAM,
+                    MSO_SHAPE_TYPE.IGX_GRAPHIC,
+                }
+            ):
+                unsupported.append(
+                    {
+                        "kind": "graphic_frame",
+                        "shape": qualified_name,
+                        "reason": "SmartArt or diagram text mapping is not supported.",
+                    }
+                )
+                continue
+            if getattr(shape, "has_table", False):
+                records.extend(
+                    table_records(
+                        prs,
+                        shape,
+                        page,
+                        bounds,
+                        z_index,
+                        qualified_name,
+                    )
+                )
+                continue
+            if not getattr(shape, "has_text_frame", False):
+                continue
+            text = " ".join(shape.text.split())
+            normalized = normalize_text(text)
+            if not normalized:
+                continue
+            left, top, width, height = bounds
+            records.append(
+                {
+                    "z_index": z_index,
+                    "shape": qualified_name,
+                    "shape_id": shape.shape_id,
+                    "text": text,
+                    "normalized": normalized,
+                    "rect": page_rect(prs, page, left, top, width, height),
+                    "kind": "text_frame",
+                }
+            )
+
+    visit(slide.shapes)
+    return records, unsupported
 
 
 def span_records(page: fitz.Page) -> list[dict]:
@@ -73,15 +260,19 @@ def span_records(page: fitz.Page) -> list[dict]:
                         "text": text,
                         "normalized": normalized,
                         "size_pt": round(float(span["size"]), 2),
+                        "font": str(span.get("font") or ""),
                         "rect": fitz.Rect(span["bbox"]),
                     }
                 )
     return records
 
 
-def assign_spans_to_shapes(spans: list[dict], shapes: list[dict]) -> tuple[list[dict], int]:
+def assign_spans_to_shapes(
+    spans: list[dict],
+    shapes: list[dict],
+) -> tuple[list[dict], list[dict]]:
     assigned: list[dict] = []
-    unmapped = 0
+    unmapped: list[dict] = []
     for span in spans:
         rect = span["rect"]
         center_x = (rect.x0 + rect.x1) / 2
@@ -102,7 +293,7 @@ def assign_spans_to_shapes(spans: list[dict], shapes: list[dict]) -> tuple[list[
             ) / max(len(span_text), 1)
             candidates.append((score, shape_index))
         if not candidates:
-            unmapped += 1
+            unmapped.append(span)
             continue
         record = dict(span)
         record["shape_index"] = min(candidates)[1]
@@ -203,13 +394,17 @@ def audit_rendered_text(
     pdf: Path,
     *,
     allowed_slides: set[int] | None = None,
+    allowed_finding_ids: set[str] | None = None,
     overflow_tolerance_pt: float = 4.0,
 ) -> dict:
     allowed = allowed_slides or set()
+    allowed_ids = allowed_finding_ids or set()
     prs = Presentation(deck)
     overlap_findings: list[dict] = []
     overflow_findings: list[dict] = []
-    unmapped_spans = 0
+    unmapped_findings: list[dict] = []
+    unsupported_findings: list[dict] = []
+    rendered_fonts: set[str] = set()
 
     with fitz.open(pdf) as document:
         if len(document) != len(prs.slides):
@@ -220,12 +415,43 @@ def audit_rendered_text(
         for slide_number, (slide, page) in enumerate(
             zip(prs.slides, document), 1
         ):
-            shapes = shape_records(prs, slide, page)
-            assigned, unmapped = assign_spans_to_shapes(span_records(page), shapes)
-            unmapped_spans += unmapped
+            shapes, unsupported = shape_records(prs, slide, page)
+            spans = span_records(page)
+            rendered_fonts.update(span["font"] for span in spans if span["font"])
+            assigned, unmapped = assign_spans_to_shapes(spans, shapes)
+            for finding in unsupported:
+                finding["slide"] = slide_number
+                annotate(
+                    "unsupported_text_object",
+                    finding,
+                    allowed_finding_ids=allowed_ids,
+                    slide_allowed=False,
+                )
+                unsupported_findings.append(finding)
+            if unmapped:
+                finding = {
+                    "slide": slide_number,
+                    "count": len(unmapped),
+                    "textSamples": [span["text"][:80] for span in unmapped[:8]],
+                    "fonts": sorted(
+                        {span["font"] for span in unmapped if span["font"]}
+                    ),
+                }
+                annotate(
+                    "unmapped_rendered_text",
+                    finding,
+                    allowed_finding_ids=allowed_ids,
+                    slide_allowed=False,
+                )
+                unmapped_findings.append(finding)
             for finding in detect_span_overlaps(assigned, shapes):
                 finding["slide"] = slide_number
-                finding["allowed"] = slide_number in allowed
+                annotate(
+                    "rendered_text_overlap",
+                    finding,
+                    allowed_finding_ids=allowed_ids,
+                    slide_allowed=slide_number in allowed,
+                )
                 overlap_findings.append(finding)
             for finding in detect_span_overflow(
                 assigned,
@@ -233,6 +459,12 @@ def audit_rendered_text(
                 tolerance_pt=overflow_tolerance_pt,
             ):
                 finding["slide"] = slide_number
+                annotate(
+                    "rendered_text_overflow",
+                    finding,
+                    allowed_finding_ids=allowed_ids,
+                    slide_allowed=False,
+                )
                 overflow_findings.append(finding)
 
     unexpected = [
@@ -242,5 +474,19 @@ def audit_rendered_text(
         "rendered_text_overlaps": overlap_findings,
         "unexpected_rendered_text_overlaps": unexpected,
         "rendered_text_overflow_candidates": overflow_findings,
-        "unmapped_rendered_text_spans": unmapped_spans,
+        "unexpected_rendered_text_overflow_candidates": [
+            finding for finding in overflow_findings if not finding["allowed"]
+        ],
+        "unmapped_rendered_text_findings": unmapped_findings,
+        "unexpected_unmapped_rendered_text_findings": [
+            finding for finding in unmapped_findings if not finding["allowed"]
+        ],
+        "unmapped_rendered_text_spans": sum(
+            finding["count"] for finding in unmapped_findings
+        ),
+        "unsupported_text_objects": unsupported_findings,
+        "unexpected_unsupported_text_objects": [
+            finding for finding in unsupported_findings if not finding["allowed"]
+        ],
+        "rendered_fonts": sorted(rendered_fonts),
     }

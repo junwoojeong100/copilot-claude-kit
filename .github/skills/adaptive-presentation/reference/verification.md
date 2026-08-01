@@ -7,22 +7,20 @@
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
-  deck.pptx --out <work-dir> --expected-slides 30 --strict \
-  --min-body-pt 15
+  deck.pptx --out <work-dir> --deck-spec <work-dir>/deck-spec.json
 ```
 
 Runner가 구조 감사와 전체 렌더를 읽기 전용으로 병렬 실행하고, risk score가 높은 슬라이드를 같은 PDF로
 상세 렌더한다. `verification-report.json`, `qa/contact-*.jpg`, `qa-detail/slide-*.jpg`를 확인한 뒤
-결함을 일괄 수정한다. `--strict --min-body-pt 15`는 15pt 미만의 likely body 후보, 명시적 크기가 없는 run, title risk,
+결함을 일괄 수정한다. deck spec의 strict 계약은 15pt 미만의 likely body 후보, 명시적 크기가 없는 run, title risk,
 본문 title row의 font-size 불일치, 승인되지 않은 geometry overlap, 서로 다른 text frame에서 실제
-렌더된 글자의 충돌을 실패 처리한다.
-Storyline에서 Fact Ledger의 외부 사실을 사용하는 슬라이드가 있으면
-`--require-sources <slide-list>`를 추가해 모두 전달한다.
-해당 슬라이드의 footer 영역에 `Source:` 또는 `출처:`가 없으면 strict 검증이 실패한다. 외부 사실을
-사용하지 않는 덱에서만 이 옵션을 생략한다.
-사람이 확인한 의도적 예외가 있을 때만 `--allow-small-text 4,8-9` 또는
-`--allow-overlap 6,8`, `--allow-title-size 12`처럼 슬라이드 번호를 명시한다. footer와 짧은
-label/chip은 별도로 분류된다.
+렌더된 글자의 충돌·overflow·허용치를 넘는 unmapped span을 실패 처리한다.
+Fact Ledger `claimIds`가 있는 슬라이드는 자동으로 출처 대상이 되며 footer에 `[F-001]` 같은 ID가
+없으면 실패한다.
+
+chart·SmartArt처럼 자동 text mapping을 지원하지 않는 객체는 성공으로 가정하지 않는다. 첫 실행에서
+발급된 finding ID를 전체 화면으로 확인한 뒤 `qa-exceptions.json`에 정확한 ID와 검토 이유를 기록한다.
+슬라이드 전체 `--allow-*` 옵션은 기존 작업 호환용이며 새 덱에서는 사용하지 않는다.
 
 ## 1. 구조 감사
 
@@ -53,23 +51,23 @@ python3 -B .github/skills/adaptive-presentation/scripts/audit_pptx.py deck.pptx
 긴 제목 때문에 특정 슬라이드만 축소하지 말고 title frame 높이·폭이나 문구를 조정한다. 표지·section
 divider처럼 실제 위계가 다른 예외만 확대 확인 후 `--allow-title-size`로 승인한다.
 
-구조 검사 결과의 `overlap_candidates`는 좌표 기반이다. `--strict`에서는
+구조 검사 결과의 `overlap_candidates`는 좌표 기반이다. strict mode에서는
 `unexpected_overlap_candidates`가 0이어야 한다. connector나 포함 관계처럼 의도적인 겹침은 개별
-슬라이드를 확대 확인한 뒤에만 `--allow-overlap`으로 승인한다.
+슬라이드를 확대 확인한 뒤 finding ID 단위로 승인한다.
 
-감사 스크립트는 주요 본문과 짧은 label/chip 후보를 분리해 보고한다. label 경고는 시각 검토 대상이며
-그 자체가 실패는 아니다. 그룹 도형이 있으면 내부 텍스트는 검사하지만 자식 좌표의 시각적 경계는 렌더로
-확인한다. 차트 축·데이터 레이블처럼 별도 객체에 그려지는 텍스트도 렌더로 확인한다. 장식 도형의
-intentional bleed는 허용할 수 있다. 감사 결과를 맹목적으로 통과시키지 말고 항목별로 판단한다.
+감사 스크립트는 주요 본문과 짧은 label/chip 후보를 분리한다. 그룹 자식과 표 셀은 개별 frame으로
+render mapping하고, chart·SmartArt는 `unsupported_text_objects`로 분류한다. 장식 도형의 intentional
+bleed는 finding 단위 근거가 있을 때만 허용한다.
 
 전체 렌더가 끝나면 verifier는 PDF text span을 원본 text frame에 다시 매핑한다.
 
 - `rendered_text_overlaps`: 서로 다른 text frame에서 실제 글리프 bounding box가 겹친 항목
 - `unexpected_rendered_text_overlaps`: 승인되지 않아 strict 실패를 만드는 항목
 - `rendered_text_overflow_candidates`: 줄바꿈·폰트 metric으로 frame 밖에 렌더된 후보
+- `unmapped_rendered_text_findings`: PPTX semantic object에 연결되지 않은 PDF span
+- `unsupported_text_objects`: chart·SmartArt 등 자동 mapping 범위 밖의 객체
 
-overflow candidate 자체는 인접 객체와 충돌하지 않을 수 있으므로 위험 슬라이드 우선순위에 반영하고
-확대 확인한다. 다른 frame의 글자와 충돌한 항목은 수정하거나 명시적으로 승인해야 한다.
+overflow·unmapped·unsupported finding은 수정하거나 전체 화면 검토 후 finding 단위로 승인해야 한다.
 
 ## 2. 전체 렌더
 
@@ -164,6 +162,9 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 | Preview/demo | 텍스트 라벨 존재 |
 | Render | 전체 compact overview 생성 + 위험 슬라이드 선택 렌더 |
 | Integrity | `unzip -t` 오류 0 |
+| Contract | deck spec의 장수·canvas·font·Fact Ledger ID와 일치 |
+| Unsupported text | chart·SmartArt finding마다 확대 검토 이유 존재 |
+| Visual evidence | 최종 PPTX SHA-256과 일치하는 전체 slide review manifest |
 
 ## 6. 수정 루프 (시간 최소화)
 
@@ -172,12 +173,12 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 3. 오버플로 수정은 내용·레이아웃을 우선하되, 전체 축소 요청은 역할별 0.5~2pt 일괄 조정한다.
 4. 모든 결함을 모아 세션 작업 폴더의 `build_<deck>.py`를 **한 번에** 수정한다.
 5. PPTX를 재생성하고 새 PPTX에서 PDF를 다시 변환한다.
-6. `--strict`를 다시 실행해 geometry/render overlap이 0인지 확인한다. 의도적 예외는 확대 검토 근거가
-   있을 때만 `--allow-overlap`으로 남긴다.
+6. verifier를 다시 실행해 자동 결함이 0인지 확인한다. 의도적 예외는 확대 검토 후 finding ID와 이유를
+   manifest에 남긴다.
 7. **국소(단일·소수 슬라이드, 비구조) 수정이면 `--slides`로 변경 슬라이드만 이미지화해 확인하고 전체
    contact sheet는 다시 만들지 않는다.**
-8. 여러 슬라이드·구조가 바뀐 경우에만 전체 contact sheet를 다시 열람한다. 변경이 없으면 최초 전체
-   렌더가 최종 검증이다.
+8. 최종 revision의 전체 contact sheet를 확인하고 SHA-256에 묶인 `visual-review.json`으로 완료를
+   증명한다. PPTX가 바뀌면 기존 evidence는 사용할 수 없다.
 
 ## 7. 정리
 

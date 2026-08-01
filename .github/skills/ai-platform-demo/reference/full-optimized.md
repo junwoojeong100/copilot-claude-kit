@@ -45,12 +45,12 @@ Pack과 Overlay를 `demo-spec.json`으로 만들며 이후 수정 surface는 HTM
 2. 고객의 DX·AI 현황과 최근 이슈
 3. Microsoft·GitHub 서비스의 현재 상태
 
-각 검색 결과는 `web-search`의 공통 Fact Ledger 계약으로 기록하고 `Demo candidate`만 확장한다. 메인
+각 검색 결과는 `web-search`의 공통 Fact Ledger 계약으로 기록하고 데모 매핑은 Customer Overlay에 둔다. 메인
 에이전트가 결과를 하나의 Fact Ledger로 합치고 충돌을 해결한 뒤에만 스토리라인을 시작한다. 기존
 원장이 있으면 안정적인 회사 사실은 출처를 찾는 참고로만 사용하고, **고객 요청마다 공식 원문을
 실시간으로 다시 확인한다.** 이전 Fact Ledger나 Industry Pack의 사실이 새 조사를 대체하면 안 된다.
 AI 데모 빌드 전에는 같은 내용을 `web-search/schema/fact-ledger.schema.json`에 맞춘
-`fact-ledger.json`으로 저장하고, timezone이 포함된 `checkedAt`과 서로 다른 canonical Fact source URL
+`fact-ledger.json`으로 저장하고, timezone이 포함된 `checkedAt`과 서로 다른 canonical Accepted Fact source URL
 2개 이상을 확인한다.
 
 ## 4. Puppeteer 공용 캐시

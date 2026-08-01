@@ -309,21 +309,28 @@ class ComposeDemoSpecTests(unittest.TestCase):
         )
         research, provenance = compose_demo_spec.fact_ledger_research(ledger)
         self.assertEqual(research["mode"], "live")
-        self.assertEqual(research["ledgerIds"], ["F-001", "F-002"])
+        self.assertEqual(
+            research["ledgerIds"], ["A-001", "F-001", "F-002", "I-001"]
+        )
         self.assertEqual(len(research["sourceUrls"]), 2)
         self.assertEqual(len(provenance["sources"]), 2)
         self.assertEqual(provenance["sources"][0]["ledgerIds"], ["F-001"])
 
-        inference = dict(ledger["facts"][0])
-        inference["id"] = "I-001"
-        inference["type"] = "Inference"
-        ledger["facts"].append(inference)
-        _, provenance = compose_demo_spec.fact_ledger_research(ledger)
-        self.assertEqual(
-            provenance["ledgerIds"], ["F-001", "F-002", "I-001"]
-        )
-
         ledger["facts"] = ledger["facts"][:1]
+        with self.assertRaisesRegex(
+            compose_demo_spec.ComposeError, "at least two unique"
+        ):
+            compose_demo_spec.fact_ledger_research(ledger)
+
+        ledger = json.loads(
+            (WEB_SEARCH_ROOT / "examples" / "fact-ledger.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        ledger["facts"][1]["status"] = "Rejected"
+        ledger["facts"][1]["decisionRationale"] = "Superseded source."
+        ledger["facts"][2]["status"] = "Unresolved"
+        ledger["facts"][2]["decisionRationale"] = "A basis was rejected."
         with self.assertRaisesRegex(
             compose_demo_spec.ComposeError, "at least two unique"
         ):
@@ -340,20 +347,20 @@ class ComposeDemoSpecTests(unittest.TestCase):
             compose_demo_spec.fact_ledger_research(ledger)
 
         ledger["schemaVersion"] = 1
-        ledger["facts"][0]["accessed"] = "20260723"
+        ledger["facts"][0]["sources"][0]["accessed"] = "20260723"
         with self.assertRaisesRegex(
             compose_demo_spec.ComposeError, "YYYY-MM-DD"
         ):
             compose_demo_spec.fact_ledger_research(ledger)
 
-        ledger["facts"][0]["accessed"] = "2026-07-23"
-        ledger["facts"][0]["publishedOrUpdated"] = "not-a-date"
+        ledger["facts"][0]["sources"][0]["accessed"] = "2026-08-01"
+        ledger["facts"][0]["sources"][0]["publishedOrUpdated"] = "not-a-date"
         with self.assertRaisesRegex(
             compose_demo_spec.ComposeError, "publishedOrUpdated"
         ):
             compose_demo_spec.fact_ledger_research(ledger)
 
-        ledger["facts"][0]["publishedOrUpdated"] = "확인 불가"
+        ledger["facts"][0]["sources"][0]["publishedOrUpdated"] = "확인 불가"
         ledger["unexpected"] = True
         with self.assertRaises(compose_demo_spec.ComposeError):
             compose_demo_spec.fact_ledger_research(ledger)
@@ -393,7 +400,10 @@ class ComposeDemoSpecTests(unittest.TestCase):
             now = datetime.now().astimezone()
             ledger["checkedAt"] = now.isoformat()
             for fact in ledger["facts"]:
-                fact["accessed"] = now.date().isoformat()
+                for source in fact.get("sources", []):
+                    source["accessed"] = now.date().isoformat()
+            for source in ledger.get("excludedSources", []):
+                source["accessed"] = now.date().isoformat()
             ledger_path = temp / "fact-ledger.json"
             ledger_path.write_text(
                 json.dumps(ledger, ensure_ascii=False),
@@ -442,7 +452,8 @@ class ComposeDemoSpecTests(unittest.TestCase):
             sources = spec["meta"]["research"]["sources"]
             self.assertEqual(len(sources), 2)
             self.assertEqual(
-                spec["meta"]["research"]["ledgerIds"], ["F-001", "F-002"]
+                spec["meta"]["research"]["ledgerIds"],
+                ["A-001", "F-001", "F-002", "I-001"],
             )
             self.assertEqual(sources[0]["ledgerIds"], ["F-001"])
             html = html_output.read_text(encoding="utf-8")

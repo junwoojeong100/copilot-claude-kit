@@ -1,36 +1,74 @@
 {
   "schemaVersion": 1,
-  "checkedAt": "2026-07-23T10:30:00+09:00",
+  "checkedAt": "2026-08-01T16:00:00+09:00",
   "facts": [
     {
       "id": "F-001",
       "type": "Fact",
       "claim": "Microsoft Learn exposes an MCP endpoint for documentation access.",
-      "evidence": "The official support page documents the Microsoft Learn MCP server.",
-      "source": {
-        "title": "Microsoft Learn MCP Server overview",
-        "url": "https://learn.microsoft.com/training/support/mcp"
-      },
-      "publisher": "Microsoft",
-      "publishedOrUpdated": "확인 불가",
-      "accessed": "2026-07-23",
+      "evidence": "The official overview documents the Microsoft Learn MCP server.",
+      "sources": [
+        {
+          "title": "Microsoft Learn MCP Server overview",
+          "url": "https://learn.microsoft.com/training/support/mcp",
+          "publisher": "Microsoft",
+          "publishedOrUpdated": "확인 불가",
+          "accessed": "2026-08-01",
+          "locator": "Overview"
+        }
+      ],
       "scopeOrStatus": "Microsoft Learn documentation",
-      "confidence": "High"
+      "confidence": "High",
+      "status": "Accepted"
     },
     {
       "id": "F-002",
       "type": "Fact",
       "claim": "GitHub documents agent skills for Copilot.",
       "evidence": "The official GitHub documentation describes agent skill structure and use.",
-      "source": {
-        "title": "About agent skills",
-        "url": "https://docs.github.com/copilot/concepts/agents/about-agent-skills"
-      },
-      "publisher": "GitHub",
-      "publishedOrUpdated": "확인 불가",
-      "accessed": "2026-07-23",
+      "sources": [
+        {
+          "title": "About agent skills",
+          "url": "https://docs.github.com/copilot/concepts/agents/about-agent-skills",
+          "publisher": "GitHub",
+          "publishedOrUpdated": "확인 불가",
+          "accessed": "2026-08-01",
+          "locator": "About agent skills"
+        }
+      ],
       "scopeOrStatus": "GitHub Copilot",
-      "confidence": "High"
+      "confidence": "High",
+      "status": "Accepted"
+    },
+    {
+      "id": "I-001",
+      "type": "Inference",
+      "claim": "A shared ledger can connect research to downstream presentation and demo artifacts.",
+      "evidence": "Both documented capabilities expose structured source metadata that downstream contracts can reference.",
+      "basisIds": ["F-001", "F-002"],
+      "scopeOrStatus": "Repository workflow design",
+      "confidence": "Medium",
+      "status": "Accepted"
+    },
+    {
+      "id": "A-001",
+      "type": "Assumption",
+      "claim": "The target environment can reach both public documentation endpoints.",
+      "evidence": "Network availability is environment-specific and was not established by the source documents.",
+      "assumptionOwner": "Artifact producer",
+      "validationNeeded": "Confirm outbound HTTPS access before running live research.",
+      "scopeOrStatus": "Execution environment",
+      "confidence": "Low",
+      "status": "Unresolved",
+      "decisionRationale": "Connectivity must be checked in the deployment environment."
+    }
+  ],
+  "excludedSources": [
+    {
+      "title": "Unverified search snippet",
+      "url": "https://example.com/unverified-result",
+      "reason": "No canonical original document was available.",
+      "accessed": "2026-08-01"
     }
   ]
 }

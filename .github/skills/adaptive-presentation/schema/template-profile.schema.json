@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/junwoojeong100/github-copilot-augment-kit/main/.github/skills/adaptive-presentation/schema/template-profile.schema.json",
+  "title": "Adaptive Presentation Template Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "source",
+    "widthIn",
+    "heightIn",
+    "aspectRatio",
+    "themeFingerprint",
+    "templateFingerprint",
+    "masterCount",
+    "layouts",
+    "themeFonts",
+    "slideCount"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "source": {"type": "string", "minLength": 1},
+    "widthIn": {"type": "number", "exclusiveMinimum": 0},
+    "heightIn": {"type": "number", "exclusiveMinimum": 0},
+    "aspectRatio": {"type": "number", "exclusiveMinimum": 0},
+    "themeFingerprint": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "templateFingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "masterCount": {"type": "integer", "minimum": 1},
+    "layouts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "index",
+          "masterIndex",
+          "layoutIndex",
+          "name",
+          "placeholderTypes"
+        ],
+        "properties": {
+          "index": {"type": "integer", "minimum": 0},
+          "masterIndex": {"type": "integer", "minimum": 0},
+          "layoutIndex": {"type": "integer", "minimum": 0},
+          "name": {"type": "string"},
+          "placeholderTypes": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "themeFonts": {
+      "type": "object",
+      "required": ["major", "minor"]
+    },
+    "slideCount": {"type": "integer", "minimum": 0}
+  }
+}

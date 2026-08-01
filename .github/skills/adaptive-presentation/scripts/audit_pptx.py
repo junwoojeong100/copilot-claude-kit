@@ -19,6 +19,7 @@ from pptx.oxml.ns import qn
 from pptx.util import Inches
 from lxml import etree
 
+from qa_exceptions import annotate
 from tooling import paths_collide
 
 SHAPE_PROPERTY_TAGS = {
@@ -48,6 +49,13 @@ def positive_float(value: str) -> float:
 def nonnegative_float(value: str) -> float:
     parsed = float(value)
     if not math.isfinite(parsed) or parsed < 0:
+        raise argparse.ArgumentTypeError("value must be non-negative")
+    return parsed
+
+
+def nonnegative_int(value: str) -> int:
+    parsed = int(value)
+    if parsed < 0:
         raise argparse.ArgumentTypeError("value must be non-negative")
     return parsed
 
@@ -586,6 +594,7 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
     group_shapes: list[dict] = []
     slides_with_sources: list[int] = []
     slides_with_footer_sources: list[int] = []
+    footer_source_texts: dict[int, list[str]] = {}
     overlap_candidates = detect_geometry_overlap_candidates(
         prs, tolerance, args.allow_overlap
     )
@@ -641,6 +650,7 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
                 has_source = True
                 if top is not None and top >= footer_top:
                     has_footer_source = True
+                    footer_source_texts.setdefault(slide_number, []).append(text)
 
             for paragraph in text_frame.paragraphs:
                 paragraph_text = paragraph.text.strip()
@@ -702,6 +712,35 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
                 }
             )
 
+    allowed_finding_ids = getattr(args, "allow_finding_ids", set())
+    for item in out_of_bounds:
+        annotate(
+            "out_of_bounds",
+            item,
+            allowed_finding_ids=allowed_finding_ids,
+            slide_allowed=bool(item["allowed_bleed"]),
+        )
+        item["allowed_bleed"] = item["allowed"]
+    for detector, items in (
+        ("small_body_text", small_text_body),
+        ("small_label_text", small_text_labels),
+        ("geometry_overlap", overlap_candidates),
+        ("title_risk", title_risks),
+        ("unsized_run", unsized_runs),
+        ("title_size_inconsistency", title_consistency["title_size_inconsistencies"]),
+    ):
+        for item in items:
+            annotate(
+                detector,
+                item,
+                allowed_finding_ids=allowed_finding_ids,
+                slide_allowed=bool(item.get("allowed")),
+            )
+    title_consistency["unexpected_title_size_inconsistencies"] = [
+        item
+        for item in title_consistency["title_size_inconsistencies"]
+        if not item["allowed"]
+    ]
     unexpected_bounds = [
         item for item in out_of_bounds if not item["allowed_bleed"]
     ]
@@ -710,6 +749,12 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
     ]
     unexpected_overlap_candidates = [
         item for item in overlap_candidates if not item["allowed"]
+    ]
+    unexpected_title_risks = [
+        item for item in title_risks if not item["allowed"]
+    ]
+    unexpected_unsized_runs = [
+        item for item in unsized_runs if not item["allowed"]
     ]
     required_source_slides = sorted(
         getattr(args, "require_sources", set())
@@ -737,6 +782,9 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
         },
         "slides_with_sources": slides_with_sources,
         "slides_with_footer_sources": slides_with_footer_sources,
+        "footer_source_texts_by_slide": {
+            str(slide): texts for slide, texts in sorted(footer_source_texts.items())
+        },
         "required_source_slides": required_source_slides,
         "missing_required_source_slides": missing_required_source_slides,
         "out_of_bounds": out_of_bounds,
@@ -746,8 +794,10 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
         "small_text_label_candidates": small_text_labels,
         "empty_text_frames": empty_text_frames,
         "title_risks": title_risks,
+        "unexpected_title_risks": unexpected_title_risks,
         **title_consistency,
         "unsized_runs": unsized_runs,
+        "unexpected_unsized_runs": unexpected_unsized_runs,
         "group_shapes": group_shapes,
         "overlap_candidates": overlap_candidates,
         "unexpected_overlap_candidates": unexpected_overlap_candidates,
@@ -775,9 +825,10 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
             f"{len(unexpected_small_text_body)} likely body-text runs are below "
             f"{args.min_body_pt} pt"
         )
-    if args.fail_title_risks and title_risks:
+    if args.fail_title_risks and unexpected_title_risks:
         failures.append(
-            f"{len(title_risks)} slides have no text at or above {args.min_title_pt} pt"
+            f"{len(unexpected_title_risks)} slides have no text at or above "
+            f"{args.min_title_pt} pt"
         )
     if (
         args.fail_title_consistency
@@ -787,9 +838,10 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
             f"{len(title_consistency['unexpected_title_size_inconsistencies'])} "
             "content slide title(s) differ from the deck title-size standard"
         )
-    if args.fail_unsized_runs and unsized_runs:
+    if args.fail_unsized_runs and unexpected_unsized_runs:
         failures.append(
-            f"{len(unsized_runs)} non-empty text runs have no explicit font size"
+            f"{len(unexpected_unsized_runs)} non-empty text runs have no explicit "
+            "font size"
         )
     if args.fail_overlaps and unexpected_overlap_candidates:
         failures.append(

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/junwoojeong100/github-copilot-augment-kit/main/.github/skills/adaptive-presentation/schema/qa-exceptions.schema.json",
+  "title": "Adaptive Presentation QA Exceptions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "exceptions"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["findingId", "reason"],
+        "properties": {
+          "findingId": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 12}
+        }
+      }
+    }
+  }
+}

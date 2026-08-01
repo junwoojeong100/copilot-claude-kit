@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/junwoojeong100/github-copilot-augment-kit/main/.github/skills/adaptive-presentation/schema/visual-review.schema.json",
+  "title": "Adaptive Presentation Visual Review Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "deckSha256", "reviewer", "reviewedSlides", "notes"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "deckSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "reviewer": {"type": "string", "minLength": 1},
+    "reviewedSlides": {
+      "oneOf": [
+        {"const": "all"},
+        {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "integer", "minimum": 1}
+        }
+      ]
+    },
+    "notes": {"type": "string", "minLength": 12}
+  }
+}

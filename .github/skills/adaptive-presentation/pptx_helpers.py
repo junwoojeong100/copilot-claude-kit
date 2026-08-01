@@ -12,6 +12,7 @@
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Sequence
 
 from pptx import Presentation
@@ -23,11 +24,11 @@ from pptx.oxml.ns import qn
 
 __all__ = [
     "PP_ALIGN", "MSO_ANCHOR", "MSO_AUTO_SIZE", "MSO_SHAPE", "RGBColor", "Inches", "Pt",
-    "hexc", "new_deck", "add_slide", "soft_shadow", "box", "text",
+    "hexc", "new_deck", "init_deck", "initialize_deck", "add_slide", "soft_shadow", "box", "text",
     "bullets", "chip", "hline", "vline", "chevron", "grid_table",
 ]
 
-DEFAULT_FONT = "Apple SD Gothic Neo"  # 폴백일 뿐, 호출자가 언제든 override
+DEFAULT_FONT = "Arial"  # 폴백일 뿐, 호출자가 언제든 override
 
 
 def hexc(value: str) -> RGBColor:
@@ -40,7 +41,87 @@ def new_deck(width_in: float = 13.333, height_in: float = 7.5):
     prs = Presentation()
     prs.slide_width = Inches(width_in)
     prs.slide_height = Inches(height_in)
-    return prs, prs.slide_layouts[6]
+    return prs, _select_layout(prs)
+
+
+def _layout_candidates(prs):
+    for master_index, master in enumerate(prs.slide_masters):
+        for layout_index, layout in enumerate(master.slide_layouts):
+            yield master_index, layout_index, layout
+
+
+def _select_layout(prs, layout_name: str | None = None):
+    candidates = list(_layout_candidates(prs))
+    if not candidates:
+        raise ValueError("Presentation has no slide layouts")
+
+    if layout_name is not None:
+        requested = layout_name.strip()
+        exact = [item for item in candidates if (item[2].name or "") == requested]
+        matches = exact or [
+            item
+            for item in candidates
+            if (item[2].name or "").casefold() == requested.casefold()
+        ]
+        if not matches:
+            available = ", ".join(
+                repr(layout.name or "")
+                for _, _, layout in candidates
+            )
+            raise ValueError(
+                f"Slide layout {layout_name!r} was not found; available layouts: {available}"
+            )
+        return matches[0][2]
+
+    housekeeping = {"DATE", "FOOTER", "SLIDE_NUMBER", "HEADER"}
+
+    def score(item):
+        master_index, layout_index, layout = item
+        placeholder_types = [
+            getattr(placeholder.placeholder_format.type, "name", "")
+            for placeholder in layout.placeholders
+        ]
+        content_count = sum(
+            placeholder_type not in housekeeping
+            for placeholder_type in placeholder_types
+        )
+        return content_count, len(placeholder_types), master_index, layout_index
+
+    return min(candidates, key=score)[2]
+
+
+def _remove_existing_slides(prs) -> None:
+    slide_ids = prs.slides._sldIdLst
+    for slide_id in list(slide_ids):
+        prs.part.drop_rel(slide_id.rId)
+        slide_ids.remove(slide_id)
+
+
+def init_deck(
+    template_path: str | Path | None = None,
+    *,
+    clear_existing_slides: bool = False,
+    layout_name: str | None = None,
+    width_in: float = 13.333,
+    height_in: float = 7.5,
+):
+    """Initialize a deck and return ``(presentation, selected_layout)``.
+
+    A provided template retains its canvas, masters, layouts, and theme. Existing
+    slides are removed only when ``clear_existing_slides`` is true.
+    """
+    if template_path is None:
+        prs = Presentation()
+        prs.slide_width = Inches(width_in)
+        prs.slide_height = Inches(height_in)
+    else:
+        prs = Presentation(Path(template_path).expanduser())
+        if clear_existing_slides:
+            _remove_existing_slides(prs)
+    return prs, _select_layout(prs, layout_name)
+
+
+initialize_deck = init_deck
 
 
 def add_slide(prs, blank_layout, bg: RGBColor | None = None):
