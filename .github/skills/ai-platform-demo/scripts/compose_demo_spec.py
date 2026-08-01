@@ -19,6 +19,12 @@ from urllib.parse import urlparse, urlunparse
 
 import render_demo
 
+WEB_SEARCH_SCRIPTS = (
+    Path(__file__).resolve().parents[2] / "web-search" / "scripts"
+)
+sys.path.insert(0, str(WEB_SEARCH_SCRIPTS))
+import validate_fact_ledger as fact_ledger_validator  # noqa: E402
+
 
 DELETE_MARKER = {"$delete": True}
 REPLACE_KEY = "$replace"
@@ -28,20 +34,6 @@ ISO_TIMESTAMP_PATTERN = re.compile(
     r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"
     r"(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
 )
-FACT_LEDGER_KEYS = {"schemaVersion", "checkedAt", "facts"}
-FACT_KEYS = {
-    "id",
-    "type",
-    "claim",
-    "evidence",
-    "source",
-    "publisher",
-    "publishedOrUpdated",
-    "accessed",
-    "scopeOrStatus",
-    "confidence",
-}
-SOURCE_KEYS = {"title", "url"}
 
 
 class ComposeError(ValueError):
@@ -308,98 +300,31 @@ def canonical_source_url(value: str) -> str | None:
 def fact_ledger_research(
     document: Any,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    if (
-        not isinstance(document, dict)
-        or set(document) != FACT_LEDGER_KEYS
-        or type(document.get("schemaVersion")) is not int
-        or document["schemaVersion"] != 1
-    ):
-        raise ComposeError("Fact Ledger requires schemaVersion 1")
-    checked_at = document.get("checkedAt")
-    if not isinstance(checked_at, str) or not ISO_TIMESTAMP_PATTERN.fullmatch(
-        checked_at
-    ):
-        raise ComposeError(
-            "Fact Ledger checkedAt must be a timezone-aware ISO 8601 timestamp"
-        )
-    parse_checked_at(checked_at)
-    facts = document.get("facts")
-    if not isinstance(facts, list) or not facts:
-        raise ComposeError("Fact Ledger facts must be a non-empty array")
-
-    required_strings = (
-        "id",
-        "type",
-        "claim",
-        "evidence",
-        "publisher",
-        "publishedOrUpdated",
-        "accessed",
-        "scopeOrStatus",
-        "confidence",
-    )
-    seen_ids: set[str] = set()
+    try:
+        normalized = fact_ledger_validator.validate_ledger(document)
+    except fact_ledger_validator.LedgerValidationError as error:
+        raise ComposeError(f"Fact Ledger is invalid: {error}") from error
+    checked_at = normalized["checkedAt"]
+    seen_ids = {fact["id"] for fact in normalized["facts"]}
     sources_by_url: dict[str, dict[str, Any]] = {}
-    for index, fact in enumerate(facts):
-        path = f"Fact Ledger facts[{index}]"
-        if not isinstance(fact, dict) or set(fact) != FACT_KEYS:
-            raise ComposeError(f"{path} must match the Fact Ledger schema")
-        for key in required_strings:
-            value = fact.get(key)
-            if not isinstance(value, str) or not value.strip():
-                raise ComposeError(f"{path}.{key} must be a non-empty string")
-        if fact["type"] not in {"Fact", "Inference", "Assumption"}:
-            raise ComposeError(f"{path}.type is invalid")
-        if fact["confidence"] not in {"High", "Medium", "Low"}:
-            raise ComposeError(f"{path}.confidence is invalid")
-        if fact["id"] in seen_ids:
-            raise ComposeError(f"Fact Ledger ID is duplicated: {fact['id']}")
-        seen_ids.add(fact["id"])
-        if not ISO_DATE_PATTERN.fullmatch(fact["accessed"]):
-            raise ComposeError(f"{path}.accessed must be YYYY-MM-DD")
-        try:
-            date.fromisoformat(fact["accessed"])
-        except ValueError as error:
-            raise ComposeError(f"{path}.accessed must be YYYY-MM-DD") from error
-        published_or_updated = fact["publishedOrUpdated"]
-        if published_or_updated != "확인 불가":
-            if not ISO_DATE_PATTERN.fullmatch(published_or_updated):
-                raise ComposeError(
-                    f"{path}.publishedOrUpdated must be YYYY-MM-DD or 확인 불가"
-                )
-            try:
-                date.fromisoformat(published_or_updated)
-            except ValueError as error:
-                raise ComposeError(
-                    f"{path}.publishedOrUpdated must be YYYY-MM-DD or 확인 불가"
-                ) from error
-
-        source = fact.get("source")
-        if not isinstance(source, dict) or set(source) != SOURCE_KEYS:
-            raise ComposeError(f"{path}.source must match the Fact Ledger schema")
-        title = source.get("title")
-        source_url = source.get("url")
-        if not isinstance(title, str) or not title.strip():
-            raise ComposeError(f"{path}.source.title must be a non-empty string")
-        if not isinstance(source_url, str):
-            raise ComposeError(f"{path}.source.url must be an HTTP(S) URL")
-        canonical_url = canonical_source_url(source_url)
-        if canonical_url is None:
-            raise ComposeError(f"{path}.source.url must be an HTTP(S) URL")
-        if fact["type"] != "Fact":
+    for fact in normalized["facts"]:
+        if fact["type"] != "Fact" or fact["status"] != "Accepted":
             continue
-        if canonical_url not in sources_by_url:
-            sources_by_url[canonical_url] = {
-                "title": title.strip(),
-                "url": canonical_url,
-                "publisher": fact["publisher"].strip(),
-                "ledgerIds": [],
-            }
-        sources_by_url[canonical_url]["ledgerIds"].append(fact["id"])
+        for source in fact["sources"]:
+            canonical_url = source["url"]
+            if canonical_url not in sources_by_url:
+                sources_by_url[canonical_url] = {
+                    "title": source["title"],
+                    "url": canonical_url,
+                    "publisher": source["publisher"],
+                    "ledgerIds": [],
+                }
+            sources_by_url[canonical_url]["ledgerIds"].append(fact["id"])
 
     if len(sources_by_url) < 2:
         raise ComposeError(
-            "AI demo Fact Ledger requires at least two unique canonical Fact sources"
+            "AI demo Fact Ledger requires at least two unique canonical "
+            "Accepted Fact sources"
         )
     source_urls = list(sources_by_url)
     research = {

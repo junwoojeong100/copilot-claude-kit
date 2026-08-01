@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/junwoojeong100/github-copilot-augment-kit/main/.github/skills/adaptive-presentation/schema/deck-spec.schema.json",
+  "title": "Adaptive Presentation Deck Specification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "request",
+    "canvas",
+    "fontPolicy",
+    "slides",
+    "qa"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topic", "audience", "purpose", "language", "slideCount"],
+      "properties": {
+        "topic": {"type": "string", "minLength": 1},
+        "audience": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "language": {"type": "string", "minLength": 2},
+        "slideCount": {"type": "integer", "minimum": 1},
+        "output": {"type": "string", "minLength": 1}
+      }
+    },
+    "canvas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "widthIn", "heightIn"],
+      "properties": {
+        "source": {"enum": ["default", "template", "custom"]},
+        "widthIn": {"type": "number", "exclusiveMinimum": 0},
+        "heightIn": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"source": {"const": "default"}}},
+          "then": {
+            "properties": {
+              "widthIn": {"const": 13.333},
+              "heightIn": {"const": 7.5}
+            }
+          }
+        }
+      ]
+    },
+    "templateProfile": {
+      "type": ["string", "null"]
+    },
+    "factLedger": {
+      "type": ["string", "null"]
+    },
+    "fontPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selected",
+        "fallbacks",
+        "requireAvailable",
+        "requireRenderedMatch"
+      ],
+      "properties": {
+        "selected": {"type": "string", "minLength": 1},
+        "fallbacks": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "requireAvailable": {"type": "boolean"},
+        "requireRenderedMatch": {"type": "boolean"}
+      }
+    },
+    "slides": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["number", "role", "title", "claimIds", "stateLabels"],
+        "properties": {
+          "number": {"type": "integer", "minimum": 1},
+          "role": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "claimIds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "stateLabels": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": ["GA", "PARTIAL GA", "PREVIEW", "ASSUMPTION", "DEMO DATA"]
+            }
+          }
+        }
+      }
+    },
+    "qa": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strict",
+        "minBodyPt",
+        "minTitlePt",
+        "maxUnmappedTextSpans",
+        "failRenderedOverflow",
+        "requireVisualReview"
+      ],
+      "properties": {
+        "strict": {"type": "boolean"},
+        "minBodyPt": {"type": "number", "exclusiveMinimum": 0},
+        "minTitlePt": {"type": "number", "exclusiveMinimum": 0},
+        "maxUnmappedTextSpans": {"type": "integer", "minimum": 0},
+        "failRenderedOverflow": {"type": "boolean"},
+        "requireVisualReview": {"type": "boolean"},
+        "exceptionManifest": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

@@ -99,7 +99,7 @@ npm install -g @github/copilot
 | `copilot-instructions.md` | ✅ 자동 적용 | ✅ 자동 적용 |
 | `skills/` | ✅ 자동 활성화 · `/skill-name` | ✅ 자동 활성화 · `/skill-name` |
 | Microsoft Learn MCP | `.vscode/mcp.json`에서 Start | `.github/mcp.json`을 신뢰 후 자동 로드 |
-| 범용 최신 웹 검색 | Copilot web search/Research capability 사용 | 내장 `/research` 또는 Research agent 사용 |
+| 범용 최신 웹 검색 | 공식 도메인 검색 → Copilot web search → broad Research | 공식 도메인 검색 → 내장 web search → broad Research |
 
 ---
 
@@ -127,6 +127,7 @@ npm install -g @github/copilot
     ├── web-search/                      # 실시간 웹·공식 문서 검색과 구조화 수집
     │   ├── SKILL.md
     │   ├── schema/                      # machine-readable Fact Ledger 계약
+    │   ├── scripts/                     # Fact Ledger schema·semantic validator
     │   ├── examples/                    # Fact Ledger JSON 예제
     │   └── tests/                       # 검색·수집 정책 계약 테스트
     ├── ai-platform-demo/                # 고객·산업별 AI·App Platform 데모(단일 HTML) 생성기
@@ -139,10 +140,11 @@ npm install -g @github/copilot
     │   ├── examples/                    # 전체 Spec·compact Customer Overlay 구조 예제
     │   └── reference/                   # 고정 GitHub soft-dark 디자인·화면 청사진·Runtime·검증 절차
     └── adaptive-presentation/           # 주제·청중별 PPTX 생성기(조사·스토리라인 중심)
-        ├── SKILL.md                     # 조사→스토리라인→자유 슬라이드 제작→빠른 렌더 검증
-        ├── reference/                   # 스토리라인 패턴·레이아웃 아이디어·python-pptx 제작·검증
-        ├── scripts/                     # 통합 QA Runner·구조 감사·JPEG/contact sheet 렌더링
-        └── tests/                       # 검증 Runner 회귀 테스트
+        ├── SKILL.md                     # 조사→Deck Spec→자유 제작→revision-bound 검증
+        ├── schema/                      # Deck Spec·template·finding 예외·시각 검토 계약
+        ├── reference/                   # 스토리라인·제작·검증·Deck Spec 가이드
+        ├── scripts/                     # template/font adapter·통합 QA·렌더링
+        └── tests/                       # 계약·adapter·검증 Runner 회귀/E2E 테스트
 .vscode/
 └── mcp.json                             # VS Code Copilot Agent용 MCP 번들
 ```
@@ -276,21 +278,22 @@ cp -R .github/skills/ai-platform-demo ~/.copilot/skills/
 슬라이드에서 결론·가치·다음 행동이 보이고, 이후 장은 그 결론에 필요한 근거만 쌓는 Straightforward
 구성을 최우선으로 합니다.
 
-진행 순서: ① 외부 사실·최신 정보가 필요할 때 공식 자료 조사·Fact Ledger → ② 목적별 Storyline 설계 →
-③ `python-pptx`로 슬라이드 자유 제작(정보 유형에 맞는 시각 형태를 매번 다양하게) →
-④ 통합 QA Runner의 전체 렌더 및 contact sheet로 빠른 검증 순입니다.
+진행 순서: ① 필요한 공식 자료 조사·Fact Ledger → ② Deck Spec과 Storyline 설계 →
+③ 템플릿 profile·설치 폰트를 반영한 `python-pptx` 제작 → ④ capability-aware QA와 revision-bound
+시각 검토 순입니다.
 
 ```text
 필요한 경우 Fact Ledger
-  → 목적별 Storyline(슬라이드별 결론·근거·시각 형태)
-  → python-pptx 자유 슬라이드 제작(고정 템플릿 없음)
+  → Deck Spec + Storyline(슬라이드별 결론·Fact ID·시각 형태)
+  → python-pptx 자유 제작(제공 템플릿은 master·layout·theme·canvas 보존)
   → 편집 가능한 PPTX
-  → 통합 QA Runner(구조 감사 + 전체 렌더 + risk slides)
+  → 통합 QA Runner + finding 단위 예외 + SHA-256 시각 검토 증거
 ```
 
 **슬라이드는 고정 생성 엔진 없이 `python-pptx`로 직접 만듭니다.** 정보 관계(숫자·흐름·비교·계층·사례)에
-맞는 시각 형태를 슬라이드마다 자유롭게 선택하고, 같은 구조를 기계적으로 반복하지 않습니다. 색·글꼴은
-주제와 (있다면) 사용자 브랜드에 맞게 정하되 본문 대비 최소 4.5:1, 주요 본문 16pt 권장·15pt 하한, 출처 footer 표기 등
+맞는 시각 형태를 슬라이드마다 자유롭게 선택하고, 같은 구조를 기계적으로 반복하지 않습니다. 템플릿이
+있으면 profile을 추출해 원본 master와 theme을 보존하고, 없으면 환경에서 확인한 언어별 설치 폰트를
+선택합니다. 본문 대비 최소 4.5:1, 주요 본문 16pt 권장·15pt 하한, `[Fact ID]` 출처 footer 표기 등
 가독성·편집성 기준은 지킵니다. 아이디어가 필요하면 `reference/slide-blueprints.md`의 관계형 패턴을
 선택적으로 참고하되 그대로 복제하지 않습니다.
 
@@ -317,16 +320,14 @@ cp -R .github/skills/ai-platform-demo ~/.copilot/skills/
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
-  deck.pptx --out <session>/<deck>-work --expected-slides 30 \
-  --strict --min-body-pt 15
+  deck.pptx --out <session>/<deck>-work \
+  --deck-spec <session>/<deck>-work/deck-spec.json
 ```
 
-Runner는 구조 감사와 전체 렌더를 병렬 실행하고, 텍스트 밀도·작은 글자·title risk·group·bounds를
-점수화해 위험 슬라이드를 자동으로 상세 렌더합니다. 전체 overview와 위험 슬라이드는 사람이 확인하며,
-`--strict --min-body-pt 15`는 15pt 미만 본문 후보·명시적 크기가 없는 run·title risk를 실패 처리합니다. 사람이 확인한
-의도적 예외에만 `--allow-small-text 4,8-9`처럼 슬라이드 번호를 지정합니다. 외부 사실을 사용하는
-슬라이드가 있으면 `--require-sources <slide-list>`를 추가합니다. QA Runner는 비어 있지 않은
-일반 출력 디렉터리를 덮어쓰지 않습니다.
+Runner는 구조 감사와 전체 렌더를 병렬 실행하고 그룹 자식·표 셀을 semantic frame으로 매핑합니다.
+chart·SmartArt·unmapped text·overflow는 성공으로 숨기지 않고 finding ID를 발급합니다. 확대 검토한
+의도적 예외만 ID와 이유를 manifest에 남기며, 최종 contact sheet 검토는 현재 PPTX SHA-256과 연결된
+`visual-review.json`으로 증명합니다. QA Runner는 비어 있지 않은 일반 출력 디렉터리를 덮어쓰지 않습니다.
 
 개인 설치(같은 이름의 스킬이 없을 때):
 

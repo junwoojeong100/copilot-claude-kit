@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import unittest
 from pathlib import Path
 
@@ -14,6 +15,14 @@ ADAPTIVE_FULL_OPTIMIZED = (
     ADAPTIVE_SKILL.parent / "reference" / "full-optimized.md"
 )
 ADAPTIVE_VERIFICATION = ADAPTIVE_SKILL.parent / "reference" / "verification.md"
+ADAPTIVE_DECK_SPEC = ADAPTIVE_SKILL.parent / "reference" / "deck-spec.md"
+ADAPTIVE_DECK_SCHEMA = ADAPTIVE_SKILL.parent / "schema" / "deck-spec.schema.json"
+ADAPTIVE_EXCEPTION_SCHEMA = (
+    ADAPTIVE_SKILL.parent / "schema" / "qa-exceptions.schema.json"
+)
+ADAPTIVE_VISUAL_SCHEMA = (
+    ADAPTIVE_SKILL.parent / "schema" / "visual-review.schema.json"
+)
 DEMO_FULL_OPTIMIZED = DEMO_SKILL.parent / "reference" / "full-optimized.md"
 REPOSITORY_ROOT = SKILL.parents[3]
 COPILOT_INSTRUCTIONS = REPOSITORY_ROOT / ".github" / "copilot-instructions.md"
@@ -22,6 +31,9 @@ CLI_MCP_CONFIG = REPOSITORY_ROOT / ".github" / "mcp.json"
 VSCODE_MCP_CONFIG = REPOSITORY_ROOT / ".vscode" / "mcp.json"
 FACT_LEDGER_SCHEMA = SKILL.parent / "schema" / "fact-ledger.schema.json"
 FACT_LEDGER_EXAMPLE = SKILL.parent / "examples" / "fact-ledger.example.json"
+FACT_LEDGER_VALIDATOR = SKILL.parent / "scripts" / "validate_fact_ledger.py"
+sys.path.insert(0, str(FACT_LEDGER_VALIDATOR.parent))
+import validate_fact_ledger  # noqa: E402
 
 
 class WebSearchSkillPolicyTests(unittest.TestCase):
@@ -34,17 +46,17 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         )
         cls.description = description_line.split(":", 1)[1].strip().strip('"')
 
-    def test_copilot_search_capabilities_are_prioritized(self):
-        web_search = self.skill.index(
-            "Copilot이 제공하는 general web search tool(예: `web_search`)"
-        )
+    def test_search_routing_prefers_shortest_official_path(self):
+        canonical = self.skill.index("알려진 canonical URL·공식 index")
+        domain_search = self.skill.index("도메인 공식 검색")
+        web_search = self.skill.index("general web search tool")
         research_agent = self.skill.index(
-            "Copilot CLI의 `/research` 또는 web source를 지원하는 Research agent"
+            "여러 독립 조사 축을 병렬 수집할 때만 `/research`"
         )
-        domain_search = self.skill.index("도메인 전용 검색")
 
+        self.assertLess(canonical, domain_search)
+        self.assertLess(domain_search, web_search)
         self.assertLess(web_search, research_agent)
-        self.assertLess(research_agent, domain_search)
         self.assertIn("GitHub Copilot CLI와 VS Code Copilot Chat/Agent", self.skill)
 
     def test_public_serp_scraping_is_forbidden(self):
@@ -55,35 +67,29 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertNotIn("DuckDuckGo HTML로 전환", self.skill)
 
     def test_search_results_require_canonical_source_verification(self):
-        self.assertIn("검색 provider의 답변만으로 검증 완료 처리하지 않고", self.skill)
-        self.assertIn("canonical 원문을 직접 확인한다", self.skill)
+        self.assertIn("검색 결과·snippet·AI 요약은 URL 발견용이며 근거가 아니다", self.skill)
+        self.assertIn("canonical", self.skill)
+
+    def test_untrusted_web_content_cannot_direct_agent_actions(self):
+        self.assertIn("untrusted data", self.skill)
+        self.assertIn("prompt injection", self.skill)
+        self.assertIn("도구 실행·파일 변경·로그인·업로드·secret 요청", self.skill)
 
     def test_foundational_research_has_a_fact_ledger_contract(self):
         self.assertIn("Research Brief", self.skill)
         self.assertIn("Fact Ledger 계약", self.skill)
 
-        for field in (
-            "ID",
-            "Type",
-            "Claim",
-            "Evidence",
-            "Source",
-            "Publisher",
-            "Published/updated",
-            "Accessed",
-            "Scope/status",
-            "Confidence",
-        ):
+        for field in ("ID", "Type", "Claim", "Evidence", "Sources/Basis", "Scope/status", "Confidence", "Status"):
             with self.subTest(field=field):
                 self.assertIn(field, self.skill)
 
         self.assertIn("`Fact`·`Inference`·`Assumption`", self.skill)
         self.assertIn("fact-ledger.md", self.skill)
-        self.assertIn("fact-ledger.json", self.skill)
-        self.assertIn("timezone이 포함된 ISO 8601 timestamp", self.skill)
-        self.assertIn("page·section·", self.skill)
-        self.assertIn("table 등 원문 위치(locator)", self.skill)
-        self.assertIn("`YYYY-MM-DD`", self.skill)
+        self.assertIn("validate_fact_ledger.py", self.skill)
+        self.assertIn("locator", self.skill)
+        self.assertIn("basisIds", self.skill)
+        self.assertIn("assumptionOwner", self.skill)
+        self.assertIn("validationNeeded", self.skill)
         self.assertIn("`High`", self.skill)
         self.assertIn("`Medium`", self.skill)
         self.assertIn("`Low`", self.skill)
@@ -92,19 +98,36 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         example = json.loads(FACT_LEDGER_EXAMPLE.read_text(encoding="utf-8"))
         self.assertEqual(schema["properties"]["schemaVersion"]["const"], 1)
         self.assertEqual(example["schemaVersion"], 1)
-        self.assertGreaterEqual(len(example["facts"]), 2)
+        self.assertGreaterEqual(len(example["facts"]), 4)
+        mutual_exclusions = {
+            tuple(rule["required"])
+            for rule in schema["$defs"]["ledgerEntry"]["allOf"][1]["not"]["anyOf"]
+        }
         self.assertEqual(
-            set(schema["properties"]["facts"]["items"]["required"]),
-            set(example["facts"][0]),
+            mutual_exclusions,
+            {
+                ("sources", "source"),
+                ("sources", "publisher"),
+                ("sources", "publishedOrUpdated"),
+                ("sources", "accessed"),
+            },
         )
+        self.assertTrue(FACT_LEDGER_VALIDATOR.is_file())
+        normalized = validate_fact_ledger.validate_ledger(example)
+        self.assertEqual(len(normalized["facts"]), len(example["facts"]))
 
     def test_research_has_explicit_completion_criteria(self):
-        self.assertIn("**완료 판정**", self.skill)
+        self.assertIn("## 완료 판정", self.skill)
         self.assertIn("필수 조사 축마다", self.skill)
-        self.assertIn("각 사실 주장에 최소 한 개의 canonical 원문", self.skill)
-        self.assertIn("독립 출처로 교차검증", self.skill)
-        self.assertIn("미확보 범위와 탐색 한계", self.skill)
-        self.assertNotIn("결과 없음→쿼리 재구성 1회", self.skill)
+        self.assertIn("결론 영향 사실은 canonical 원문", self.skill)
+        self.assertIn("source budget", self.skill)
+        self.assertIn("축별 두 가지 retrieval 전략", self.skill)
+
+    def test_freshness_dimensions_are_explicit(self):
+        self.assertIn("가격은 지역·통화·기준일", self.skill)
+        self.assertIn("제품·버전·지역·GA/Preview·확인 시각", self.skill)
+        self.assertIn("관할·시행일", self.skill)
+        self.assertIn("기간·단위·표본·방법론", self.skill)
 
     def test_skill_triggers_include_foundational_research(self):
         self.assertIn("기초자료 조사", self.description)
@@ -157,15 +180,16 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
                 self.assertIn("선택적 시간 측정", content)
                 self.assertIn("완료 조건", content)
 
-    def test_downstream_skills_reference_common_ledger_without_duplication(self):
-        for downstream, extension in (
-            (ADAPTIVE_SKILL, "Slide candidate"),
-            (DEMO_SKILL, "Demo candidate"),
+    def test_downstream_skills_keep_mapping_outside_common_ledger(self):
+        for downstream, mapping_contract in (
+            (ADAPTIVE_SKILL, "storyline과 deck spec"),
+            (DEMO_SKILL, "Customer Overlay와 demo spec"),
         ):
             content = downstream.read_text(encoding="utf-8")
             with self.subTest(skill=downstream.parent.name):
                 self.assertIn("공통 Fact Ledger 계약", content)
-                self.assertIn(extension, content)
+                self.assertIn(mapping_contract, content)
+                self.assertIn("Ledger를 확장하지 않고", content)
                 self.assertNotIn("| ID | Type | Claim |", content)
 
     def test_factcheck_policy_is_risk_scoped(self):
@@ -194,17 +218,34 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         verification = ADAPTIVE_VERIFICATION.read_text(encoding="utf-8")
         self.assertIn("client가 제공한 artifact 디렉터리", content)
         self.assertIn("scripts/verify_deck.py", content)
-        self.assertIn("--strict --min-body-pt 15", content)
-        self.assertIn("--require-sources", content)
-        self.assertIn("--strict --min-body-pt 15", verification)
-        self.assertIn("canonical QA에서 likely body 15pt 미만 실패", verification)
+        self.assertIn("--deck-spec", content)
+        self.assertIn("[Fact ID]", content)
+        self.assertIn("finding ID", verification)
+        self.assertIn("visual-review.json", verification)
+
+        deck_schema = json.loads(ADAPTIVE_DECK_SCHEMA.read_text(encoding="utf-8"))
+        exception_schema = json.loads(
+            ADAPTIVE_EXCEPTION_SCHEMA.read_text(encoding="utf-8")
+        )
+        visual_schema = json.loads(
+            ADAPTIVE_VISUAL_SCHEMA.read_text(encoding="utf-8")
+        )
+        deck_contract = ADAPTIVE_DECK_SPEC.read_text(encoding="utf-8")
+        self.assertEqual(deck_schema["properties"]["schemaVersion"]["const"], 1)
+        self.assertEqual(
+            exception_schema["properties"]["schemaVersion"]["const"], 1
+        )
+        self.assertEqual(visual_schema["properties"]["schemaVersion"]["const"], 1)
+        self.assertIn("claimIds", deck_contract)
+        self.assertIn("template-profile.json", deck_contract)
+        self.assertIn("findingId", deck_contract)
 
     def test_readme_matches_current_search_and_research_contracts(self):
         content = README.read_text(encoding="utf-8")
         self.assertIn("검색 backend와 원문 검증은 `web-search` 계약이 결정합니다", content)
         self.assertIn("사용자 제공 자료만 재구성하거나 외부 사실이 없는 창작형 덱", content)
         self.assertIn("고정 8개 화면 SPA", content)
-        self.assertIn("--strict --min-body-pt 15", content)
+        self.assertIn("--deck-spec", content)
         self.assertNotIn("4~8개 화면", content)
         self.assertNotIn("research agent·`/fleet`에 위임하지 않습니다", content)
         self.assertNotIn("매번 실시간 공식 자료 조사", content)

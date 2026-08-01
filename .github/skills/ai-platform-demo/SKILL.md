@@ -65,8 +65,8 @@ App Platform readiness는 `진단 → 미해결 Gap → 개선 계획 → 예상
 - 검색 backend와 원문 검증 방법은 `web-search`가 결정하며 이 스킬에서 별도 정책을 정의하지 않는다.
 - 고객 요청마다 변동 사실을 다시 확인하고, 이전 Ledger와 Industry Pack은 검색 출발점으로만 사용한다.
 - 결과를 `web-search`의 공통 Fact Ledger 계약과 schema에 맞춘 `fact-ledger.json`으로 저장한다.
-  `checkedAt`과 서로 다른 canonical `Fact` source URL 2개 이상이 필요하다.
-  데모 매핑이 필요하면 `Demo candidate`만 확장 필드로 추가한다.
+  `checkedAt`과 서로 다른 canonical `Accepted Fact` source URL 2개 이상이 필요하다.
+  데모 매핑은 Ledger를 확장하지 않고 Customer Overlay와 demo spec에 기록한다.
 - 모든 고객 사실·KPI 범위·서사는 이 Ledger에 근거한다. 확인하지 못한 내용은 사실처럼 표현하지 않는다.
 
 ### 2. 스토리라인

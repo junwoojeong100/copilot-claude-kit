@@ -21,7 +21,10 @@
 
 <session>/<deck>-work/               # SKILL.md의 portable 세션 artifact 디렉터리 아래
   fact-ledger.md
+  fact-ledger.json                    # deck spec의 machine-readable handoff
+  deck-spec.json
   storyline.md
+  template-profile.json                  # 템플릿이 있을 때만
   build_<deck>.py                    # python-pptx 직접 생성 스크립트
   qa/
     contact-01-30.jpg
@@ -40,18 +43,22 @@
 import os
 from pathlib import Path
 
-from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
 
 OUT = Path(os.environ["PPTX_OUT"])
+TEMPLATE = os.environ.get("PPTX_TEMPLATE")
+
+import sys
+sys.path.insert(0, os.environ["ADAPTIVE_PRESENTATION_DIR"])
+import pptx_helpers as H
 
 # 주제·브랜드에 맞게 자유롭게 정하는 값 (고정 팔레트 아님)
 INK = RGBColor(0x1A, 0x1A, 0x1A)
 ACCENT = RGBColor(0x0F, 0x62, 0xFE)
 CANVAS = RGBColor(0xFF, 0xFF, 0xFF)
-BODY_FONT = "Apple SD Gothic Neo"
+BODY_FONT = os.environ["PPTX_FONT"]  # toolcheck가 확인해 deck spec에 기록한 설치 폰트
 
 def textbox(slide, text, x, y, w, h, size, *, color=INK, bold=False,
             align=PP_ALIGN.LEFT, font=BODY_FONT):
@@ -70,10 +77,12 @@ def textbox(slide, text, x, y, w, h, size, *, color=INK, bold=False,
     return box
 
 def build():
-    prs = Presentation()
-    prs.slide_width = Inches(13.333)
-    prs.slide_height = Inches(7.5)
-    blank = prs.slide_layouts[6]
+    prs, blank = H.init_deck(
+        TEMPLATE,
+        clear_existing_slides=bool(TEMPLATE),
+        width_in=13.333,
+        height_in=7.5,
+    )
 
     # 슬라이드마다 정보 관계에 맞는 형태를 직접 구성한다.
     slide = prs.slides.add_slide(blank)
@@ -93,7 +102,8 @@ if __name__ == "__main__":
 
 `pptx_helpers`는 색·좌표를 **인자로 받는** 기계적 프리미티브(box·text·bullets·chip·chevron·grid_table·
 soft_shadow)만 제공한다. 팔레트·테마·슬라이드 유형이 없으므로 "정해진 틀 없이 자유 구성" 원칙을 그대로
-지키면서 반복 코드를 줄인다.
+지키면서 반복 코드를 줄인다. 템플릿이 있으면 template-aware initializer로 master·layout·theme·canvas를
+보존하고 예시 슬라이드만 제거한다.
 
 ```python
 import sys
@@ -178,7 +188,7 @@ Appendix로 구분한다.
 
 ## 6. 한글 폰트
 
-실행 환경에서 폰트를 검색한다.
+실행 환경에서 폰트를 검색하고 언어·템플릿에 맞는 실제 설치 폰트를 선택한다.
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
@@ -187,13 +197,14 @@ python3 -B .github/skills/adaptive-presentation/scripts/toolcheck.py \
 (fc-list 2>/dev/null || true) | grep -Ei 'Noto Sans|Apple SD Gothic|Malgun|Aptos|Segoe'
 ```
 
-예시 폴백:
+예시 후보:
 
 - macOS: Apple SD Gothic Neo
 - Windows: Malgun Gothic
 - 공통 배포 환경: Noto Sans CJK KR 설치 여부 확인
 
-폰트를 PPTX에 임베드할 수 있다고 가정하지 않는다.
+탐지 결과를 `deck-spec.json`의 `fontPolicy.selected`에 기록하고 생성 스크립트의 모든 run에 사용한다.
+폰트를 PPTX에 임베드할 수 있다고 가정하지 않으며 verifier에서 PDF 렌더 폰트와 다시 대조한다.
 
 ## 7. 색과 대비
 
@@ -296,8 +307,7 @@ PPTX_OUT="<absolute-output>/<deck>.pptx" python3 -B <work-dir>/build_<deck>.py
 # canonical QA: 구조 감사, 전체 렌더, rendered overlap, 위험 슬라이드, ZIP 검사를 통합 실행
 python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
   <absolute-output>/<deck>.pptx --out <work-dir>/verify \
-  --expected-slides <count> --strict --min-body-pt 15
-# 외부 사실을 사용한 슬라이드가 있으면 --require-sources <slide-list> 추가
+  --deck-spec <work-dir>/deck-spec.json
 
 # 추가 확대가 필요할 때만 canonical QA의 PDF를 재사용
 python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
@@ -307,6 +317,8 @@ python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
 unzip -t <absolute-output>/<deck>.pptx
 ```
 
+첫 실행 후 contact sheet와 위험 슬라이드를 확인하고 finding 단위 exception과
+`visual-review.json`을 작성한 뒤 `--visual-review`를 추가해 다시 실행한다.
 `--reuse-pdf`는 sibling manifest의 PPTX·PDF SHA-256과 현재 파일이 모두 일치할 때만 PDF를 재사용한다.
 PPTX를 수정하거나 PDF가 달라진 뒤에는 기존 PDF를 재사용하지 않는다. 새 PDF로 변환한 뒤 수정 영향에
 맞는 범위를 다시 렌더한다.

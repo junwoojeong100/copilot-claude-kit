@@ -6,8 +6,9 @@
 
 ## 1. 불변 원칙
 
-- 데이터 수집 → Fact Ledger → 스토리라인 → 슬라이드 제작 → 전체 QA 순서를 유지한다.
-- Fact Ledger, storyline, 생성 스크립트, 최종 PPTX는 한 에이전트가 일관되게 소유한다.
+- 외부 사실이 필요할 때만 데이터 수집 → Fact Ledger를 수행하고, 이후 deck spec → 스토리라인 →
+  슬라이드 제작 → 전체 QA 순서를 유지한다.
+- Fact Ledger, deck spec, storyline, 생성 스크립트, 최종 PPTX는 한 에이전트가 일관되게 소유한다.
 - 조사 backend 선택과 원문 검증은 `web-search` 계약을 따른다. 이 가이드에서 특정 backend를 추가로
   금지하거나 강제하지 않는다.
 - 수정 후에는 항상 새 PPTX에서 PDF를 다시 변환한다. 국소·비구조 수정은 변경 슬라이드만 이미지로
@@ -22,29 +23,35 @@
 ```text
 <session>/<deck>-work/
   fact-ledger.md
+  fact-ledger.json                # deck spec의 machine-readable handoff
+  deck-spec.json
   storyline.md
+  template-profile.json          # 템플릿이 있을 때만
   build_<deck>.py
   defects.md
+  qa-exceptions.json             # 검토 후 허용할 finding이 있을 때만
+  visual-review.json
   metrics.json                  # 성능 측정이 필요한 경우만
   qa/
   qa-detail/
 ```
 
 - `storyline.md`에는 슬라이드별 제목, 핵심 메시지, 근거, 시각 형태, 이전/다음 연결을 확정한다.
-- 코드 작성 전에 `storyline.md`를 잠가 후기 구조 변경을 줄인다.
+- 코드 작성 전에 `storyline.md`와 `deck-spec.json`을 잠근다. 새 근거나 시각적 blocker가 발견되면 두
+  파일을 함께 갱신하고 변경 이유를 기록한다.
 - `defects.md`에는 발견 즉시 고치지 말고 슬라이드 번호와 결함 유형을 모아 한 번에 수정한다.
 
 ## 3. 조사 병렬화
 
-입력 확정 후 독립적인 조사 축을 **먼저 모두 나열한 뒤 한 번의 병렬 배치**로 동시에 실행한다(왕복 최소화).
+외부 사실이 필요하면 관련 조사 축만 먼저 나열하고 한 번의 병렬 배치로 실행한다.
 
 1. 주제·고객·산업 사실과 핵심 수치
 2. 제품·기술·규제의 현재 상태
 3. 사례·성과·경쟁 또는 도입 근거
 
-각 축에서는 `web-search`의 공통 Fact Ledger 계약으로 근거를 수집하고 `Slide candidate`만 확장한다.
-메인 에이전트가 결과를 하나의 Fact Ledger로 합친 후에만 스토리라인을 시작한다. 조사 자체는 캐시로
-생략하지 않는다.
+필요하지 않은 축을 장수 채우기 목적으로 추가하지 않는다. 각 축에서는 `web-search`의 공통 Fact
+Ledger 계약으로 근거를 수집하고 슬라이드 매핑은 storyline과 deck spec에 기록한다.
+메인 에이전트가 결과를 하나의 Fact Ledger로 합친 후에만 스토리라인을 시작한다. `web-search`의 충분성·완료 기준을 만족하면 탐색을 종료한다.
 이전 Fact Ledger와 canonical URL은
 검색 출발점으로만 쓰고, 발표에 들어가는 외부 사실은 매 요청 시점의 공식 원문으로 다시 검증한다.
 
@@ -68,7 +75,8 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 ## 5. 단일 소유 제작
 
 - 조사 단계에서는 슬라이드 코드를 작성하지 않는다.
-- 메인 에이전트가 잠긴 `storyline.md`를 기준으로 `build_<deck>.py`를 한 번에 작성한다.
+- 메인 에이전트가 검증된 `deck-spec.json`과 잠긴 `storyline.md`를 기준으로 `build_<deck>.py`를
+  한 번에 작성한다.
 - 슬라이드는 `python-pptx`로 직접 만들고, 정보 유형에 맞는 시각 형태를 매번 다양하게 구성한다.
   고정 템플릿·고정 컴포넌트를 강제하지 않는다.
 - (선택) `pptx_helpers`(디자인 중립 프리미티브)를 import해 보일러플레이트만 줄이고, 색·레이아웃은 매 덱 자유 구성한다.
@@ -76,15 +84,16 @@ ${COPILOT_CACHE_DIR:-$HOME/.copilot/cache}/adaptive-presentation/
 
 ## 6. QA 최적화
 
-1. `verify_deck.py`로 구조 감사와 전체 렌더를 읽기 전용 병렬 실행한다.
+1. `verify_deck.py --deck-spec`으로 구조 감사와 전체 렌더를 읽기 전용 병렬 실행한다.
 2. Runner가 최초 전체 렌더의 PDF를 세션 QA 폴더에 유지한다(`render_pptx.py`를 직접 실행할 때는
    `--keep-pdf` 사용).
 3. audit risk score로 선택된 슬라이드를 같은 PDF로 자동 상세 렌더하고 contact sheet와 함께 확인한다.
-4. 모든 결함을 `defects.md`에 모은 뒤 생성 스크립트를 한 번에 수정한다.
+4. 모든 결함을 `defects.md`에 모은 뒤 생성 스크립트를 한 번에 수정한다. chart·SmartArt처럼 자동
+   매핑이 불가능한 finding은 확대 검토 후 finding ID와 이유를 exception manifest에 기록한다.
 5. PPTX를 재생성하고 새 PDF로 변환한다. 국소·비구조 수정이면 `--slides`로 변경 슬라이드만 이미지화해
    확인하고 전체 contact sheet는 다시 만들지 않는다.
-6. 다수 슬라이드 또는 서사·구조가 바뀌었을 때만 전체 contact sheet를 다시 생성·확인한다. 변경이 없으면
-   최초 전체 렌더가 최종 검증이다.
+6. 최종 revision의 contact sheet와 위험 슬라이드를 확인하고 deck SHA-256에 묶인 visual-review
+   evidence를 만든 뒤 verifier를 다시 실행한다.
 
 `--reuse-pdf`는 PPTX와 PDF SHA-256이 manifest와 모두 일치할 때만 동작한다. 어느 파일이든 변경되면
 실패하도록 설계되어 오래되거나 부분 생성된 PDF로 검수하는 품질 저하를 막는다.

@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import tempfile
 import unittest
+import json
 from argparse import Namespace
 from pathlib import Path
 
@@ -11,11 +12,20 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 import render_pptx  # noqa: E402
+import toolcheck  # noqa: E402
+import tooling  # noqa: E402
+from pptx import Presentation  # noqa: E402
+from pptx.util import Inches, Pt  # noqa: E402
 from verify_deck import (  # noqa: E402
     audit_namespace,
     build_parser,
+    claim_footer_failures,
+    font_matches,
     prepare_output_dirs,
+    resolve_contract,
     select_risk_slides,
+    state_label_failures,
+    unexpected_fonts,
     verify,
 )
 
@@ -139,6 +149,203 @@ class VerifyDeckTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             verify(args)
         self.assertEqual(deck.read_bytes(), b"preserve")
+
+    def test_font_matching_tolerates_pdf_style_suffixes(self):
+        self.assertTrue(
+            font_matches(
+                "Apple SD Gothic Neo",
+                ["ABCDEE+AppleSDGothicNeo-Regular"],
+            )
+        )
+        self.assertFalse(font_matches("Malgun Gothic", ["Aptos-Regular"]))
+        self.assertFalse(font_matches("Arial", ["ABCDEF+ArialNarrow-Regular"]))
+        self.assertTrue(font_matches("Arial", ["ABCDEF+Arial-BoldItalic"]))
+        self.assertEqual(
+            unexpected_fonts(
+                ["Arial", "Malgun Gothic"],
+                ["Arial-Bold", "Aptos", "Malgun Gothic"],
+            ),
+            ["Aptos"],
+        )
+
+    def test_claim_footer_requires_fact_ledger_ids(self):
+        class Context:
+            claim_ids_by_slide = {2: ["F-001", "F-002"]}
+
+        failures, gaps = claim_footer_failures(
+            {
+                "footer_source_texts_by_slide": {
+                    "2": ["Source: [F-001] Microsoft · Documentation"]
+                }
+            },
+            Context(),
+        )
+        self.assertEqual(gaps, {"2": ["F-002"]})
+        self.assertIn("F-002", failures[0])
+
+    def test_without_deck_spec_defaults_remain_backward_compatible(self):
+        args = build_parser().parse_args(
+            ["deck.pptx", "--out", str(self.work_dir)]
+        )
+        self.assertIsNone(resolve_contract(args))
+        self.assertEqual(args.min_body_pt, 13)
+        self.assertEqual(args.min_title_pt, 26)
+        self.assertIsNone(args.max_unmapped_text_spans)
+        self.assertEqual(args.footer_top, 6.9)
+
+    def test_state_labels_require_standalone_tokens(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        shape = slide.shapes.add_textbox(
+            Inches(1), Inches(1), Inches(4), Inches(1)
+        )
+        shape.text = "MEGA platform · PARTIAL GA"
+        deck = self.work_dir / "state-label.pptx"
+        prs.save(deck)
+
+        class Context:
+            spec = {
+                "slides": [
+                    {
+                        "number": 1,
+                        "stateLabels": ["GA"],
+                    }
+                ]
+            }
+
+        self.assertTrue(state_label_failures(deck, Context()))
+
+    def test_runner_protects_visual_review_inside_managed_qa(self):
+        out = self.work_dir / "verify"
+        qa = out / "qa"
+        qa.mkdir(parents=True)
+        evidence = qa / "visual-review.json"
+        evidence.write_text("{}", encoding="utf-8")
+        deck = self.work_dir / "deck.pptx"
+        deck.write_bytes(b"preserve")
+        args = build_parser().parse_args(
+            [
+                str(deck),
+                "--out",
+                str(out),
+                "--require-visual-review",
+                "--visual-review",
+                str(evidence),
+            ]
+        )
+        with self.assertRaisesRegex(ValueError, "managed QA"):
+            verify(args)
+        self.assertTrue(evidence.exists())
+
+    @unittest.skipUnless(
+        tooling.resolve_soffice(),
+        "LibreOffice is required for verifier integration",
+    )
+    def test_deck_spec_drives_end_to_end_verification(self):
+        font = toolcheck.select_font(
+            toolcheck.enumerate_fonts()["fonts"],
+            language="en-US",
+        )
+        self.assertIsNotNone(font)
+        prs = Presentation()
+        prs.slide_width = Inches(13.333)
+        prs.slide_height = Inches(7.5)
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        for text, top, height, size in (
+            ("Decision title", 0.6, 0.8, 30),
+            ("This body sentence provides enough evidence for the decision.", 2, 0.8, 15),
+            ("GA", 5.8, 0.3, 11),
+            ("Source: [F-001] Example · Official documentation", 6.95, 0.2, 8),
+        ):
+            shape = slide.shapes.add_textbox(
+                Inches(0.8), Inches(top), Inches(11.5), Inches(height)
+            )
+            run = shape.text_frame.paragraphs[0].add_run()
+            run.text = text
+            run.font.size = Pt(size)
+            run.font.name = font
+        deck = self.work_dir / "contract-deck.pptx"
+        prs.save(deck)
+
+        ledger = {
+            "schemaVersion": 1,
+            "checkedAt": "2026-08-01T10:00:00+09:00",
+            "facts": [
+                {
+                    "id": "F-001",
+                    "type": "Fact",
+                    "claim": "Official fact",
+                    "evidence": "Official documentation",
+                    "source": {
+                        "title": "Official documentation",
+                        "url": "https://example.com/docs",
+                    },
+                    "publisher": "Example",
+                    "publishedOrUpdated": "2026-08-01",
+                    "accessed": "2026-08-01",
+                    "scopeOrStatus": "GA",
+                    "confidence": "High",
+                }
+            ],
+        }
+        (self.work_dir / "fact-ledger.json").write_text(
+            json.dumps(ledger), encoding="utf-8"
+        )
+        spec = {
+            "schemaVersion": 1,
+            "request": {
+                "topic": "Decision",
+                "audience": "Executive",
+                "purpose": "Decision",
+                "language": "en-US",
+                "slideCount": 1,
+            },
+            "canvas": {
+                "source": "default",
+                "widthIn": 13.333,
+                "heightIn": 7.5,
+            },
+            "templateProfile": None,
+            "factLedger": "fact-ledger.json",
+            "fontPolicy": {
+                "selected": font,
+                "fallbacks": [],
+                "requireAvailable": True,
+                "requireRenderedMatch": True,
+            },
+            "slides": [
+                {
+                    "number": 1,
+                    "role": "evidence",
+                    "title": "Decision title",
+                    "claimIds": ["F-001"],
+                    "stateLabels": ["GA"],
+                }
+            ],
+            "qa": {
+                "strict": True,
+                "minBodyPt": 15,
+                "minTitlePt": 26,
+                "maxUnmappedTextSpans": 0,
+                "failRenderedOverflow": True,
+                "requireVisualReview": False,
+                "exceptionManifest": None,
+            },
+        }
+        spec_path = self.work_dir / "deck-spec.json"
+        spec_path.write_text(json.dumps(spec), encoding="utf-8")
+        args = build_parser().parse_args(
+            [
+                str(deck),
+                "--out",
+                str(self.work_dir / "verify"),
+                "--deck-spec",
+                str(spec_path),
+            ]
+        )
+        result = verify(args)
+        self.assertTrue(result["passed"], result["audit_failures"])
+        self.assertEqual(result["claim_id_gaps"], {})
 
 
 if __name__ == "__main__":
