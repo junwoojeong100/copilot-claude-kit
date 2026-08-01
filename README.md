@@ -170,7 +170,7 @@ npm install -g @github/copilot
 | 스킬 | 트리거 예시 | 기능 |
 |------|-----------|------|
 | **web-search** | "최신 버전 알려줘", "고객·산업 기초자료 수집해줘" | 전용 검색 도구·공식 문서 검색으로 원문을 검증하고 Markdown/JSON Fact Ledger로 구조화해 downstream 스킬에 전달 |
-| **ai-platform-demo** | "○○ 고객 AI 데모", "AKS/ACA App Platform 데모", "CI/CD 임원 데모" | 실시간 조사 + focus별 스토리라인 + 메뉴·데이터 Overlay → 고정 soft-dark 디자인의 단일 HTML SaaS 데모(목적별 4~8화면) 생성·전체 QA |
+| **ai-platform-demo** | "○○ 고객 AI 데모", "AKS/ACA App Platform 데모", "CI/CD 임원 데모" | 실시간 조사 + focus별 스토리라인 + 메뉴·데이터 Overlay → 고정 8화면 soft-dark 단일 HTML SaaS 데모 생성·전체 QA |
 | **adaptive-presentation** | "병원 경영진 대상 의료 AI 전략 PPT 20장", "기술 발표자료 만들어줘", "제품 소개 슬라이드" | 결론·다음 행동 우선 스토리라인 + 필요한 외부 조사 + python-pptx 자유 제작 + 통합 QA Runner → 편집 가능한 PPTX |
 
 ---
@@ -182,8 +182,8 @@ npm install -g @github/copilot
 클릭·질문·조작하는 SaaS 앱입니다.
 
 **무엇을 만드나** — 사이드바 + 실시간 대시보드 + 도메인/App Platform 운영 콘솔 + GitHub 기반
-개발·배포 + AI 에이전트 채팅 + 통합 거버넌스 등 **목적별 4~8개 화면 SPA**. 기본은 8개이며 좁은
-목적이면 핵심 화면만 노출합니다. 첫 화면에서 고객 결과·KPI·primary action이 보이고, 실시간
+개발·배포 + AI 에이전트 채팅 + 통합 거버넌스 등 **고정 8개 화면 SPA**. 목적에 따라 4~6개 핵심
+시연 장면으로 동선을 압축합니다. 첫 화면에서 고객 결과·KPI·primary action이 보이고, 실시간
 KPI·스트리밍 차트·움직이는 객체·토스트·멀티에이전트 협업까지 동작합니다.
 
 **사용법** — 자연어로 고객과 산업을 알려주고, 필요하면 AI 중심 또는 App Platform·CI/CD 중심 focus를
@@ -194,8 +194,8 @@ KPI·스트리밍 차트·움직이는 객체·토스트·멀티에이전트 협
 > OO사 대상으로 GitHub Actions와 AKS/ACA 운영을 강조한 App Platform 임원 데모 만들어줘.
 ```
 
-스킬이 자동 로드되어 ① **매 요청 실시간** 고객·산업 리서치 → ② Storyline·메뉴/데이터 매핑(8개
-데이터 계약, 4~8개 노출 scope) →
+스킬이 자동 로드되어 ① **매 요청 실시간** 고객·산업 리서치 → ② Storyline·메뉴/데이터 매핑(고정 8개
+route, 4~6개 guided journey) →
 ③ compact `customer-overlay.json` 작성 → ④ Industry Pack과 합성해 Spec·HTML 생성 → ⑤ Puppeteer 전체 QA까지
 수행합니다. **디자인은 GitHub Primer Dark Dimmed 계열 soft-dark로 고정**되어 있어 고객별로는
 메뉴와 데이터만 바뀝니다.
@@ -210,7 +210,7 @@ Fact Ledger로 병합해 Storyline·Overlay·최종 HTML까지 일관되게 연�
   → validated demo-spec.json
   → Golden Runtime (shell.tmpl + runtime.css + runtime.js)
   → 고객별 단일 HTML
-  → 노출된 4~8개 화면·전체 인터랙션 브라우저 QA
+  → 고정 8개 화면·핵심 인터랙션 브라우저 QA
 ```
 
 **Golden Runtime은 검증된 동작 엔진**입니다. 라우터, timer/listener 정리, 실시간 차트, 시뮬레이터,
@@ -290,7 +290,7 @@ cp -R .github/skills/ai-platform-demo ~/.copilot/skills/
 
 **슬라이드는 고정 생성 엔진 없이 `python-pptx`로 직접 만듭니다.** 정보 관계(숫자·흐름·비교·계층·사례)에
 맞는 시각 형태를 슬라이드마다 자유롭게 선택하고, 같은 구조를 기계적으로 반복하지 않습니다. 색·글꼴은
-주제와 (있다면) 사용자 브랜드에 맞게 정하되 본문 대비 최소 4.5:1, 본문 최소 16pt, 출처 footer 표기 등
+주제와 (있다면) 사용자 브랜드에 맞게 정하되 본문 대비 최소 4.5:1, 주요 본문 16pt 권장·15pt 하한, 출처 footer 표기 등
 가독성·편집성 기준은 지킵니다. 아이디어가 필요하면 `reference/slide-blueprints.md`의 관계형 패턴을
 선택적으로 참고하되 그대로 복제하지 않습니다.
 
@@ -317,13 +317,15 @@ cp -R .github/skills/ai-platform-demo ~/.copilot/skills/
 
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
-  deck.pptx --out <session>/<deck>-work --expected-slides 30 --strict
+  deck.pptx --out <session>/<deck>-work --expected-slides 30 \
+  --strict --min-body-pt 15
 ```
 
 Runner는 구조 감사와 전체 렌더를 병렬 실행하고, 텍스트 밀도·작은 글자·title risk·group·bounds를
 점수화해 위험 슬라이드를 자동으로 상세 렌더합니다. 전체 overview와 위험 슬라이드는 사람이 확인하며,
-`--strict`는 16pt 미만 본문 후보·명시적 크기가 없는 run·title risk를 실패 처리합니다. 사람이 확인한
-의도적 예외에만 `--allow-small-text 4,8-9`처럼 슬라이드 번호를 지정합니다. QA Runner는 비어 있지 않은
+`--strict --min-body-pt 15`는 15pt 미만 본문 후보·명시적 크기가 없는 run·title risk를 실패 처리합니다. 사람이 확인한
+의도적 예외에만 `--allow-small-text 4,8-9`처럼 슬라이드 번호를 지정합니다. 외부 사실을 사용하는
+슬라이드가 있으면 `--require-sources <slide-list>`를 추가합니다. QA Runner는 비어 있지 않은
 일반 출력 디렉터리를 덮어쓰지 않습니다.
 
 개인 설치(같은 이름의 스킬이 없을 때):
@@ -350,7 +352,7 @@ time을 줄입니다.
 | **요청별 변경 surface 축소** | 매번 실시간 조사 후 Industry Pack에는 없는 고객 사실·메뉴·데이터(핵심 route)만 Customer Overlay에 작성 | 외부 조사가 필요하면 Fact Ledger를 만들고, 스토리라인을 먼저 확정한 뒤 슬라이드는 주제에 맞게 자유 제작 |
 | **안전한 병렬 실행** | 메인 에이전트가 공식 조사 도구를 병렬 호출하고 최종 Spec·HTML도 직접 소유 | 메인 에이전트가 공식 조사 도구를 병렬 호출하고 동일 immutable PPTX의 구조 감사·전체 렌더만 읽기 전용 병렬 실행 |
 | **도구 캐시** | 저장소 밖 공용 Puppeteer·Chromium 캐시를 재사용 | 저장소 밖 Python·렌더링 도구·폰트 탐색 캐시를 재사용 |
-| **중간 산출물 재사용** | 한 browser/page 세션에서 노출된 4~8개 route와 인터랙션을 연속 검증 | PPTX SHA-256이 같은 리비전에서만 중간 PDF를 상세 렌더에 재사용 |
+| **중간 산출물 재사용** | 한 browser/page 세션에서 고정 8개 route와 핵심 인터랙션을 연속 검증 | PPTX SHA-256이 같은 리비전에서만 중간 PDF를 상세 렌더에 재사용 |
 | **수정 루프 단축** | 결함을 모아 일괄 수정 → 영향 route 확인 → 최종 전체 QA | 결함을 모아 일괄 수정 → 위험 슬라이드 확인 → 변경 시에만 최종 전체 render |
 | **측정** | 단계별 시간·cache hit·repair cycle을 세션 `metrics.json`에 기록 | 단계별 시간·PDF reuse·cache hit·repair cycle을 세션 `metrics.json`에 기록 |
 

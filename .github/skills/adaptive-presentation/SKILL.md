@@ -15,6 +15,8 @@ argument-hint: "주제, 청중, 목적, 슬라이드 수를 알려주세요 — 
 - 사용자가 요청한 경우에만 PDF 또는 생성 스크립트를 추가한다.
 - 최종 출력 위치에는 요청한 파일만 남긴다. 조사 메모·생성 스크립트·PDF·QA 이미지는 저장소와 최종
   출력 폴더 밖의 세션 작업 디렉터리에 두고 완료 시 정리한다.
+- `<session>`은 client가 제공한 artifact 디렉터리다. 없으면 저장소·최종 출력 폴더 밖의 고유 OS
+  temporary directory를 사용하고 최종 파일을 복사한 뒤 삭제한다.
 
 ## 입력
 
@@ -28,7 +30,7 @@ argument-hint: "주제, 청중, 목적, 슬라이드 수를 알려주세요 — 
 | `TEMPLATE/BRAND` | 제공되면 master·grid·font·color를 우선 적용 |
 | `OUTPUT` | 사용자 지정 파일명·경로·형식 준수 |
 
-결과를 크게 바꾸는 정보만 한 번에 하나씩 질문한다. 충분한 정보가 있으면 질문하지 않는다.
+결과를 크게 바꾸는 blocking 정보만 질문한다. 안전한 기본값이 있으면 가정을 표시하고 진행한다.
 
 ## 필수 워크플로
 
@@ -76,6 +78,12 @@ argument-hint: "주제, 청중, 목적, 슬라이드 수를 알려주세요 — 
 
 [`scripts/verify_deck.py`](./scripts/verify_deck.py)와
 [`reference/verification.md`](./reference/verification.md)를 사용한다.
+
+```bash
+python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py <deck>.pptx --out <work> \
+  --expected-slides <count> --strict --min-body-pt 15
+```
+외부 사실을 사용한 슬라이드가 있으면 `--require-sources <slide-list>`를 추가한다.
 
 1. 동일한 최초 PPTX에 대해 구조 감사와 전체 렌더를 실행한다.
 2. compact contact sheet를 확인하고 위험 슬라이드만 상세 확인한다.

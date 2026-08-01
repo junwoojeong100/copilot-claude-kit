@@ -13,6 +13,7 @@ DEMO_SKILL = SKILL.parents[1] / "ai-platform-demo" / "SKILL.md"
 ADAPTIVE_FULL_OPTIMIZED = (
     ADAPTIVE_SKILL.parent / "reference" / "full-optimized.md"
 )
+ADAPTIVE_VERIFICATION = ADAPTIVE_SKILL.parent / "reference" / "verification.md"
 DEMO_FULL_OPTIMIZED = DEMO_SKILL.parent / "reference" / "full-optimized.md"
 REPOSITORY_ROOT = SKILL.parents[3]
 COPILOT_INSTRUCTIONS = REPOSITORY_ROOT / ".github" / "copilot-instructions.md"
@@ -173,17 +174,38 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertIn("단순·저위험 답변에는 표를 붙이지 않는다", content)
         self.assertNotIn("팩트체크 (항상)", content)
 
+    def test_xhigh_execution_contract_is_bounded_and_read_only_safe(self):
+        content = COPILOT_INSTRUCTIONS.read_text(encoding="utf-8")
+        self.assertIn("위험과 복잡도에 비례한 사고", content)
+        self.assertIn("질문·설명·검토 요청은 read-only", content)
+        self.assertIn("acceptance criteria", content)
+        self.assertIn("validator·schema", content)
+        self.assertIn("사용자가 요청한 경우에만 수행", content)
+
     def test_demo_language_and_route_scope_are_explicit(self):
         content = DEMO_SKILL.read_text(encoding="utf-8")
         self.assertIn("지정 언어를 준수", content)
         self.assertIn("한국어일 때만", content)
         self.assertIn("`story.routeScope`", content)
-        self.assertIn("4~8개 route", content)
+        self.assertIn("`story.routeScope`를 쓰면 고정 8개 canonical 순서", content)
+
+    def test_adaptive_skill_exposes_canonical_session_and_qa_contract(self):
+        content = ADAPTIVE_SKILL.read_text(encoding="utf-8")
+        verification = ADAPTIVE_VERIFICATION.read_text(encoding="utf-8")
+        self.assertIn("client가 제공한 artifact 디렉터리", content)
+        self.assertIn("scripts/verify_deck.py", content)
+        self.assertIn("--strict --min-body-pt 15", content)
+        self.assertIn("--require-sources", content)
+        self.assertIn("--strict --min-body-pt 15", verification)
+        self.assertIn("canonical QA에서 likely body 15pt 미만 실패", verification)
 
     def test_readme_matches_current_search_and_research_contracts(self):
         content = README.read_text(encoding="utf-8")
         self.assertIn("검색 backend와 원문 검증은 `web-search` 계약이 결정합니다", content)
         self.assertIn("사용자 제공 자료만 재구성하거나 외부 사실이 없는 창작형 덱", content)
+        self.assertIn("고정 8개 화면 SPA", content)
+        self.assertIn("--strict --min-body-pt 15", content)
+        self.assertNotIn("4~8개 화면", content)
         self.assertNotIn("research agent·`/fleet`에 위임하지 않습니다", content)
         self.assertNotIn("매번 실시간 공식 자료 조사", content)
 
