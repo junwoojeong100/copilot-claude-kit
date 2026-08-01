@@ -112,7 +112,14 @@
         "theme": {"const": "dark-dimmed"},
         "density": {"const": "executive"},
         "motion": {"const": "balanced"},
-        "tokens": {"type": "object", "maxProperties": 0},
+        "tokens": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "brand": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+            "accent": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"}
+          }
+        },
         "avoid": {
           "type": "array",
           "prefixItems": [
@@ -187,8 +194,8 @@
             "title": {"type": "string", "minLength": 1},
             "steps": {
               "type": "array",
-              "minItems": 4,
-              "maxItems": 4,
+              "minItems": 3,
+              "maxItems": 6,
               "items": {
                 "type": "object",
                 "required": ["route", "label", "owner", "timestamp", "status"],
@@ -205,20 +212,12 @@
         },
         "routeScope": {
           "type": "array",
-          "prefixItems": [
-            {"const": "dashboard"},
-            {"const": "operations"},
-            {"const": "simulator"},
-            {"const": "improvement"},
-            {"const": "finance"},
-            {"const": "github"},
-            {"const": "foundry"},
-            {"const": "appPlatform"}
-          ],
-          "minItems": 8,
+          "minItems": 5,
           "maxItems": 8,
           "uniqueItems": true,
-          "items": false
+          "items": {
+            "enum": ["dashboard", "operations", "simulator", "improvement", "finance", "github", "foundry", "appPlatform"]
+          }
         }
       }
     },
@@ -396,7 +395,19 @@
             "impacts",
             "board",
             "action"
-          ]
+          ],
+          "properties": {
+            "board": {
+              "type": "object",
+              "properties": {
+                "columns": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 4
+                }
+              }
+            }
+          }
         }
       ]
     },
@@ -413,7 +424,19 @@
             "composition",
             "watchlist",
             "explanation"
-          ]
+          ],
+          "properties": {
+            "composition": {
+              "type": "object",
+              "properties": {
+                "segments": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 6
+                }
+              }
+            }
+          }
         }
       ]
     },
@@ -482,7 +505,7 @@
             "decisionPreviewTitle": {"type": "string", "minLength": 1},
             "profiles": {
               "type": "array",
-              "minItems": 5,
+              "minItems": 3,
               "maxItems": 7,
               "items": {
                 "type": "object",
@@ -518,7 +541,22 @@
         {
           "required": ["sales", "cards", "controls", "memories", "learningLoop", "evaluation"],
           "properties": {
-            "sales": {"$ref": "#/$defs/salesContract"}
+            "sales": {"$ref": "#/$defs/salesContract"},
+            "cards": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 4
+            },
+            "learningLoop": {
+              "type": "object",
+              "properties": {
+                "steps": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 6
+                }
+              }
+            }
           }
         }
       ]
@@ -691,7 +729,7 @@
         "businessKpis": {
           "type": "array",
           "minItems": 2,
-          "maxItems": 2,
+          "maxItems": 3,
           "items": {
             "type": "object",
             "required": ["label", "value", "detail"],
@@ -747,8 +785,8 @@
         "hero": {"$ref": "#/$defs/hero"},
         "kpis": {
           "type": "array",
-          "minItems": 4,
-          "maxItems": 4,
+          "minItems": 3,
+          "maxItems": 5,
           "items": {"$ref": "#/$defs/kpi"}
         }
       }

@@ -11,9 +11,8 @@ Validated Base Spec
 ```
 
 Industry Pack은 산업 용어·공식·Agent 역할의 출발점만 제공하며, 고객 Overlay가 `meta`, `story`와
-메뉴·데이터(핵심 route·Agent)를 소유한다. **디자인은 GitHub Primer Dark Dimmed 계열 soft-dark로
-고정**되어 base spec이 제공하므로
-Overlay는 `design`을 넣지 않는다.
+메뉴·데이터(핵심 route·Agent)를 소유한다. GitHub Primer Dark Dimmed 계열 soft-dark는 base 기본값이며
+Overlay는 선택적으로 `design.tokens.brand/accent`만 정의한다.
 
 ## 1. 실시간 리서치는 매번 수행
 
@@ -103,6 +102,7 @@ Customer Overlay가 반드시 새로 결정하는 것:
 - 업무 예외→Foundry→GitHub→App Platform 공통 scenario trace
 - Pack의 `requiredCustomerPaths`
 - 고객 공식 사실·KPI 현실 범위·GitHub/Foundry/App Platform 답변과 가정
+- 선택한 5~8개 route와 필요하면 `design.tokens.brand/accent`
 
 ## 3. Merge 규칙
 
@@ -115,8 +115,7 @@ Customer Overlay가 반드시 새로 결정하는 것:
 - 최종 output에는 `_pack`, `_customer` metadata를 포함하지 않는다.
 - `meta`, `story`와 Pack의 `requiredCustomerPaths`는 Customer Overlay 값으로 **전체 교체**해
   base/pack 하위 값이 조용히 남지 않게 한다.
-- `design`은 GitHub soft-dark로 고정이므로 Overlay가 정의하지 않는다. Overlay에 `design`이 있으면
-  Composer가 실패한다.
+- `design`은 base marker를 유지한다. Overlay의 `design`은 `tokens.brand/accent`만 허용하며 다른 key는 실패한다.
 
 ## 4. Composer
 
@@ -132,7 +131,7 @@ python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
 
 Composer는 다음 순서로 실패를 조기에 차단한다.
 
-1. Pack이 customer identity 또는 `design`을 포함하는지 + Overlay가 `design`을 정의하는지 검사(디자인 고정)
+1. Pack의 customer identity·`design` 금지와 Overlay의 안전한 brand/accent token만 허용하는지 검사
 2. Customer Overlay의 live research metadata 검사
 3. Pack이 요구하는 customer path가 Overlay에 있는지 검사
 4. layer deep merge
@@ -152,10 +151,10 @@ HTTP(S) 원문인지 확인한다.
 - Pack은 초안 가속 장치이며 고객의 storyline을 대신하지 않는다.
 - Hero는 제품 소개가 아니라 고객 결과를 바로 말한다. route마다 임원 질문 하나와 primary action 하나를
   유지한다.
-- 앞의 5개 고객 주요사업 Hero·dashboard primary action·flow·simulator·finance와 Foundry Agent
+- 선택한 고객 업무 Hero·dashboard primary action·flow·simulator·finance와 활성 Foundry Agent
   profiles, focus별 climax는 고객 Overlay에서 새로 작성한다.
 - GitHub·Foundry·App Platform의 안정적인 interaction copy는 재사용 가능하지만 `sales`의 사업 KPI,
   통제 증거, buyer next step과 고객 가치 매핑은 갱신한다.
 - Microsoft Foundry·Microsoft Agent Framework, GitHub Copilot·GitHub Platform, AKS·Azure Container
   Apps는 제품 catalog가 아니라 지능·delivery·runtime 역할로 연결한다.
-- 최종 browser QA는 고객 주요사업 5개 + 플랫폼 서비스 3개의 8개 route를 모두 검사한다.
+- 최종 browser QA는 `story.routeScope`에서 선택한 5~8개 route를 모두 검사한다.
