@@ -8,15 +8,16 @@
 ```bash
 python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
   deck.pptx --out <work-dir> --expected-slides 30 --strict \
-  --require-sources <external-fact-slides>
+  --min-body-pt 15
 ```
 
 Runner가 구조 감사와 전체 렌더를 읽기 전용으로 병렬 실행하고, risk score가 높은 슬라이드를 같은 PDF로
 상세 렌더한다. `verification-report.json`, `qa/contact-*.jpg`, `qa-detail/slide-*.jpg`를 확인한 뒤
-결함을 일괄 수정한다. `--strict`는 13pt 미만의 likely body 후보, 명시적 크기가 없는 run, title risk,
+결함을 일괄 수정한다. `--strict --min-body-pt 15`는 15pt 미만의 likely body 후보, 명시적 크기가 없는 run, title risk,
 본문 title row의 font-size 불일치, 승인되지 않은 geometry overlap, 서로 다른 text frame에서 실제
 렌더된 글자의 충돌을 실패 처리한다.
-`--require-sources`에는 Storyline에서 Fact Ledger의 외부 사실을 사용하는 슬라이드를 모두 전달한다.
+Storyline에서 Fact Ledger의 외부 사실을 사용하는 슬라이드가 있으면
+`--require-sources <slide-list>`를 추가해 모두 전달한다.
 해당 슬라이드의 footer 영역에 `Source:` 또는 `출처:`가 없으면 strict 검증이 실패한다. 외부 사실을
 사용하지 않는 덱에서만 이 옵션을 생략한다.
 사람이 확인한 의도적 예외가 있을 때만 `--allow-small-text 4,8-9` 또는
@@ -150,7 +151,7 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 | Overlap | `unexpected_overlap_candidates` 0 + `unexpected_rendered_text_overlaps` 0 |
 | Content title size | `unexpected_title_size_inconsistencies` 0 |
 | Primary body | 원칙적으로 16pt+, 최소 15pt |
-| Automated body floor | likely body 13pt 미만 실패; compact label/secondary annotation은 별도 보고 |
+| Automated body floor | canonical QA에서 likely body 15pt 미만 실패; compact label/secondary annotation은 별도 보고 |
 | Source/footer | 8~9.5pt 허용 |
 | Editorial hierarchy | title 30~42pt, primary body 15~19pt, secondary 13~15pt, label 11~13pt |
 | Density after reduction | 여백이 생긴 장만 근거·KPI·owner·예외 조건을 1~2개 보강하고, 고밀도 장은 유지 |

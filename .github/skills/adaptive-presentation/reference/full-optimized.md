@@ -16,7 +16,7 @@
 
 ## 2. 세션 작업 계약
 
-`<session>`은 [`SKILL.md`](../SKILL.md)의 portable 세션 정의를 따른다. 클라이언트 고유의 `files`
+`<session>`은 [`SKILL.md`](../SKILL.md)의 세션 작업 정의를 따른다. 클라이언트 고유의 `files`
 하위 디렉터리를 가정하지 않으며 저장소·최종 출력 폴더 밖에 있어야 한다.
 
 ```text

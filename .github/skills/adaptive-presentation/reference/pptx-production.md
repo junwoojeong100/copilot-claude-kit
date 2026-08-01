@@ -293,17 +293,15 @@ python3 -B -c 'import ast,pathlib; ast.parse(pathlib.Path("<work-dir>/build_<dec
 # 생성
 PPTX_OUT="<absolute-output>/<deck>.pptx" python3 -B <work-dir>/build_<deck>.py
 
-# 감사와 렌더는 같은 immutable PPTX를 읽으므로 병렬 실행 가능
-python3 -B .github/skills/adaptive-presentation/scripts/audit_pptx.py \
-  <absolute-output>/<deck>.pptx --expected-slides <count> --strict \
-  --fail-small-text --fail-title-risks --fail-unsized-runs \
-  --require-sources <external-fact-slides>
-python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
-  <absolute-output>/<deck>.pptx --out <work-dir>/qa --keep-pdf
+# canonical QA: 구조 감사, 전체 렌더, rendered overlap, 위험 슬라이드, ZIP 검사를 통합 실행
+python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
+  <absolute-output>/<deck>.pptx --out <work-dir>/verify \
+  --expected-slides <count> --strict --min-body-pt 15
+# 외부 사실을 사용한 슬라이드가 있으면 --require-sources <slide-list> 추가
 
-# 의심 슬라이드는 기존 PDF를 재사용해 개별 JPEG로 확인
+# 추가 확대가 필요할 때만 canonical QA의 PDF를 재사용
 python3 -B .github/skills/adaptive-presentation/scripts/render_pptx.py \
-  <absolute-output>/<deck>.pptx --reuse-pdf <work-dir>/qa/<deck>.pdf \
+  <absolute-output>/<deck>.pptx --reuse-pdf <work-dir>/verify/qa/<deck>.pdf \
   --slides 8,16 --keep-slide-images --out <work-dir>/qa-detail
 
 unzip -t <absolute-output>/<deck>.pptx

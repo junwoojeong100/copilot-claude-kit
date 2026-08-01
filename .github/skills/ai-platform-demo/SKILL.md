@@ -33,8 +33,8 @@ Puppeteer·Chromium만 외부 공용 캐시에 유지하고, 최종 출력 위�
 | `APP_NAME` | 기본 `<CUSTOMER> IQ` |
 | `ROUTE_SCOPE` | 고정 8개 전체 노출. 시연 동선만 목적에 맞는 4~6개 장면으로 압축 |
 
-고객과 산업은 필수다. 결과를 크게 바꾸는 모호성만 한 번에 하나씩 확인한다. `CI`, `PI`처럼 의미가
-여러 개인 직무 약어는 실제 역할을 확인한다.
+고객과 산업은 필수다. 결과를 크게 바꾸는 blocking 모호성만 확인하며, `CI`, `PI`처럼 의미가 여러 개인
+직무 약어는 실제 역할을 확인한다.
 
 ## 표현 계약
 
@@ -49,18 +49,14 @@ Puppeteer·Chromium만 외부 공용 캐시에 유지하고, 최종 출력 위�
 - 임원이 보는 메뉴·제목·버튼·상태·표·Agent 문구는 `LANG`를 따른다. 한국어일 때만 자연스러운
   한국어를 우선하고 공식 제품명·일반 약어는 원문을 유지한다.
 
-플랫폼 역할은 고객 과제에 필요한 화면에서만 구체적으로 연결한다.
-
-- Microsoft Foundry + Microsoft Agent Framework: 모델·Agent·도구·오케스트레이션·평가
-- GitHub Copilot + GitHub Platform: 계획·코드·PR·GitHub Actions·GitHub Advanced Security
-- AKS + Azure Container Apps: 애플리케이션·Agent workload의 배포·확장·운영
-- Microsoft Entra·Purview·Defender·Azure AI Content Safety·GitHub AI Controls: 통제와 거버넌스
+플랫폼 역할은 고객 과제에 필요한 화면에서만 연결한다: Foundry·Agent Framework는 모델·Agent·평가,
+GitHub는 계획·코드·PR·Actions·Advanced Security, AKS·ACA는 배포·확장·운영, Entra·Purview·Defender·
+Content Safety·GitHub AI Controls는 통제와 거버넌스를 담당한다.
 
 세 플랫폼 route는 기능 시연만으로 끝내지 않는다. 각각 `sales` 계약으로 임원 질문, 가능해지는 사업
 성과, 사업 KPI 2개, 차별화 기능, 통제 증거, 담당자·기간·성공 기준이 있는 구매 다음 단계를 제공한다.
 App Platform readiness는 `진단 → 미해결 Gap → 개선 계획 → 예상 점수`로 분리하며 진단만으로 점수를
 올리지 않는다.
-
 ## 필수 워크플로
 
 ### 1. 고객 조사
@@ -79,7 +75,7 @@ App Platform readiness는 `진단 → 미해결 Gap → 개선 계획 → 예상
 
 1. 고객 과제와 목표 결과를 연결하는 서사 한 줄
 2. 청중 직무별 핵심 메시지와 담당 route
-3. 청중별 4~6개 `guidedJourneys`, route bridge, focus별 climax, 고정 8개 `story.routeScope`
+3. 청중별 4~6개 `guidedJourneys`, route bridge, focus별 climax. `story.routeScope`를 쓰면 고정 8개 canonical 순서
 4. 업무 route → Foundry → GitHub → App Platform 공통 `scenarioTrace`
 
 서사는 고정 인용문이나 범용 AI 메시지에서 시작하지 않는다. 조사로 확인한 고객 과제와 사업 언어에서
@@ -99,7 +95,7 @@ Runtime이 고정 제공한다.
 
 ### 4. 빌드
 
-1. 적합한 Industry Pack이 있으면 terminology·공식·Agent 역할의 출발점으로 사용한다.
+1. 적합한 Industry Pack이 있으면 base 예제의 내부 ID를 유지한 채 terminology·공식·Agent 역할의 출발점으로 사용한다.
 2. Pack이 맞지 않으면 억지로 사용하지 않고 전체 Spec을 직접 작성한다.
 3. `scripts/compose_demo_spec.py`로 Base + Pack + Overlay + Fact Ledger를 합쳐
    `demo-spec.json`과 HTML을 생성한다.
@@ -121,7 +117,7 @@ Runtime이 고정 제공한다.
 1. 노출된 모든 route를 한 browser/page 세션에서 전체 렌더한다.
 2. 레이아웃·겹침·깨짐·`LANG` 위반을 화면별로 확인한다.
 3. 콘솔/페이지 오류와 빠른 route 전환 오류가 0인지 확인한다.
-4. 슬라이더, action button, 모든 클릭 가능한 행, Agent 전환, 채팅을 검증한다.
+4. 모든 클릭 대상의 handler binding과 슬라이더·action button·Agent 전환·채팅의 핵심 상태 변화를 검증한다.
 5. 청중 journey preset, 다음 장면 CTA, 공통 scenario trace를 검증한다.
 6. App Platform 진단에서 점수가 유지되고 Gap이 노출된 뒤 개선 계획에서만 예상 점수가 변하는지 확인한다.
 7. 결함을 일괄 수정하고 영향 route를 빠르게 확인한다.
@@ -129,7 +125,6 @@ Runtime이 고정 제공한다.
 
 캐시와 증분 검증 방법은 [`reference/full-optimized.md`](./reference/full-optimized.md)를 따르되 최종 전체
 QA를 생략하지 않는다.
-
 ## 완료 조건
 
 - 최종 산출물이 외부 빌드 없이 열리는 단일 HTML이다.
@@ -138,7 +133,7 @@ QA를 생략하지 않는다.
 - 청중별 guided journey와 다음 장면 CTA가 고객 업무 결과에서 세 플랫폼 서비스로 자연스럽게 이어진다.
 - GitHub·Foundry·App Platform 화면에 사업 KPI·통제 증거·구매 다음 단계가 보인다.
 - Purview·Azure AI Content Safety·Entra·Defender·GitHub AI Controls/Advanced Security 역할이 검증된다.
-- 노출된 모든 route, 버튼, 슬라이더, 클릭 가능한 행, Agent 전환, 채팅이 동작한다.
+- 노출된 모든 route의 클릭 handler가 연결되고 버튼·슬라이더·Agent 전환·채팅의 핵심 상태 변화가 동작한다.
 - 콘솔/페이지 오류와 route 전환 시 null 접근·listener 누수가 없다.
 - 고객 사실은 Fact Ledger와 연결되고 가정 수치는 `시연 데이터`로 표시된다.
 - 디자인은 공용 Golden Runtime을 유지하고 고객 전용 내용이 runtime·Pack에 섞이지 않았다.
