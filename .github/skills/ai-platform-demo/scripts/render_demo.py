@@ -43,6 +43,8 @@ ROUTE_IDS = [
     "foundry",
     "appPlatform",
 ]
+BUSINESS_ROUTE_IDS = ROUTE_IDS[:5]
+PLATFORM_ROUTE_IDS = ROUTE_IDS[5:]
 
 FIXED_DESIGN = {
     "archetype": "trusted-executive",
@@ -81,6 +83,8 @@ ISO_TIMESTAMP_PATTERN = re.compile(
     r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"
     r"(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
 )
+HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
+ALLOWED_DESIGN_TOKENS = {"brand", "accent"}
 
 UNSAFE_PATTERNS = [
     re.compile(r"<\s*script", re.IGNORECASE),
@@ -377,9 +381,9 @@ def validate_safe_id(value: str, path: str) -> None:
 
 
 def validate_kpis(section: dict[str, Any], path: str) -> None:
-    kpis = require_list(section, "kpis", path, minimum=4)
-    if len(kpis) != 4:
-        raise SpecError(f"{path}.kpis must contain exactly 4 KPI items")
+    kpis = require_list(section, "kpis", path, minimum=3)
+    if len(kpis) > 5:
+        raise SpecError(f"{path}.kpis must contain 3-5 KPI items")
     for index, item in enumerate(kpis):
         if not isinstance(item, dict):
             raise SpecError(f"{path}.kpis[{index}] must be an object")
@@ -487,8 +491,8 @@ def validate_sales_contract(
     require_string(sales, "executiveQuestion", f"{path}.sales")
     require_string(sales, "enabledBusinessOutcome", f"{path}.sales")
     business_kpis = require_list(sales, "businessKpis", f"{path}.sales", minimum=2)
-    if len(business_kpis) != 2:
-        raise SpecError(f"{path}.sales.businessKpis must contain exactly 2 items")
+    if len(business_kpis) > 3:
+        raise SpecError(f"{path}.sales.businessKpis must contain 2-3 items")
     validate_named_items(
         business_kpis,
         f"{path}.sales.businessKpis",
@@ -535,7 +539,10 @@ def validate_sales_contract(
     )
 
 
-def validate_guided_journeys(story: dict[str, Any]) -> None:
+def validate_guided_journeys(
+    story: dict[str, Any],
+    active_routes: list[str],
+) -> None:
     journeys = require_list(story, "guidedJourneys", "$.story", minimum=2)
     journey_ids: list[str] = []
     for index, journey in enumerate(journeys):
@@ -552,9 +559,9 @@ def validate_guided_journeys(story: dict[str, Any]) -> None:
             raise SpecError(
                 f"{journey_path}.routes must contain 4-6 unique route IDs"
             )
-        if routes[0] != "dashboard" or not all(route in ROUTE_IDS for route in routes):
+        if routes[0] != "dashboard" or not all(route in active_routes for route in routes):
             raise SpecError(
-                f"{journey_path}.routes must start with dashboard and use fixed route IDs"
+                f"{journey_path}.routes must start with dashboard and use active route IDs"
             )
         bridges = require_string_list(journey, "bridges", journey_path, minimum=3)
         if len(bridges) != len(routes) - 1:
@@ -572,13 +579,16 @@ def validate_guided_journeys(story: dict[str, Any]) -> None:
         raise SpecError("$.story.defaultJourneyId must reference a guided journey")
 
 
-def validate_scenario_trace(story: dict[str, Any]) -> None:
+def validate_scenario_trace(
+    story: dict[str, Any],
+    active_routes: list[str],
+) -> None:
     scenario = require_mapping(story, "scenarioTrace", "$.story")
     for key in ["id", "title"]:
         require_string(scenario, key, "$.story.scenarioTrace")
-    steps = require_list(scenario, "steps", "$.story.scenarioTrace", minimum=4)
-    if len(steps) != 4:
-        raise SpecError("$.story.scenarioTrace.steps must contain exactly 4 items")
+    steps = require_list(scenario, "steps", "$.story.scenarioTrace", minimum=3)
+    if len(steps) > 6:
+        raise SpecError("$.story.scenarioTrace.steps must contain 3-6 items")
     routes: list[str] = []
     for index, step in enumerate(steps):
         step_path = f"$.story.scenarioTrace.steps[{index}]"
@@ -593,10 +603,15 @@ def validate_scenario_trace(story: dict[str, Any]) -> None:
             require_string(status, "tone", f"{step_path}.status"),
             f"{step_path}.status.tone",
         )
-    if routes[0] not in ROUTE_IDS[:5] or routes[1:] != ["foundry", "github", "appPlatform"]:
+    if len(routes) != len(set(routes)):
+        raise SpecError("$.story.scenarioTrace step routes must be unique")
+    if routes[0] not in BUSINESS_ROUTE_IDS:
+        raise SpecError("$.story.scenarioTrace must start with a business route")
+    if not all(route in active_routes for route in routes):
+        raise SpecError("$.story.scenarioTrace must use active route IDs")
+    if len([route for route in routes if route in PLATFORM_ROUTE_IDS]) < 2:
         raise SpecError(
-            "$.story.scenarioTrace must connect one business route to "
-            "foundry, github, and appPlatform in that order"
+            "$.story.scenarioTrace must include at least two active platform routes"
         )
 
 
@@ -699,10 +714,15 @@ def validate_spec(spec: dict[str, Any]) -> None:
     if concept_words != FIXED_CONCEPT_WORDS:
         raise SpecError("$.design.conceptWords must match the fixed Golden Runtime marker")
     tokens = require_mapping(design, "tokens", "$.design")
-    if tokens:
+    unsupported_tokens = set(tokens) - ALLOWED_DESIGN_TOKENS
+    if unsupported_tokens:
         raise SpecError(
-            "$.design.tokens must be empty; runtime/runtime.css is the only visual-token source"
+            "$.design.tokens supports only: "
+            + ", ".join(sorted(ALLOWED_DESIGN_TOKENS))
         )
+    for key, value in tokens.items():
+        if not isinstance(value, str) or not HEX_COLOR_PATTERN.fullmatch(value):
+            raise SpecError(f"$.design.tokens.{key} must be a six-digit hex color")
     avoid = require_list(design, "avoid", "$.design", minimum=3)
     if avoid != FIXED_AVOID_PATTERNS:
         raise SpecError("$.design.avoid must match the fixed Golden Runtime marker")
@@ -716,15 +736,33 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "$.story.audienceMessages",
         ["audience", "message"],
     )
-    validate_guided_journeys(story)
-    validate_scenario_trace(story)
     route_scope = story.get("routeScope", ROUTE_IDS)
     if "routeScope" in story:
-        route_scope = require_list(story, "routeScope", "$.story", minimum=8)
-    if route_scope != ROUTE_IDS:
-        raise SpecError(
-            "$.story.routeScope must contain all 8 route IDs in canonical order"
+        route_scope = require_string_list(
+            story,
+            "routeScope",
+            "$.story",
+            minimum=5,
         )
+    if len(route_scope) > 8 or len(route_scope) != len(set(route_scope)):
+        raise SpecError("$.story.routeScope must contain 5-8 unique route IDs")
+    if route_scope != [route for route in ROUTE_IDS if route in route_scope]:
+        raise SpecError(
+            "$.story.routeScope must use canonical route order"
+        )
+    business_route_count = sum(route in BUSINESS_ROUTE_IDS for route in route_scope)
+    platform_route_count = sum(route in PLATFORM_ROUTE_IDS for route in route_scope)
+    if (
+        route_scope[0] != "dashboard"
+        or not 3 <= business_route_count <= 5
+        or not 2 <= platform_route_count <= 3
+    ):
+        raise SpecError(
+            "$.story.routeScope requires dashboard, 3-5 business routes, "
+            "and 2-3 platform routes"
+        )
+    validate_guided_journeys(story, route_scope)
+    validate_scenario_trace(story, route_scope)
 
     navigation = require_list(spec, "navigation", "$", minimum=8)
     nav_ids = [item.get("id") if isinstance(item, dict) else None for item in navigation]
@@ -746,11 +784,11 @@ def validate_spec(spec: dict[str, Any]) -> None:
     for key in ["label", "targetRoute", "toastTitle", "toastText", "icon"]:
         require_string(primary_action, key, "$.dashboard.primaryAction")
     if (
-        primary_action["targetRoute"] not in ROUTE_IDS
+        primary_action["targetRoute"] not in route_scope
         or primary_action["targetRoute"] == "dashboard"
     ):
         raise SpecError(
-            "$.dashboard.primaryAction.targetRoute must reference another fixed route"
+            "$.dashboard.primaryAction.targetRoute must reference another active route"
         )
     stream = require_mapping(dashboard, "stream", "$.dashboard")
     for key in ["title", "label", "color"]:
@@ -999,9 +1037,9 @@ def validate_spec(spec: dict[str, Any]) -> None:
     board = require_mapping(improvement, "board", "$.improvement")
     require_string(board, "title", "$.improvement.board")
     require_string(board, "hint", "$.improvement.board")
-    columns = require_list(board, "columns", "$.improvement.board", minimum=3)
-    if len(columns) != 3:
-        raise SpecError("$.improvement.board.columns must contain exactly 3 columns")
+    columns = require_list(board, "columns", "$.improvement.board", minimum=2)
+    if len(columns) > 4:
+        raise SpecError("$.improvement.board.columns must contain 2-4 columns")
     for index, column in enumerate(columns):
         column_path = f"$.improvement.board.columns[{index}]"
         if not isinstance(column, dict):
@@ -1104,9 +1142,9 @@ def validate_spec(spec: dict[str, Any]) -> None:
     composition = require_mapping(finance, "composition", "$.finance")
     for key in ["title", "hint", "centerLabel"]:
         require_string(composition, key, "$.finance.composition")
-    segments = require_list(composition, "segments", "$.finance.composition", minimum=4)
-    if len(segments) != 4:
-        raise SpecError("$.finance.composition.segments must contain exactly 4 items")
+    segments = require_list(composition, "segments", "$.finance.composition", minimum=3)
+    if len(segments) > 6:
+        raise SpecError("$.finance.composition.segments must contain 3-6 items")
     for index, segment in enumerate(segments):
         segment_path = f"$.finance.composition.segments[{index}]"
         if not isinstance(segment, dict):
@@ -1224,7 +1262,7 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "fallback",
     ]:
         require_string(foundry, key, "$.foundry")
-    profiles = require_list(foundry, "profiles", "$.foundry", minimum=5)
+    profiles = require_list(foundry, "profiles", "$.foundry", minimum=3)
     if len(profiles) > 7:
         raise SpecError("$.foundry.profiles supports at most 7 agents")
     profile_names = []
@@ -1274,9 +1312,9 @@ def validate_spec(spec: dict[str, Any]) -> None:
         "$.appPlatform",
         required_services=("Microsoft Entra", "Microsoft Defender"),
     )
-    cards = require_list(app_platform, "cards", "$.appPlatform", minimum=3)
-    if len(cards) != 3:
-        raise SpecError("$.appPlatform.cards must contain exactly 3 items")
+    cards = require_list(app_platform, "cards", "$.appPlatform", minimum=2)
+    if len(cards) > 4:
+        raise SpecError("$.appPlatform.cards must contain 2-4 items")
     validate_named_items(
         cards,
         "$.appPlatform.cards",
@@ -1298,10 +1336,10 @@ def validate_spec(spec: dict[str, Any]) -> None:
         platform_loop,
         "steps",
         "$.appPlatform.learningLoop",
-        minimum=4,
+        minimum=3,
     )
-    if len(platform_steps) != 4:
-        raise SpecError("$.appPlatform.learningLoop.steps must contain exactly 4 items")
+    if len(platform_steps) > 6:
+        raise SpecError("$.appPlatform.learningLoop.steps must contain 3-6 items")
     validate_named_items(
         platform_steps,
         "$.appPlatform.learningLoop.steps",
@@ -1462,6 +1500,22 @@ def render(spec: dict[str, Any], runtime_dir: Path) -> str:
     runtime = runtime_dir.expanduser().resolve()
     shell = read_text(runtime / "shell.tmpl")
     css = read_text(runtime / "runtime.css")
+    tokens = spec["design"].get("tokens") or {}
+    if tokens:
+        overrides = []
+        if "brand" in tokens:
+            brand = tokens["brand"]
+            overrides.extend(
+                [
+                    f"--brand:{brand}",
+                    f"--brand-alt:color-mix(in srgb,{brand} 88%,#000)",
+                    f"--brand-emphasis:color-mix(in srgb,{brand} 72%,#000)",
+                    f"--brand-strong:color-mix(in srgb,{brand} 58%,#000)",
+                ]
+            )
+        if "accent" in tokens:
+            overrides.append(f'--accent:{tokens["accent"]}')
+        css += "\n:root{" + ";".join(overrides) + "}\n"
     javascript = read_text(runtime / "runtime.js")
     language = spec["meta"]["language"].casefold()
     is_korean = language == "ko" or language.startswith("ko-")

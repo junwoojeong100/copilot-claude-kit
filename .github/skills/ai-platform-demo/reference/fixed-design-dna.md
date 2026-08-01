@@ -1,8 +1,8 @@
-# Fixed GitHub Soft-Dark Design System
+# Golden Runtime Soft-Dark Design System
 
-이 데모의 디자인은 **GitHub Primer `dark-dimmed` 계열의 soft-dark 톤으로 고정**되어 있다.
-고객·산업이 바뀌어도 색·레이아웃·타이포·모션은 바꾸지 않는다. 고객별로는
-**메뉴(라우트/도메인명)와 데이터만** 바뀐다.
+이 데모는 **GitHub Primer `dark-dimmed` 계열의 soft-dark 톤을 기본값**으로 사용한다.
+레이아웃·타이포·간격·모션은 Golden Runtime이 유지하고, 고객 Overlay는 검증된 `brand`·`accent`
+6자리 hex token만 선택적으로 바꿀 수 있다.
 
 과거의 "고객별 Adaptive Design DNA(archetype·palette·theme 도출)"는 제거되었다. 매 요청 디자인을
 새로 설계하지 않으므로 생성이 빠르다.
@@ -11,7 +11,7 @@
 
 - 시각 토큰의 원천은 `runtime/runtime.css`의 `:root` 하나다.
 - Renderer는 `runtime.css`를 그대로 inline하며, JavaScript는 색 토큰을 override하지 않는다.
-- `demo-spec.json`의 `design` 블록은 **base spec이 고정 marker**로 제공한다. `tokens`는 빈 객체이며 고객 Overlay는 `design`을 정의하지 않는다.
+- `demo-spec.json`의 고정 marker는 base spec이 제공한다. Overlay는 `design.tokens.brand/accent`만 정의할 수 있다.
 
 ## 2. 고정 팔레트 (GitHub Primer Dark Dimmed inspired)
 
@@ -35,12 +35,12 @@
 
 상태 색 매핑: ok=success(green), warn=warning(amber), bad=danger(red), info=info(blue), AI/governance=violet.
 
-## 3. 바꾸지 않는다
+## 3. 변경 경계
 
-- 팔레트·radius·폰트·간격·모션은 고객·산업별로 바꾸지 않는다.
-- 색을 바꿔야 하면 `runtime/runtime.css`의 `:root`만 수정한다(전 고객 공통으로 반영됨).
-- 고객 Overlay(`customer-overlay.json`)에 `design`을 넣으면 Composer가 실패한다.
-- 고객 브랜드 색을 전체 배경으로 확장하지 않는다. 브랜드 색은 강조 역할로만 쓴다.
+- canvas·surface·ink·상태색·radius·폰트·간격·모션은 고객별로 바꾸지 않는다.
+- 고객 Overlay는 `brand`와 `accent`만 바꿀 수 있으며 Renderer가 6자리 hex와 허용 key를 검증한다.
+- 공용 기본값을 바꿀 때만 `runtime/runtime.css`의 `:root`를 수정한다.
+- 고객 브랜드 색을 전체 배경으로 확장하지 않고 강조 역할로만 쓴다.
 
 ## 4. 정직성·자산
 

@@ -1,7 +1,7 @@
 # Demo Spec Contract
 
 `demo-spec.json`은 고객별 AI·App Platform 콘텐츠와 산업 동작을 한 곳에 잠그는 build contract다
-(디자인은 고정 GitHub Primer Dark Dimmed 계열 soft-dark). Fact
+(GitHub Primer Dark Dimmed 계열 soft-dark 기본값 + 선택적 brand/accent). Fact
 Ledger와 storyline을 먼저 확정한 뒤 작성하며, Renderer가 읽을 수 있는 JSON이어야 한다.
 
 기본 생성 경로에서는 이 파일을 0부터 직접 작성하지 않고
@@ -31,10 +31,9 @@ Pack이 없거나 bespoke 구조가 더 빠르고 정확할 때만 전체 Spec�
 }
 ```
 
-위 section과 `notification`은 필수다. `design`은 base spec이 고정 soft-dark marker로 제공하며 고객
-Overlay는 정의하지 않는다. 고정값은 `archetype=trusted-executive`, `theme=dark-dimmed`,
-`density=executive`, `motion=balanced`, `tokens={}`다. 나머지 marker field도 base를 그대로 유지한다.
-시각 토큰의 유일한 원천은 `runtime.css`다.
+위 section과 `notification`은 canonical data contract로 유지한다. `design` marker는 base가 제공하며
+고객 Overlay는 `tokens.brand/accent`만 정의한다. `archetype=trusted-executive`,
+`theme=dark-dimmed`, `density=executive`, `motion=balanced` 등 marker는 유지한다.
 
 ## 2. Meta
 
@@ -58,15 +57,15 @@ Overlay는 정의하지 않는다. 고정값은 `archetype=trusted-executive`, `
 
 ## 3. Navigation
 
-Golden Runtime 데이터 계약은 정확히 8개 항목이며 ID와 순서를 고정한다. 앞의 5개는 고객 주요사업,
-뒤의 3개는 공통 플랫폼 서비스이며 모두 노출한다.
+Golden Runtime 데이터 계약은 8개 canonical 항목과 순서를 유지하되 `story.routeScope`에서
+업무 3~5개와 플랫폼 2~3개, 총 5~8개를 선택해 노출한다.
 
 `story`는 추가로 다음을 가진다.
 
 - `guidedJourneys`: 청중별 4~6개 route, transition별 `bridges`, owner·timebox·success criteria가 있는
   `finalAction`
 - `defaultJourneyId`: 초기 journey
-- `scenarioTrace`: 고객 업무 route 1개 → `foundry` → `github` → `appPlatform` 4단계 공통 trace
+- `scenarioTrace`: 고객 업무 route로 시작하고 활성 플랫폼 2개 이상을 포함하는 3~6단계 trace
 
 ```json
 [
@@ -81,8 +80,8 @@ Golden Runtime 데이터 계약은 정확히 8개 항목이며 ID와 순서를 �
 ]
 ```
 
-ID와 순서는 고정한다. 앞의 5개 메뉴명·crumb는 `DEMO_FOCUS`와 고객 업무에 맞게 바꾸고, 뒤의 3개
-플랫폼 메뉴는 공식 서비스명을 유지한다. `story.routeScope`를 쓰면 canonical 순서의 8개 전체를 넣는다.
+ID와 순서는 canonical data contract로 유지한다. 앞의 5개 메뉴명·crumb는 고객 업무에 맞게 바꾸고,
+플랫폼 메뉴는 공식 서비스명을 유지한다. `story.routeScope`는 canonical 순서의 5~8개 subset이다.
 메뉴·제목·버튼·상태는 `meta.language`를 따르며 공식명 또는 일반 약어는 원문을 유지한다.
 
 ## 4. Straightforward content contract
@@ -92,7 +91,7 @@ ID와 순서는 고정한다. 앞의 5개 메뉴명·crumb는 `DEMO_FOCUS`와 �
 - 각 route는 임원 질문 하나와 primary action 하나를 중심으로 구성한다.
 - 클릭 전/후의 KPI·상태·추천은 눈에 띄게 달라야 한다.
 - 제품명은 고객 가치 흐름에서 맡는 역할과 함께 쓴다. 한 화면에 제품 catalog를 만들지 않는다.
-- 8개 route는 항상 노출하되 핵심 4~6개 시연 장면은 목적에 맞춰 정한다.
+- 업무 3~5개와 플랫폼 2~3개를 노출하고 핵심 4~6개 시연 장면을 목적에 맞춰 정한다.
 
 ## 5. 공통 data shapes
 
@@ -202,7 +201,7 @@ secondary = base + Σ((value - input.value) * weights[input.id])
 ### Microsoft Foundry
 
 - `hero`, `sales`, `decisionPreviewTitle`, `kpis`
-- `profiles`: 5~7개. 업무 Agent뿐 아니라 Platform·SRE·Release·FinOps·Security Agent를 사용할 수 있다.
+- `profiles`: 3~7개. 업무 Agent뿐 아니라 Platform·SRE·Release·FinOps·Security Agent를 사용할 수 있다.
   - `icon`, `name`, `subtitle`, `intro`
   - `qa`: 정확히 3개 권장, 각 `question`, `answer`
 - `orchestration`: `intro`, `stages`, `summary`
@@ -222,7 +221,7 @@ secondary = base + Σ((value - input.value) * weights[input.id])
 세 플랫폼의 `sales` 공통 구조:
 
 - `executiveQuestion`, `enabledBusinessOutcome`
-- `businessKpis`: 정확히 2개
+- `businessKpis`: 2~3개
 - `differentiatedCapabilities`: 3개 이상
 - `controlEvidence`: 서비스·통제·증거·상태
 - `buyerNextStep`: action·owner·timebox·successCriteria
@@ -238,7 +237,7 @@ GitHub AI Controls·GitHub Advanced Security가, App Platform에는 Microsoft En
    직접 Spec을 작성하는 경우에도 `meta.research`에 현재 Ledger의 `checkedAt`, canonical source 2개 이상,
    Ledger ID를 포함해야 하며 누락된 Spec은 Renderer가 거부한다.
 2. `DEMO_FOCUS`, 청중별 guided journey, route bridge, 공통 scenario trace를 `story`에 잠근다.
-3. 디자인은 GitHub soft-dark로 고정되어 base가 제공한다(고객 Overlay에는 `design`을 넣지 않는다).
+3. 디자인 marker는 base가 제공하며 고객 Overlay에는 `design.tokens.brand/accent`만 넣을 수 있다.
 4. View Contract의 high-impact route를 고객 Overlay로 변환한다.
 5. Composer로 Industry Pack과 Overlay를 합쳐 전체 Spec을 만든다.
 6. Renderer validation을 통과시킨다.

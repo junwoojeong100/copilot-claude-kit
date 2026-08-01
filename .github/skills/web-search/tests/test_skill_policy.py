@@ -211,7 +211,8 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertIn("지정 언어를 준수", content)
         self.assertIn("한국어일 때만", content)
         self.assertIn("`story.routeScope`", content)
-        self.assertIn("`story.routeScope`를 쓰면 고정 8개 canonical 순서", content)
+        self.assertIn("총 5~8개를 canonical 순서로 선택", content)
+        self.assertIn("`design.tokens.brand/accent`", content)
 
     def test_adaptive_skill_exposes_canonical_session_and_qa_contract(self):
         content = ADAPTIVE_SKILL.read_text(encoding="utf-8")
@@ -244,9 +245,9 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         content = README.read_text(encoding="utf-8")
         self.assertIn("검색 backend와 원문 검증은 `web-search` 계약이 결정합니다", content)
         self.assertIn("사용자 제공 자료만 재구성하거나 외부 사실이 없는 창작형 덱", content)
-        self.assertIn("고정 8개 화면 SPA", content)
-        self.assertIn("--deck-spec", content)
-        self.assertNotIn("4~8개 화면", content)
+        self.assertIn("목적에 맞는 5~8개 화면 SPA", content)
+        self.assertIn("--strict --min-body-pt 15", content)
+        self.assertNotIn("고정 8개 화면 SPA", content)
         self.assertNotIn("research agent·`/fleet`에 위임하지 않습니다", content)
         self.assertNotIn("매번 실시간 공식 자료 조사", content)
 

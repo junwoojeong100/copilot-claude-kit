@@ -138,7 +138,7 @@ npm install -g @github/copilot
     │   ├── scripts/                     # Overlay Composer·Spec Renderer·브라우저 검증기
     │   ├── tests/                       # Composition·design 고정 검사 회귀 테스트
     │   ├── examples/                    # 전체 Spec·compact Customer Overlay 구조 예제
-    │   └── reference/                   # 고정 GitHub soft-dark 디자인·화면 청사진·Runtime·검증 절차
+    │   └── reference/                   # soft-dark 기본 디자인·화면 archetype·Runtime·검증 절차
     └── adaptive-presentation/           # 주제·청중별 PPTX 생성기(조사·스토리라인 중심)
         ├── SKILL.md                     # 조사→Deck Spec→자유 제작→revision-bound 검증
         ├── schema/                      # Deck Spec·template·finding 예외·시각 검토 계약
@@ -172,7 +172,7 @@ npm install -g @github/copilot
 | 스킬 | 트리거 예시 | 기능 |
 |------|-----------|------|
 | **web-search** | "최신 버전 알려줘", "고객·산업 기초자료 수집해줘" | 전용 검색 도구·공식 문서 검색으로 원문을 검증하고 Markdown/JSON Fact Ledger로 구조화해 downstream 스킬에 전달 |
-| **ai-platform-demo** | "○○ 고객 AI 데모", "AKS/ACA App Platform 데모", "CI/CD 임원 데모" | 실시간 조사 + focus별 스토리라인 + 메뉴·데이터 Overlay → 고정 8화면 soft-dark 단일 HTML SaaS 데모 생성·전체 QA |
+| **ai-platform-demo** | "○○ 고객 AI 데모", "AKS/ACA App Platform 데모", "CI/CD 임원 데모" | 실시간 조사 + focus별 스토리라인 + 유연한 route Overlay → 5~8화면 soft-dark 단일 HTML SaaS 데모 생성·전체 QA |
 | **adaptive-presentation** | "병원 경영진 대상 의료 AI 전략 PPT 20장", "기술 발표자료 만들어줘", "제품 소개 슬라이드" | 결론·다음 행동 우선 스토리라인 + 필요한 외부 조사 + python-pptx 자유 제작 + 통합 QA Runner → 편집 가능한 PPTX |
 
 ---
@@ -184,8 +184,8 @@ npm install -g @github/copilot
 클릭·질문·조작하는 SaaS 앱입니다.
 
 **무엇을 만드나** — 사이드바 + 실시간 대시보드 + 도메인/App Platform 운영 콘솔 + GitHub 기반
-개발·배포 + AI 에이전트 채팅 + 통합 거버넌스 등 **고정 8개 화면 SPA**. 목적에 따라 4~6개 핵심
-시연 장면으로 동선을 압축합니다. 첫 화면에서 고객 결과·KPI·primary action이 보이고, 실시간
+개발·배포 + AI 에이전트 채팅 + 통합 거버넌스 중 **목적에 맞는 5~8개 화면 SPA**. 고객 업무
+3~5개와 플랫폼 화면 2~3개를 선택하고 4~6개 핵심 시연 장면으로 동선을 압축합니다. 첫 화면에서 고객 결과·KPI·primary action이 보이고, 실시간
 KPI·스트리밍 차트·움직이는 객체·토스트·멀티에이전트 협업까지 동작합니다.
 
 **사용법** — 자연어로 고객과 산업을 알려주고, 필요하면 AI 중심 또는 App Platform·CI/CD 중심 focus를
@@ -196,35 +196,34 @@ KPI·스트리밍 차트·움직이는 객체·토스트·멀티에이전트 협
 > OO사 대상으로 GitHub Actions와 AKS/ACA 운영을 강조한 App Platform 임원 데모 만들어줘.
 ```
 
-스킬이 자동 로드되어 ① **매 요청 실시간** 고객·산업 리서치 → ② Storyline·메뉴/데이터 매핑(고정 8개
+스킬이 자동 로드되어 ① **매 요청 실시간** 고객·산업 리서치 → ② Storyline·메뉴/데이터 매핑(5~8개
 route, 4~6개 guided journey) →
 ③ compact `customer-overlay.json` 작성 → ④ Industry Pack과 합성해 Spec·HTML 생성 → ⑤ Puppeteer 전체 QA까지
-수행합니다. **디자인은 GitHub Primer Dark Dimmed 계열 soft-dark로 고정**되어 있어 고객별로는
-메뉴와 데이터만 바뀝니다.
+수행합니다. **디자인은 GitHub Primer Dark Dimmed 계열 soft-dark를 기본값**으로 사용하고 고객별
+`brand`·`accent` token만 안전하게 바꿀 수 있습니다.
 
 검색 backend와 원문 검증은 `web-search` 계약이 결정합니다. 범용 web search, CLI의 `/research` 또는
 Research agent, 공식 문서 검색을 가용성과 질문 범위에 맞게 사용하고, 메인 에이전트가 결과를 하나의
 Fact Ledger로 병합해 Storyline·Overlay·최종 HTML까지 일관되게 연결합니다.
 
 ```text
-실시간 Fact Ledger + Storyline + 메뉴·데이터(고정 GitHub soft-dark 디자인)
+실시간 Fact Ledger + Storyline + route·메뉴·데이터(soft-dark 기본 디자인)
   → Customer Overlay + Industry Pack
   → validated demo-spec.json
   → Golden Runtime (shell.tmpl + runtime.css + runtime.js)
   → 고객별 단일 HTML
-  → 고정 8개 화면·핵심 인터랙션 브라우저 QA
+  → 선택된 5~8개 화면·핵심 인터랙션 브라우저 QA
 ```
 
 **Golden Runtime은 검증된 동작 엔진**입니다. 라우터, timer/listener 정리, 실시간 차트, 시뮬레이터,
-에이전트 채팅, HTML escaping, 안정적인 QA ID를 재사용합니다. **디자인은 GitHub Primer Dark Dimmed
-계열 soft-dark로 고정**(`runtime.css`)되어 있고, 고객별로는 화면 구성·KPI·공식·에이전트·서사(=메뉴와 데이터)만
-Spec에서 결정하므로 HTML·CSS·JavaScript를 처음부터 다시 쓰는 시간을 줄입니다.
+에이전트 채팅, HTML escaping, 안정적인 QA ID를 재사용합니다. layout·type·motion은 Runtime이 유지하고
+고객별 route 구성·KPI·공식·에이전트·서사와 선택적 brand/accent를 Spec에서 결정합니다.
 
 **Industry Pack은 산업 terminology·KPI 공식·Agent/Platform 역할의 출발점**만 제공하며 고객명·Storyline을
-포함할 수 없습니다. Composer는 **Customer Overlay가 `design`을 정의하거나**(디자인은 고정)
+포함할 수 없습니다. Composer는 Customer Overlay가 허용되지 않은 design key를 정의하거나
 Fact Ledger가 오래됐거나 canonical Fact source가 2개 미만이거나 핵심 고객 path가 빠지면 실패합니다.
 따라서 같은 산업이라도 고객별
-운영 flow·KPI·에이전트·climax(=데이터)가 달라지되, **디자인은 모든 고객이 동일한 soft-dark 톤**입니다.
+운영 flow·KPI·에이전트·climax가 달라지고 soft-dark 기본값 위에 brand/accent를 선택 적용할 수 있습니다.
 
 ```bash
 python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
@@ -353,7 +352,7 @@ time을 줄입니다.
 | **요청별 변경 surface 축소** | 매번 실시간 조사 후 Industry Pack에는 없는 고객 사실·메뉴·데이터(핵심 route)만 Customer Overlay에 작성 | 외부 조사가 필요하면 Fact Ledger를 만들고, 스토리라인을 먼저 확정한 뒤 슬라이드는 주제에 맞게 자유 제작 |
 | **안전한 병렬 실행** | 메인 에이전트가 공식 조사 도구를 병렬 호출하고 최종 Spec·HTML도 직접 소유 | 메인 에이전트가 공식 조사 도구를 병렬 호출하고 동일 immutable PPTX의 구조 감사·전체 렌더만 읽기 전용 병렬 실행 |
 | **도구 캐시** | 저장소 밖 공용 Puppeteer·Chromium 캐시를 재사용 | 저장소 밖 Python·렌더링 도구·폰트 탐색 캐시를 재사용 |
-| **중간 산출물 재사용** | 한 browser/page 세션에서 고정 8개 route와 핵심 인터랙션을 연속 검증 | PPTX SHA-256이 같은 리비전에서만 중간 PDF를 상세 렌더에 재사용 |
+| **중간 산출물 재사용** | 한 browser/page 세션에서 선택된 5~8개 route와 핵심 인터랙션을 연속 검증 | PPTX SHA-256이 같은 리비전에서만 중간 PDF를 상세 렌더에 재사용 |
 | **수정 루프 단축** | 결함을 모아 일괄 수정 → 영향 route 확인 → 최종 전체 QA | 결함을 모아 일괄 수정 → 위험 슬라이드 확인 → 변경 시에만 최종 전체 render |
 | **측정** | 단계별 시간·cache hit·repair cycle을 세션 `metrics.json`에 기록 | 단계별 시간·PDF reuse·cache hit·repair cycle을 세션 `metrics.json`에 기록 |
 

@@ -83,6 +83,27 @@ class ComposeDemoSpecTests(unittest.TestCase):
                 max_age_hours=24,
             )
 
+    def test_customer_overlay_may_define_safe_brand_tokens(self):
+        customer = {
+            "meta": {"customer": "Customer"},
+            "story": {"frame": "Customer"},
+            "design": {"tokens": {"brand": "#0078D4", "accent": "#E3008C"}},
+        }
+        result = compose_demo_spec.apply_customer_layer(
+            {
+                "meta": {"customer": "Base"},
+                "design": {
+                    "theme": "dark-dimmed",
+                    "tokens": {},
+                },
+                "story": {"frame": "Base"},
+            },
+            customer,
+            [],
+        )
+        self.assertEqual(result["design"]["theme"], "dark-dimmed")
+        self.assertEqual(result["design"]["tokens"], customer["design"]["tokens"])
+
     def test_customer_required_paths_replace_instead_of_merge(self):
         base = {
             "meta": {"customer": "Base"},
