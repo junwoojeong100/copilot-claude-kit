@@ -246,7 +246,7 @@ class WebSearchSkillPolicyTests(unittest.TestCase):
         self.assertIn("검색 backend와 원문 검증은 `web-search` 계약이 결정합니다", content)
         self.assertIn("사용자 제공 자료만 재구성하거나 외부 사실이 없는 창작형 덱", content)
         self.assertIn("목적에 맞는 5~8개 화면 SPA", content)
-        self.assertIn("--strict --min-body-pt 15", content)
+        self.assertIn("--deck-spec", content)
         self.assertNotIn("고정 8개 화면 SPA", content)
         self.assertNotIn("research agent·`/fleet`에 위임하지 않습니다", content)
         self.assertNotIn("매번 실시간 공식 자료 조사", content)
