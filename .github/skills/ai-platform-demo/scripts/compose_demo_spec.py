@@ -182,15 +182,39 @@ def meaningful(value: Any) -> bool:
     return value is not None
 
 
+def validate_customer_design(customer_spec: dict[str, Any]) -> None:
+    design = customer_spec.get("design")
+    if design is None:
+        return
+    if not isinstance(design, dict) or set(design) != {"tokens"}:
+        raise ComposeError(
+            "Customer overlay design may define only the optional 'tokens' object"
+        )
+    tokens = design.get("tokens")
+    if not isinstance(tokens, dict):
+        raise ComposeError("Customer overlay design.tokens must be an object")
+    unsupported = set(tokens) - render_demo.ALLOWED_DESIGN_TOKENS
+    if unsupported:
+        raise ComposeError(
+            "Customer overlay design.tokens supports only: "
+            + ", ".join(sorted(render_demo.ALLOWED_DESIGN_TOKENS))
+        )
+    for key, value in tokens.items():
+        if (
+            not isinstance(value, str)
+            or not render_demo.HEX_COLOR_PATTERN.fullmatch(value)
+        ):
+            raise ComposeError(
+                f"Customer overlay design.tokens.{key} must be a six-digit hex color"
+            )
+
+
 def apply_customer_layer(
     composed: dict[str, Any],
     customer_spec: dict[str, Any],
     required_paths: list[str],
 ) -> dict[str, Any]:
-    if "design" in customer_spec:
-        raise ComposeError(
-            "Customer overlay must not define 'design'; the Golden Runtime design is fixed"
-        )
+    validate_customer_design(customer_spec)
     merged = deep_merge(composed, customer_spec)
     for section in ["meta", "story"]:
         merged[section] = copy.deepcopy(customer_spec[section])
@@ -487,13 +511,7 @@ def validate_customer(
     for section in ["meta", "story"]:
         if not isinstance(spec.get(section), dict):
             raise ComposeError(f"Customer overlay must own the full '{section}' section")
-    # Design is fixed to the Golden Runtime soft-dark theme. The overlay changes
-    # only menu (routes) and data, so it must NOT redefine the visual design.
-    if "design" in spec:
-        raise ComposeError(
-            "Customer overlay must not define 'design'; the soft-dark design is fixed "
-            "in the base spec and runtime."
-        )
+    validate_customer_design(spec)
 
     research = metadata.get("research")
     if not isinstance(research, dict) or research.get("mode") != "live":

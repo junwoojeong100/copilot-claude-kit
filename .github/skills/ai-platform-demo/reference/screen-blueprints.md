@@ -1,8 +1,8 @@
 # Screen Blueprints + 산업 매핑
 
-8개 화면의 **기본 골격**과 **산업/focus별 콘텐츠 매핑**. 앞의 5개는 고객 주요사업에 맞게 구성하고,
-뒤의 3개는 `GitHub Ecosystem`, `Microsoft Foundry`, `App Platform(ACA/AKS)`으로 고정한다. 모든 메뉴를
-노출하되 시연 동선은 목적에 필요한 4~6개 핵심 장면으로 압축한다.
+8개 canonical 화면 archetype과 **산업/focus별 콘텐츠 매핑**. 고객 업무 archetype 3~5개와
+`GitHub Ecosystem`, `Microsoft Foundry`, `App Platform(ACA/AKS)` 중 2~3개를 선택해 총 5~8개를
+노출하고, 시연 동선은 목적에 필요한 4~6개 핵심 장면으로 압축한다.
 
 공통 shell은 CEO·COO·CFO·CIO 등 청중별 journey selector, route bridge, `다음 장면` CTA를 제공한다.
 Dashboard primary action과 공통 scenario trace가 업무 예외→Foundry 의사결정→GitHub 변경→App
@@ -10,7 +10,7 @@ Platform 운영을 동일 ID로 연결한다.
 
 ---
 
-## 화면 1 — 대시보드 (필수)
+## 화면 1 — 대시보드 (항상 필수)
 **목적**: "전사가 실시간으로 돌고 있다"는 첫인상.
 **구성**: 결과형 `hero` → KPI 4개(`.grid-4`, 스파크라인+실시간 변동) → `.grid-2`[스트리밍 라인차트 | 활동 피드] → `.grid-2`[Agent/서비스/배포 상태 | 부문/권역 테이블].
 **실시간**: KPI 미세 변동(2s), 차트 스트리밍(1.8s), 피드 prepend(3.5s), 주기 토스트(9s).
@@ -34,7 +34,7 @@ primary action은 업무 최적화, 트래픽 전환, rollout, 자동 복구처�
 ## 화면 5 — 재무 인사이트 (권장)
 **구성**: `.grid-2`[What-if 슬라이더(원가 변수) → 큰 마진 숫자+상태 | 원가 도넛] → 이상탐지 테이블(전월비·근거 코멘트·상태 배지). 24시간 감시 톤.
 
-## 화면 6 — GitHub Ecosystem (고정)
+## 화면 6 — GitHub Ecosystem (플랫폼 선택)
 **구성**: `hero`+"Copilot에 이슈 배정" → KPI 4(리드타임·PR·GitHub Actions·보안검사) →
 `.grid-2`[코드 diff 타이핑(`.code .add/.delete`) | 계획→PR→Actions→AKS/ACA 배포 스텝 +
 이슈 테이블(상태→PR#)].
@@ -44,7 +44,7 @@ review time, CI success, security coverage.
 화면 상단에는 enabled business outcome, 사업 KPI 2개, buyer next step을 먼저 보여주고 기술 지표와
 Issue-to-PR flow를 뒤에 배치한다.
 
-## 화면 7 — Microsoft Foundry + Microsoft Agent Framework (고정)
+## 화면 7 — Microsoft Foundry + Microsoft Agent Framework (플랫폼 선택)
 **목적**: 임원이 직접 질문하고 Agent들이 협업하며 평가·추적되는 모습을 보여준다.
 **주요 기능**: 모델·Agent·도구 연결, prompt/hosted agent, Microsoft Agent Framework orchestration,
 knowledge grounding, evaluation, tracing, safety. **주요 지표**: Agent 성공률, P95 latency, 평가
@@ -83,7 +83,7 @@ Rich text는 Renderer가 허용한 태그/class만 사용하고, 사용자 입�
 `escapeHtml`을 거친다. **오케스트레이션**은 중앙 `.flow-node.core` + 도메인 노드로 구성하고,
 "시나리오 실행" 시 노드 순차 `hot` + `<animateMotion>` 펄스 + assistant bubble을 사용한다.
 
-## 화면 8 — App Platform · Azure Container Apps + AKS (고정)
+## 화면 8 — App Platform · Azure Container Apps + AKS (플랫폼 선택)
 **목적**: workload별 runtime 선택과 배포·확장·보안·관찰성·비용 상태를 한 화면에서 판단.
 **구성**: `hero` → enabled business outcome·사업 KPI·buyer next step →
 `.grid-3`[platform readiness | SLO 달성률 | 용량 효율] →
