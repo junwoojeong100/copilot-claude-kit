@@ -344,7 +344,10 @@ let browser;
         }
         return titles;
       });
-      if (agentTitles.length < 5 || new Set(agentTitles).size !== agentTitles.length) {
+      if (
+        agentTitles.length !== qaSpec.foundry.profiles.length
+        || new Set(agentTitles).size !== agentTitles.length
+      ) {
         failures.push(`foundry: row switching failed ${JSON.stringify(agentTitles)}`);
       }
       await page.$eval('#chatInput', element => { element.value = '전환 중 응답 테스트'; });

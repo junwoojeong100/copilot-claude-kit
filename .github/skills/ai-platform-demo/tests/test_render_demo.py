@@ -31,15 +31,19 @@ class RenderDemoTests(unittest.TestCase):
         with self.assertRaises(render_demo.SpecError):
             render_demo.validate_spec(spec)
 
-    def test_fixed_design_cannot_be_overridden(self):
+    def test_runtime_design_markers_are_fixed_but_safe_tokens_are_allowed(self):
         self.invalid(lambda spec: spec["design"].update(theme="light"))
         self.invalid(lambda spec: spec["design"]["tokens"].update(brand="#000"))
+        self.invalid(lambda spec: spec["design"]["tokens"].update(canvas="#ffffff"))
         self.invalid(
             lambda spec: spec["design"].update(
                 conceptWords=["custom", "customer", "theme"]
             )
         )
         self.invalid(lambda spec: spec["design"].update(visualMetaphor="custom"))
+        spec = copy.deepcopy(BASE)
+        spec["design"]["tokens"] = {"brand": "#0078D4", "accent": "#E3008C"}
+        render_demo.validate_spec(render_demo.sanitize_rich_fields(spec))
 
     def test_selector_ids_and_semantic_colors_are_restricted(self):
         self.invalid(
@@ -59,12 +63,29 @@ class RenderDemoTests(unittest.TestCase):
             spec = render_demo.sanitize_rich_fields(spec)
             render_demo.validate_spec(spec)
 
-    def test_route_scope_supports_exactly_eight_menus(self):
+    def test_route_scope_supports_full_or_focused_composition(self):
         spec = copy.deepcopy(BASE)
         spec["story"]["routeScope"] = render_demo.ROUTE_IDS
         render_demo.validate_spec(render_demo.sanitize_rich_fields(spec))
+        spec["story"]["routeScope"] = [
+            "dashboard",
+            "operations",
+            "simulator",
+            "github",
+            "foundry",
+        ]
+        for journey in spec["story"]["guidedJourneys"]:
+            journey["routes"] = ["dashboard", "operations", "github", "foundry"]
+            journey["bridges"] = journey["bridges"][:3]
+        spec["story"]["scenarioTrace"]["steps"] = [
+            spec["story"]["scenarioTrace"]["steps"][0],
+            spec["story"]["scenarioTrace"]["steps"][2],
+            spec["story"]["scenarioTrace"]["steps"][1],
+        ]
+        spec["dashboard"]["primaryAction"]["targetRoute"] = "operations"
+        render_demo.validate_spec(render_demo.sanitize_rich_fields(spec))
 
-    def test_route_scope_requires_all_routes_in_canonical_order(self):
+    def test_route_scope_requires_canonical_order_and_route_mix(self):
         self.invalid(
             lambda spec: spec["story"].update(
                 routeScope=[
@@ -81,7 +102,17 @@ class RenderDemoTests(unittest.TestCase):
         )
         self.invalid(
             lambda spec: spec["story"].update(
-                routeScope=render_demo.ROUTE_IDS[:-1]
+                routeScope=["dashboard", "operations", "simulator", "improvement", "finance"]
+            )
+        )
+        self.invalid(
+            lambda spec: spec["story"].update(
+                routeScope=["dashboard", "operations", "github", "foundry", "appPlatform"]
+            )
+        )
+        self.invalid(
+            lambda spec: spec["story"].update(
+                routeScope=["dashboard", "operations", {}, "github", "foundry"]
             )
         )
 
@@ -93,12 +124,21 @@ class RenderDemoTests(unittest.TestCase):
             lambda spec: spec["story"].update(defaultJourneyId="missing")
         )
 
-    def test_scenario_trace_connects_business_to_platform_chain(self):
+    def test_scenario_trace_uses_unique_active_business_and_platform_routes(self):
         self.invalid(
             lambda spec: spec["story"]["scenarioTrace"]["steps"][2].update(
                 route="appPlatform"
             )
         )
+        spec = copy.deepcopy(BASE)
+        template = spec["story"]["scenarioTrace"]["steps"]
+        spec["story"]["scenarioTrace"]["steps"] = [
+            {**copy.deepcopy(template[index % len(template)]), "route": route}
+            for index, route in enumerate(
+                ["operations", "simulator", "finance", "foundry", "github", "appPlatform"]
+            )
+        ]
+        render_demo.validate_spec(render_demo.sanitize_rich_fields(spec))
 
     def test_dashboard_requires_action_to_another_route(self):
         self.invalid(
@@ -120,6 +160,30 @@ class RenderDemoTests(unittest.TestCase):
         self.invalid(
             lambda spec: spec["github"]["sales"]["businessKpis"].pop()
         )
+
+    def test_flexible_visual_counts_are_bounded(self):
+        spec = copy.deepcopy(BASE)
+        for section in ("dashboard", "operations", "improvement", "github", "foundry"):
+            spec[section]["kpis"] = spec[section]["kpis"][:3]
+        spec["operations"]["action"]["kpiUpdates"] = {
+            key: value
+            for key, value in spec["operations"]["action"]["kpiUpdates"].items()
+            if int(key) < 3
+        }
+        spec["github"]["sales"]["businessKpis"].append(
+            {"label": "Adoption", "value": "82%", "detail": "Demo metric"}
+        )
+        spec["foundry"]["profiles"] = spec["foundry"]["profiles"][:3]
+        spec["foundry"]["orchestration"]["stages"] = [
+            stage
+            for stage in spec["foundry"]["orchestration"]["stages"]
+            if stage["agentIndex"] < 3
+        ]
+        spec["appPlatform"]["cards"] = spec["appPlatform"]["cards"][:2]
+        spec["appPlatform"]["learningLoop"]["steps"] = (
+            spec["appPlatform"]["learningLoop"]["steps"][:3]
+        )
+        render_demo.validate_spec(render_demo.sanitize_rich_fields(spec))
 
     def test_research_provenance_requires_timezone_timestamp(self):
         valid_research = {
@@ -269,22 +333,50 @@ class RenderDemoTests(unittest.TestCase):
         self.assertIn("escapeHtml(data.margin.unit)", runtime)
         self.assertIn("data.composition.centerSegment ?? 1", runtime)
 
-    def test_schema_enforces_canonical_route_scope_order(self):
+    def test_render_inlines_validated_brand_tokens(self):
+        spec = copy.deepcopy(BASE)
+        spec["design"]["tokens"] = {"brand": "#0078D4", "accent": "#E3008C"}
+        html = render_demo.render(spec, SKILL_ROOT / "runtime")
+        self.assertIn("--brand:#0078D4", html)
+        self.assertIn("--accent:#E3008C", html)
+
+    def test_schema_exposes_flexible_route_scope_and_safe_tokens(self):
         schema = json.loads(
             (SKILL_ROOT / "schema" / "demo-spec.schema.json").read_text(
                 encoding="utf-8"
             )
         )
         route_scope = schema["properties"]["story"]["properties"]["routeScope"]
-        self.assertEqual(
-            [item["const"] for item in route_scope["prefixItems"]],
-            render_demo.ROUTE_IDS,
-        )
-        self.assertFalse(route_scope["items"])
+        self.assertEqual(route_scope["minItems"], 5)
+        self.assertEqual(route_scope["maxItems"], 8)
+        self.assertEqual(route_scope["items"]["enum"], render_demo.ROUTE_IDS)
+        tokens = schema["properties"]["design"]["properties"]["tokens"]
+        self.assertEqual(set(tokens["properties"]), {"brand", "accent"})
         improvement_contract = schema["properties"]["improvement"]["allOf"][1]
+        finance_contract = schema["properties"]["finance"]["allOf"][1]
         github_contract = schema["properties"]["github"]["allOf"][1]
+        app_platform_contract = schema["properties"]["appPlatform"]["allOf"][1]
         self.assertNotIn("sales", improvement_contract["required"])
         self.assertIn("sales", github_contract["required"])
+        self.assertEqual(
+            improvement_contract["properties"]["board"]["properties"]["columns"][
+                "maxItems"
+            ],
+            4,
+        )
+        self.assertEqual(
+            finance_contract["properties"]["composition"]["properties"]["segments"][
+                "maxItems"
+            ],
+            6,
+        )
+        self.assertEqual(app_platform_contract["properties"]["cards"]["minItems"], 2)
+        self.assertEqual(
+            app_platform_contract["properties"]["learningLoop"]["properties"]["steps"][
+                "maxItems"
+            ],
+            6,
+        )
 
     def test_english_runtime_copy_remains_available(self):
         spec = copy.deepcopy(BASE)

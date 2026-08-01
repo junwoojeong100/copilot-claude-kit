@@ -29,21 +29,21 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 ## 2. 배열 개수 (검증기 강제)
 | 위치 | 개수 |
 |---|---|
-| `navigation` | **정확히 8**, ID 고정: dashboard, operations, simulator, improvement, finance, github, foundry, appPlatform |
-| `story.routeScope` | 선택, canonical 순서의 **8개 전체**; 미지정해도 8개 모두 노출 |
+| `navigation` | canonical data contract는 **정확히 8개** 유지 |
+| `story.routeScope` | dashboard 포함 업무 3~5개 + 플랫폼 2~3개, 총 **5~8개**를 canonical 순서로 선택 |
 | `story.guidedJourneys` | ≥2, 각 route **4~6개**, `dashboard`로 시작 · `bridges`는 route 수−1 |
-| `story.scenarioTrace.steps` | **정확히 4**: 고객 업무 route → foundry → github → appPlatform |
+| `story.scenarioTrace.steps` | **3~6개**: 고객 업무 route로 시작하고 활성 플랫폼 route 2개 이상 포함 |
 | `dashboard.primaryAction` | dashboard 외 고정 route로 이동 |
-| `dashboard.kpis` / `operations.kpis` / `improvement.kpis` / `github.kpis` / `foundry.kpis` | **각 정확히 4** |
+| `dashboard.kpis` / `operations.kpis` / `improvement.kpis` / `github.kpis` / `foundry.kpis` | 각 **3~5개** |
 | `dashboard.feed` | ≥4 · `dashboard.cards.items` ≥3 · `stream.values` ≥2 |
 | `operations.flow.nodes` | **4~7** (그리고 `flow.events`도 노드 수만큼 권장) |
 | `simulator.inputs` | ≥2(권장 3) · `secondary` ≥3 · `recommendations` ≥1 |
-| `improvement.steps` | ≥5 · `factors` ≥4 · `impacts` ≥4 · `board.columns` **정확히 3**(각 `items` ≥1) |
-| `finance.levers` | ≥3 · `summaryMetrics` ≥3 · `composition.segments` **정확히 4** |
+| `improvement.steps` | ≥5 · `factors` ≥4 · `impacts` ≥4 · `board.columns` **2~4개**(각 `items` ≥1) |
+| `finance.levers` | ≥3 · `summaryMetrics` ≥3 · `composition.segments` **3~6개** |
 | `github.issueHeaders` | ≥5 · `steps` ≥5 · `issues` ≥3(각 `diffLines` ≥2) |
-| `foundry.profiles` | **5~7**(각 `qa` ≥3, 이름 모두 상이) · `orchestration.stages` ≥3 |
-| `appPlatform.cards` | **정확히 3** · `learningLoop.steps` **정확히 4** · `controls.rows`/`memories.rows` ≥N |
-| `github.sales` / `foundry.sales` / `appPlatform.sales` | 사업 KPI **정확히 2**, 차별화 기능 ≥3, 통제 증거 ≥3, buyer next step 필수 |
+| `foundry.profiles` | **3~7**(각 `qa` ≥3, 이름 모두 상이) · `orchestration.stages` ≥3 |
+| `appPlatform.cards` | **2~4개** · `learningLoop.steps` **3~6개** · `controls.rows`/`memories.rows` ≥N |
+| `github.sales` / `foundry.sales` / `appPlatform.sales` | 사업 KPI **2~3개**, 차별화 기능 ≥3, 통제 증거 ≥3, buyer next step 필수 |
 
 ## 3. 내부 ID 연동 (반드시 일치)
 - `simulator.inputs[].id` 집합 == 각 `simulator.secondary[].weights`의 키 집합. 모든 `recommendations[].inputId`는 그 집합에 속해야 한다.
@@ -54,8 +54,8 @@ python3 -B .github/skills/ai-platform-demo/scripts/lint_spec.py <session>/<app>-
 ## 4. 색·상태 값
 - `status.tone` / `hero.badge.tone`: `success` · `warning` · `danger` · `info` · `violet` (→ ok/warn/bad/info/violet 배지)
 - `kpi.color`: `brand` · `info` · `accent` · `success` · `violet` · `warning`
-- 디자인은 **고정 GitHub Primer Dark Dimmed 계열 soft-dark**라 색을 새로 만들지 않는다. `design`
-  블록은 base의 것을 그대로 복사하며 `design.tokens`는 빈 객체다.
+- 디자인은 GitHub Primer Dark Dimmed 계열 soft-dark가 기본이다. 고객별 색은
+  `design.tokens.brand/accent` 6자리 hex만 허용한다.
 
 ## 5. Rich text (에이전트 답변 등)
 - 허용 태그: `b` `strong` `em` `code` `br` `div` `span`

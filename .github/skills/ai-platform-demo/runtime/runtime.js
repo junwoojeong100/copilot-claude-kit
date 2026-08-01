@@ -94,8 +94,8 @@
     return;
   }
 
-  // Design is fixed to a GitHub Primer dark-dimmed inspired soft-dark palette in runtime.css :root.
-  // Per customer only the menu (routes) and data change; the visual design stays constant.
+  // The Golden Runtime owns layout and safe defaults. Specs may override only
+  // validated brand/accent tokens that were inlined by the renderer.
   document.body.dataset.theme = 'dark-dimmed';
   document.body.dataset.density = 'executive';
 
@@ -231,7 +231,7 @@
   }
 
   function kpiGridHtml(kpis, routeId) {
-    return `<div class="grid grid-4">${kpis.map((kpi, index) => kpiHtml(kpi, routeId, index)).join('')}</div>`;
+    return `<div class="grid kpi-grid">${kpis.map((kpi, index) => kpiHtml(kpi, routeId, index)).join('')}</div>`;
   }
 
   function lineChart(values, color = 'var(--brand)', width = 760, height = 230) {
@@ -1357,7 +1357,7 @@
         )}
         ${executiveValueHtml('appPlatform', data.sales)}
         ${scenarioTraceHtml('appPlatform')}
-        <div class="grid grid-3">
+        <div class="grid adaptive-grid">
           ${data.cards.map((card, index) => `
             <div class="platform-card" data-title="${escapeHtml(card.title)}" data-detail="${escapeHtml(card.detail)}">
               <div class="platform-icon">${escapeHtml(card.icon)}</div>
@@ -1572,11 +1572,13 @@
         <span class="nav-name">${escapeHtml(route.name)}</span>
         <span class="nav-short">${escapeHtml(route.short)}</span>
       </a>`;
+    const businessNavigation = navigation.filter(route => REQUIRED_ROUTES.slice(0, 5).includes(route.id));
+    const platformNavigation = navigation.filter(route => REQUIRED_ROUTES.slice(5).includes(route.id));
     $('#nav').innerHTML = `
       <div class="nav-group-label">${uiText.businessDecisions}</div>
-      ${navigation.slice(0, 5).map(navLink).join('')}
+      ${businessNavigation.map(navLink).join('')}
       <div class="nav-group-label platform">${uiText.platformEvidence}</div>
-      ${navigation.slice(5).map(navLink).join('')}`;
+      ${platformNavigation.map(navLink).join('')}`;
     $$('#nav a').forEach(link => {
       link.onclick = () => {
         location.hash = link.dataset.route;

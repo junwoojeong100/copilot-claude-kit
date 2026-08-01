@@ -1,6 +1,6 @@
 ---
 name: ai-platform-demo
-description: "특정 고객·산업을 위한 실제 동작하는 AI·App Platform 운영 데모를 단일 HTML SaaS 앱으로 생성합니다. Golden Runtime과 고정 GitHub Primer Dark Dimmed 계열 soft-dark 디자인을 재사용하고 고객 주요사업 5개 메뉴와 GitHub Ecosystem·Microsoft Foundry·App Platform 3개 메뉴를 합친 고정 8-route 구조로 만듭니다. 첫 화면에서 결론·가치·다음 행동을 보여주는 임원 보고·영업 데모입니다. WHEN: 고객사 맞춤 AI 플랫폼 데모, 고객용 App Platform 운영 데모, 산업별 인터랙티브 SaaS 데모, 임원용 단일 HTML 운영 대시보드. NOT WHEN: 일반 AKS·ACA·CI/CD 설명, 코드 샘플, 아키텍처 문서, 슬라이드/PPT, 고객·산업 맥락이 없는 범용 웹 앱."
+description: "특정 고객·산업을 위한 실제 동작하는 AI·App Platform 운영 데모를 단일 HTML SaaS 앱으로 생성합니다. Golden Runtime의 안전한 shell·interaction·QA를 재사용하고 고객 업무 3~5개와 GitHub Ecosystem·Microsoft Foundry·App Platform 중 2~3개를 선택한 5~8-route 구조로 만듭니다. 첫 화면에서 결론·가치·다음 행동을 보여주는 임원 보고·영업 데모입니다. WHEN: 고객사 맞춤 AI 플랫폼 데모, 고객용 App Platform 운영 데모, 산업별 인터랙티브 SaaS 데모, 임원용 단일 HTML 운영 대시보드. NOT WHEN: 일반 AKS·ACA·CI/CD 설명, 코드 샘플, 아키텍처 문서, 슬라이드/PPT, 고객·산업 맥락이 없는 범용 웹 앱."
 argument-hint: "고객 이름, 산업, 청중, 데모 focus를 알려주세요 — 예: 'OO사, CIO 대상 App Platform·CI/CD 중심'"
 ---
 
@@ -12,8 +12,8 @@ argument-hint: "고객 이름, 산업, 청중, 데모 focus를 알려주세요 �
 ## 산출물
 
 - 인라인 CSS/JS를 포함한 단일 `.html` 파일 1개
-- GitHub Primer Dark Dimmed 계열 soft-dark 디자인의 고정 8-route SPA
-- 고객 주요사업 5개 route와 `GitHub Ecosystem`, `Microsoft Foundry`, `App Platform(ACA/AKS)` 3개 route
+- GitHub Primer Dark Dimmed 계열 soft-dark 기본 디자인의 5~8-route SPA
+- 고객 업무 route 3~5개와 `GitHub Ecosystem`, `Microsoft Foundry`, `App Platform(ACA/AKS)` 중 2~3개
 - 버튼·슬라이더·목록·채팅이 실제 동작하고 KPI·차트·활동 피드가 변하는 데모
 - 모든 화면에 `● 시연 데이터` 표시
 
@@ -31,19 +31,19 @@ Puppeteer·Chromium만 외부 공용 캐시에 유지하고, 최종 출력 위�
 | `EMPHASIS` | 강조할 Microsoft·GitHub 서비스 |
 | `LANG` | 지정 언어를 준수. 미지정 시 한국어, 공식 제품명·일반 약어는 원문 유지 |
 | `APP_NAME` | 기본 `<CUSTOMER> IQ` |
-| `ROUTE_SCOPE` | 고정 8개 전체 노출. 시연 동선만 목적에 맞는 4~6개 장면으로 압축 |
+| `ROUTE_SCOPE` | dashboard를 포함한 업무 3~5개 + 플랫폼 2~3개, 총 5~8개를 canonical 순서로 선택 |
+| `BRAND_TOKENS` | 선택적 `brand`·`accent` 6자리 hex. 나머지 layout·type·motion은 Runtime 유지 |
 
 고객과 산업은 필수다. 결과를 크게 바꾸는 blocking 모호성만 확인하며, `CI`, `PI`처럼 의미가 여러 개인
 직무 약어는 실제 역할을 확인한다.
-
 ## 표현 계약
 
-- 첫 화면에서 고객 결과 한 문장, KPI 4개, primary action 1개를 보여준다.
+- 첫 화면에서 고객 결과 한 문장, KPI 3~5개, primary action 1개를 보여준다.
 - 각 route는 임원의 질문 하나에 답하고 행동 하나를 강조한다.
-- 메뉴는 항상 8개를 노출한다. 기본 시연 동선은 이 중 4~6개 핵심 장면으로 끝낸다.
+- 메뉴는 목적에 필요한 5~8개만 노출하고 기본 시연 동선은 4~6개 핵심 장면으로 끝낸다.
 - CEO·COO·CFO·CIO 등 청중별 `story.guidedJourneys`, 보이는 route path, `다음 장면` CTA를 제공한다.
   역할 탭을 선택하면 해당 persona의 첫 의사결정 화면으로 즉시 이동한다.
-- 업무 예외 → Foundry 의사결정 → GitHub 변경 → ACA/AKS 운영을 같은 `scenarioTrace.id`로 연결한다.
+- 업무 예외에서 시작해 선택한 플랫폼 화면 2개 이상을 같은 `scenarioTrace.id`로 연결한다.
 - 제품 catalog로 시작하지 않는다. 고객 가치 → 업무 흐름 → 담당 서비스 순으로 설명한다.
 - 고객의 현재 도입이 확인되지 않은 서비스는 `목표 아키텍처` 또는 `시연 가정`으로 표시한다.
 - 임원이 보는 메뉴·제목·버튼·상태·표·Agent 문구는 `LANG`를 따른다. 한국어일 때만 자연스러운
@@ -75,8 +75,8 @@ App Platform readiness는 `진단 → 미해결 Gap → 개선 계획 → 예상
 
 1. 고객 과제와 목표 결과를 연결하는 서사 한 줄
 2. 청중 직무별 핵심 메시지와 담당 route
-3. 청중별 4~6개 `guidedJourneys`, route bridge, focus별 climax. `story.routeScope`를 쓰면 고정 8개 canonical 순서
-4. 업무 route → Foundry → GitHub → App Platform 공통 `scenarioTrace`
+3. 청중별 4~6개 `guidedJourneys`, route bridge, focus별 climax, 5~8개 `story.routeScope`
+4. 업무 route에서 시작해 활성 플랫폼 2개 이상으로 이어지는 3~6단계 `scenarioTrace`
 
 서사는 고정 인용문이나 범용 AI 메시지에서 시작하지 않는다. 조사로 확인한 고객 과제와 사업 언어에서
 시작한다. `AI 중심`은 Agent 협업·평가·거버넌스, `App Platform·CI/CD 중심`은
@@ -84,14 +84,14 @@ App Platform readiness는 `진단 → 미해결 Gap → 개선 계획 → 예상
 
 ### 3. View Contract와 Customer Overlay
 
-[`reference/screen-blueprints.md`](./reference/screen-blueprints.md)를 참고해 앞의 5개 route를 고객
-주요사업에 매핑하고, 뒤의 3개 route를 GitHub Ecosystem·Microsoft Foundry·App Platform으로 구성한다.
-`view-contract.md`에는 8개 route별 질문·KPI·primary action·필수 DOM ID·시뮬레이터 결과·Agent 전환
+[`reference/screen-blueprints.md`](./reference/screen-blueprints.md)를 참고해 업무 archetype 3~5개와
+GitHub Ecosystem·Microsoft Foundry·App Platform 중 2~3개를 선택한다.
+`view-contract.md`에는 선택한 route별 질문·KPI·primary action·필수 DOM ID·시뮬레이터 결과·Agent 전환
 조건과 세 플랫폼 route의 buyer next step을 기록한다.
 
 [`reference/composable-spec.md`](./reference/composable-spec.md)에 따라 `customer-overlay.json`을 만든다.
-Overlay는 고객 `meta`·`story`·route·Agent만 소유하며 `design`을 정의하지 않는다. 디자인은 Golden
-Runtime이 고정 제공한다.
+Overlay는 고객 `meta`·`story`·route·Agent와 선택적 `design.tokens.brand/accent`를 소유한다. 나머지
+디자인과 interaction engine은 Golden Runtime이 제공한다.
 
 ### 4. 빌드
 
@@ -129,9 +129,9 @@ QA를 생략하지 않는다.
 
 - 최종 산출물이 외부 빌드 없이 열리는 단일 HTML이다.
 - 첫 화면에서 고객 결과·KPI·primary action이 즉시 보인다.
-- 고객 주요사업 5개 + 플랫폼 서비스 3개의 고정 8개 route와 4~6개 핵심 시연 동선이 완성됐다.
-- 청중별 guided journey와 다음 장면 CTA가 고객 업무 결과에서 세 플랫폼 서비스로 자연스럽게 이어진다.
-- GitHub·Foundry·App Platform 화면에 사업 KPI·통제 증거·구매 다음 단계가 보인다.
+- 고객 업무 3~5개 + 플랫폼 서비스 2~3개의 5~8개 route와 4~6개 핵심 시연 동선이 완성됐다.
+- 청중별 guided journey와 다음 장면 CTA가 고객 업무 결과에서 선택한 플랫폼 서비스로 자연스럽게 이어진다.
+- 활성 GitHub·Foundry·App Platform 화면에 사업 KPI·통제 증거·구매 다음 단계가 보인다.
 - Purview·Azure AI Content Safety·Entra·Defender·GitHub AI Controls/Advanced Security 역할이 검증된다.
 - 노출된 모든 route의 클릭 handler가 연결되고 버튼·슬라이더·Agent 전환·채팅의 핵심 상태 변화가 동작한다.
 - 콘솔/페이지 오류와 route 전환 시 null 접근·listener 누수가 없다.
@@ -142,7 +142,7 @@ QA를 생략하지 않는다.
 ## 참고
 
 - Golden Runtime: [`reference/golden-runtime.md`](./reference/golden-runtime.md)
-- 고정 디자인: [`reference/fixed-design-dna.md`](./reference/fixed-design-dna.md)
+- 디자인 기본값과 변경 경계: [`reference/fixed-design-dna.md`](./reference/fixed-design-dna.md)
 - 화면 매핑: [`reference/screen-blueprints.md`](./reference/screen-blueprints.md)
 - Spec 합성: [`reference/composable-spec.md`](./reference/composable-spec.md)
 - 직접 작성: [`reference/authoring-cheatsheet.md`](./reference/authoring-cheatsheet.md)

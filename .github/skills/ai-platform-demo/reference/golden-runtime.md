@@ -8,9 +8,8 @@ Golden Runtime은 고객 데모의 **동작 엔진**이다. 특정 고객의 색
 
 다음 항목은 고객·산업과 무관한 runtime contract다.
 
-- 고정 GitHub Primer Dark Dimmed 계열 soft-dark 디자인(색·타이포·radius·shadow·spacing =
-  `runtime.css`의 `:root`)
-- 단일 HTML shell, 고객 주요사업 5개 + 플랫폼 서비스 3개의 고정 8-route hash router,
+- GitHub Primer Dark Dimmed 계열 soft-dark 기본 디자인과 검증된 brand/accent override
+- 단일 HTML shell, 8개 canonical data route 중 5~8개를 노출하는 hash router,
   sidebar/topbar, `시연 데이터` 표시
 - Business Decisions / Platform Evidence 메뉴 그룹, 청중별 guided journey selector, route bridge,
   `다음 장면` CTA
@@ -36,12 +35,12 @@ runtime/
 
 ## 2. 고정하지 않는 것
 
-다음 항목은 `demo-spec.json`에서 고객별로 결정한다(= 메뉴와 데이터). 디자인은 GitHub soft-dark로 고정.
+다음 항목은 `demo-spec.json`에서 고객별로 결정한다. layout engine은 유지하고 brand/accent만 바꿀 수 있다.
 
 - 브랜드명, 앱명, 언어, audience, storyline
-- 앞의 5개 고객 주요사업 route 이름과 domain terminology
+- 선택한 고객 업무 route 3~5개와 플랫폼 route 2~3개
 - 청중별 4~6개 guided journey, route bridge, final buyer action
-- 업무 예외→Foundry→GitHub→App Platform 공통 scenario trace
+- 업무 route에서 활성 플랫폼으로 이어지는 3~6단계 scenario trace
 - KPI label·단위·범위·tick behavior
 - 운영 flow node, simulator input·formula, root-cause factor
 - finance lever·가정, GitHub issue·diff
@@ -49,14 +48,14 @@ runtime/
 - App Platform workload·capability·readiness KPI 값
 - GitHub·Foundry·App Platform sales contract와 governance evidence
 
-**원칙:** engine과 visual skin은 고정하지만 domain composition과 narrative는 고객별로 바꾼다.
+**원칙:** engine·layout·안전 계약은 고정하고 domain composition·narrative·brand accent는 고객별로 바꾼다.
 
 ## 3. Runtime / Spec 경계
 
 | Layer | 소유자 | 변경 빈도 | 예시 |
 |---|---|---:|---|
 | Golden Runtime | skill | 낮음 | router, cleanup, chart primitive, interaction engine |
-| Design (GitHub soft-dark 고정) | skill | 낮음 | palette, typography, radius, shadow — `runtime.css` |
+| Design defaults | skill + customer tokens | 낮음 | soft-dark 기본값 + 검증된 brand/accent |
 | Domain content | 고객별 spec | 매 요청 | KPI, flow, formula, agent QA |
 | Bespoke extension | 생성 agent | 예외 | 산업 특화 map, uncommon visual simulator |
 
@@ -74,7 +73,7 @@ python3 -B .github/skills/ai-platform-demo/scripts/compose_demo_spec.py \
   --html-output <session>/<app>-work/<app>.html
 ```
 
-Industry Pack과 Customer Overlay 모두 디자인을 정의하지 않는다(디자인은 base가 고정 제공). 적합한
+Industry Pack은 디자인을 정의하지 않고 Customer Overlay는 brand/accent만 정의한다. 적합한
 Pack이 없을 때만 전체 Spec을 직접 작성해 아래 Renderer를 사용한다.
 
 ```bash
@@ -85,7 +84,7 @@ python3 -B .github/skills/ai-platform-demo/scripts/render_demo.py \
 
 Renderer는 다음을 수행한다.
 
-1. spec 필수 구조와 고정 8개 route data·순서를 검증한다.
+1. spec 필수 구조, 8개 canonical data route, 선택된 5~8개 route 순서를 검증한다.
 2. `runtime.css`, `runtime.js`, 고객 spec을 `shell.tmpl`에 inline한다.
 3. Rich text를 strict tag/class allowlist로 sanitize하고 event handler·SVG·URL·style을 거부한다.
 4. `</script>`, U+2028/U+2029를 안전하게 escape하고 non-finite number를 거부한다.
@@ -124,7 +123,7 @@ QA는 추가로 확인한다.
 
 Golden Runtime이 고객의 핵심 장면을 충분히 표현하지 못할 때만 extension을 사용한다.
 
-1. 먼저 spec의 `visual.variant`와 route data로 해결한다(디자인은 고정).
+1. 먼저 spec의 route data와 허용된 brand/accent token으로 해결한다.
 2. 그래도 부족하면 생성된 HTML의 해당 `VIEWS.<route>`만 session 작업 폴더에서 patch한다.
 3. runtime 공통 파일에 고객 전용 분기를 추가하지 않는다.
 4. extension 후 targeted QA와 final full QA를 모두 수행한다.
