@@ -219,16 +219,43 @@ Appendix로 구분한다.
 
 ```text
 핵심 메시지: 청중이 기억할 결론 한 문장.
-발표 설명: 화면 읽는 순서, 왜 중요한지, 조건·예외를 3~5문장.
+전체 흐름: 화면을 읽는 순서와 요소 간 관계를 3~5문장으로 설명.
+구성 요소: English 기술명·단계·카드를 항목별로 쉬운 한국어로 해설.
+실제 예시: 고객 업무 한 가지의 입력→처리→결과.
+검증 기준: KPI·확인 evidence·의사결정 기준.
+상태/조건: GA/Preview/Assumption과 API·portal·source·tool별 범위.
 질문/전환: 고객에게 던질 질문, 다음 장면 연결 또는 다음 의사결정.
-출처/상태: [F-001] Publisher · Document title · GA/Preview/Assumption.
+발표 한 문장: 발표자가 그대로 말할 수 있는 짧은 결론.
+출처: [F-001] Publisher · Document title · checked YYYY-MM-DD.
+```
+
+상세 설명형 예시는 다음처럼 작성한다.
+
+```text
+핵심 메시지: Foundry IQ는 권한에 맞는 근거를 찾고 Toolboxes는 허용된 도구로 업무를 실행합니다.
+전체 흐름: 데이터 원천 → Foundry IQ → Toolboxes 순서로 읽습니다. 먼저 자료를 찾고, 근거를 확인한 뒤,
+허용된 action만 실행합니다.
+구성 요소:
+• Foundry IQ — 여러 source에서 근거와 citation을 찾습니다.
+• Toolboxes — MCP·API·Code 같은 action을 하나의 endpoint로 연결합니다.
+실제 예시: 출장비 규정을 SharePoint에서 확인하고 사내 승인 API로 요청을 생성합니다.
+검증 기준: 근거 답변률, citation coverage, tool success, over-permission 건수를 확인합니다.
+상태/조건: Toolboxes는 GA입니다. Foundry IQ는 core API GA이지만 portal·SharePoint source와 일부
+advanced retrieval은 Preview입니다.
+질문/전환: 필요한 source와 action 중 Preview dependency는 무엇입니까?
+발표 한 문장: 권한 있는 근거는 Foundry IQ가, 통제된 실행은 Toolboxes가 담당합니다.
+출처: [F-015] Microsoft Learn · Foundry GA overview · checked 2026-08-09.
 ```
 
 - notes는 슬라이드 본문을 낭독하지 않는다. 화면에 없는 의미·전환·예외를 보강한다.
-- `발표 설명`에는 기능 목록보다 “왜 중요한가 / 무엇을 비교하는가 / 어떤 조건인가”를 쓴다.
+- `전체 흐름`에는 기능 목록보다 “어떤 순서인가 / 왜 중요한가 / 어떤 조건인가”를 쓴다.
+- `구성 요소`에는 핵심 official term의 역할을 쉬운 한국어로 풀고, 서비스 전체와
+  API·SDK·portal·knowledge source·개별 tool의 상태가 다르면 각각 구분한다.
+- `GA + PREVIEW`를 그대로 반복하지 말고 무엇이 GA이고 무엇이 Preview인지 적는다. 제품 상태가 없는
+  전략·진단·실행 장은 `내부 프레임`, `ASSUMPTION`, `Recommendation`과 검증 조건을 기록한다.
 - 출처는 footer와 일치하는 Fact ID·발행자·문서명을 짧게 적고 긴 URL은 넣지 않는다.
-- 한국어 기준 약 60초, 400~750자를 기본으로 한다. `발표 설명`은 240자·3문장 이상이되 5개 핵심 문장을
-  넘기지 않는다.
+- 한국어 기준 상세 설명 약 3분, 1,000~2,600자를 기본으로 한다. `전체 흐름`은 220자·3문장 이상,
+  `실제 예시`는 100자 이상, `검증 기준`은 70자 이상, `상태/조건`은 120자 이상으로 작성한다.
 
 ## 6. 한글 폰트
 

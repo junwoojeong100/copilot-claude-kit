@@ -293,6 +293,10 @@ class VerifyDeckTests(unittest.TestCase):
         first.notes_slide.notes_text_frame.text = (
             "핵심 메시지: 결론입니다.\n"
             "설명: 간단한 설명입니다.\n"
+            "상태: 이 기능은 GA이며 적용 범위와 예외 조건을 확인해야 합니다.\n"
+            "예시: 실제 업무에서 이 기능을 적용하는 구체적인 예시를 설명합니다.\n"
+            "검증: 품질과 시간, 위험 지표를 같은 기준으로 비교합니다.\n"
+            "한 문장: 이 기능은 허용된 범위에서 업무 결과를 개선합니다.\n"
             "질문/행동: 다음 행동을 정합니다.\n"
             "출처/상태: 내부 자료입니다."
         )
@@ -302,19 +306,43 @@ class VerifyDeckTests(unittest.TestCase):
         prs.save(deck)
         policy = {
             "required": True,
-            "requiredSections": ["핵심 메시지", "설명", "질문/행동", "출처/상태"],
+            "requiredSections": [
+                "핵심 메시지",
+                "설명",
+                "예시",
+                "검증",
+                "상태",
+                "질문/행동",
+                "한 문장",
+                "출처/상태",
+            ],
             "authoringMode": "regenerate-from-scratch",
             "explanationSection": "설명",
+            "statusSection": "상태",
+            "exampleSection": "예시",
+            "validationSection": "검증",
+            "summarySection": "한 문장",
             "targetSeconds": 60,
             "minCharacters": 40,
             "maxCharacters": 300,
             "minExplanationCharacters": 30,
             "minExplanationSentences": 2,
+            "minStatusCharacters": 20,
+            "minExampleCharacters": 20,
+            "minValidationCharacters": 20,
+            "minSummaryCharacters": 20,
+            "maxSummaryCharacters": 100,
+            "requireStateLabelsInStatusSection": True,
         }
-        report = speaker_notes.analyze_deck(deck, policy)
+        report = speaker_notes.analyze_deck(
+            deck,
+            policy,
+            state_labels_by_slide={1: ["GA"], 2: ["PREVIEW"]},
+        )
         self.assertEqual(report["shortSlides"], [2])
         self.assertEqual(report["sectionGaps"][0]["slide"], 2)
         self.assertIn("설명", report["sectionGaps"][0]["missingSections"])
+        self.assertEqual(report["stateSummaryGaps"][0]["slide"], 2)
 
     def test_speaker_notes_contract_requires_detailed_explanation(self):
         prs = Presentation()
@@ -322,6 +350,10 @@ class VerifyDeckTests(unittest.TestCase):
         slide.notes_slide.notes_text_frame.text = (
             "핵심 메시지: 결론입니다.\n"
             "설명: 짧은 설명입니다. 두 번째 문장입니다.\n"
+            "상태: GA 상태와 적용 조건을 함께 확인합니다.\n"
+            "예시: 실제 업무에서 적용하는 구체적인 예시를 설명합니다.\n"
+            "검증: 품질과 위험을 같은 기준으로 비교합니다.\n"
+            "한 문장: 이 기능의 역할과 결과를 한 문장으로 설명합니다.\n"
             "질문/행동: 질문입니다.\n"
             "출처/상태: 출처입니다."
         )
@@ -329,18 +361,209 @@ class VerifyDeckTests(unittest.TestCase):
         prs.save(deck)
         policy = {
             "required": True,
-            "requiredSections": ["핵심 메시지", "설명", "질문/행동", "출처/상태"],
+            "requiredSections": [
+                "핵심 메시지",
+                "설명",
+                "예시",
+                "검증",
+                "상태",
+                "질문/행동",
+                "한 문장",
+                "출처/상태",
+            ],
             "authoringMode": "regenerate-from-scratch",
             "explanationSection": "설명",
+            "statusSection": "상태",
+            "exampleSection": "예시",
+            "validationSection": "검증",
+            "summarySection": "한 문장",
             "targetSeconds": 60,
             "minCharacters": 40,
             "maxCharacters": 500,
             "minExplanationCharacters": 60,
             "minExplanationSentences": 3,
+            "minStatusCharacters": 20,
+            "minExampleCharacters": 20,
+            "minValidationCharacters": 20,
+            "minSummaryCharacters": 20,
+            "maxSummaryCharacters": 100,
+            "requireStateLabelsInStatusSection": True,
         }
-        report = speaker_notes.analyze_deck(deck, policy)
+        report = speaker_notes.analyze_deck(
+            deck,
+            policy,
+            state_labels_by_slide={1: ["GA"]},
+        )
         self.assertEqual(report["briefExplanationSlides"], [1])
         self.assertEqual(report["lowExplanationSentenceSlides"], [1])
+
+    def test_speaker_notes_contract_requires_detailed_status_summary(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.notes_slide.notes_text_frame.text = (
+            "핵심 메시지: 결론입니다.\n"
+            "설명: 첫 번째 설명입니다. 두 번째 설명입니다. 세 번째 설명입니다.\n"
+            "상태: GA입니다.\n"
+            "질문/행동: 질문입니다.\n"
+            "출처/상태: 출처입니다."
+        )
+        deck = self.work_dir / "brief-status.pptx"
+        prs.save(deck)
+        policy = {
+            "required": True,
+            "requiredSections": [
+                "핵심 메시지",
+                "설명",
+                "예시",
+                "검증",
+                "상태",
+                "질문/행동",
+                "한 문장",
+                "출처/상태",
+            ],
+            "authoringMode": "regenerate-from-scratch",
+            "explanationSection": "설명",
+            "statusSection": "상태",
+            "exampleSection": "예시",
+            "validationSection": "검증",
+            "summarySection": "한 문장",
+            "targetSeconds": 60,
+            "minCharacters": 40,
+            "maxCharacters": 500,
+            "minExplanationCharacters": 20,
+            "minExplanationSentences": 3,
+            "minStatusCharacters": 40,
+            "minExampleCharacters": 20,
+            "minValidationCharacters": 20,
+            "minSummaryCharacters": 20,
+            "maxSummaryCharacters": 100,
+            "requireStateLabelsInStatusSection": True,
+        }
+        report = speaker_notes.analyze_deck(
+            deck,
+            policy,
+            state_labels_by_slide={1: ["GA", "PREVIEW"]},
+        )
+        self.assertEqual(report["briefStatusSlides"], [1])
+        self.assertEqual(
+            report["stateSummaryGaps"],
+            [{"slide": 1, "missingStateLabels": ["PREVIEW"]}],
+        )
+
+    def test_speaker_notes_contract_reads_multiline_bullet_sections(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.notes_slide.notes_text_frame.text = (
+            "핵심 메시지: 결론입니다.\n"
+            "설명:\n"
+            "첫 번째 설명입니다. 두 번째 설명입니다. 세 번째 설명입니다.\n"
+            "예시:\n"
+            "• 사용자가 질문합니다.\n"
+            "• 시스템이 근거를 찾습니다.\n"
+            "검증:\n"
+            "• 품질과 위험 지표를 비교합니다.\n"
+            "상태:\n"
+            "• Core API는 GA입니다.\n"
+            "• Portal은 PREVIEW입니다.\n"
+            "질문/행동: 다음 행동을 정합니다.\n"
+            "한 문장: 근거와 실행을 분리해 안전하게 업무를 처리합니다.\n"
+            "출처/상태: 공식 문서입니다."
+        )
+        deck = self.work_dir / "multiline-notes.pptx"
+        prs.save(deck)
+        policy = {
+            "required": True,
+            "requiredSections": [
+                "핵심 메시지",
+                "설명",
+                "예시",
+                "검증",
+                "상태",
+                "질문/행동",
+                "한 문장",
+                "출처/상태",
+            ],
+            "authoringMode": "regenerate-from-scratch",
+            "explanationSection": "설명",
+            "statusSection": "상태",
+            "exampleSection": "예시",
+            "validationSection": "검증",
+            "summarySection": "한 문장",
+            "targetSeconds": 60,
+            "minCharacters": 40,
+            "maxCharacters": 600,
+            "minExplanationCharacters": 20,
+            "minExplanationSentences": 3,
+            "minStatusCharacters": 20,
+            "minExampleCharacters": 20,
+            "minValidationCharacters": 20,
+            "minSummaryCharacters": 20,
+            "maxSummaryCharacters": 100,
+            "requireStateLabelsInStatusSection": True,
+        }
+        report = speaker_notes.analyze_deck(
+            deck,
+            policy,
+            state_labels_by_slide={1: ["GA", "PREVIEW"]},
+        )
+        self.assertEqual(report["sectionGaps"], [])
+        self.assertGreater(report["slides"][0]["exampleCharacters"], 20)
+        self.assertGreater(report["slides"][0]["statusCharacters"], 20)
+
+    def test_partial_ga_does_not_satisfy_ga_state_label(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.notes_slide.notes_text_frame.text = (
+            "핵심 메시지: 결론입니다.\n"
+            "설명: 첫 문장입니다. 둘째 문장입니다. 셋째 문장입니다.\n"
+            "예시: 실제 업무의 입력과 처리와 결과를 설명하는 충분한 예시입니다.\n"
+            "검증: 품질과 위험과 비용을 같은 기준으로 확인합니다.\n"
+            "상태: 전체 기능은 PARTIAL GA이며 일부 기능은 PREVIEW입니다.\n"
+            "질문/행동: 다음 행동을 정합니다.\n"
+            "한 문장: 부분적으로 제공되는 기능의 범위를 확인해야 합니다.\n"
+            "출처/상태: 공식 문서입니다."
+        )
+        deck = self.work_dir / "partial-ga-notes.pptx"
+        prs.save(deck)
+        policy = {
+            "required": True,
+            "requiredSections": [
+                "핵심 메시지",
+                "설명",
+                "예시",
+                "검증",
+                "상태",
+                "질문/행동",
+                "한 문장",
+                "출처/상태",
+            ],
+            "authoringMode": "regenerate-from-scratch",
+            "explanationSection": "설명",
+            "statusSection": "상태",
+            "exampleSection": "예시",
+            "validationSection": "검증",
+            "summarySection": "한 문장",
+            "targetSeconds": 60,
+            "minCharacters": 40,
+            "maxCharacters": 600,
+            "minExplanationCharacters": 20,
+            "minExplanationSentences": 3,
+            "minStatusCharacters": 20,
+            "minExampleCharacters": 20,
+            "minValidationCharacters": 20,
+            "minSummaryCharacters": 20,
+            "maxSummaryCharacters": 100,
+            "requireStateLabelsInStatusSection": True,
+        }
+        report = speaker_notes.analyze_deck(
+            deck,
+            policy,
+            state_labels_by_slide={1: ["GA", "PREVIEW"]},
+        )
+        self.assertEqual(
+            report["stateSummaryGaps"],
+            [{"slide": 1, "missingStateLabels": ["GA"]}],
+        )
 
     def test_runner_protects_visual_review_inside_managed_qa(self):
         out = self.work_dir / "verify"

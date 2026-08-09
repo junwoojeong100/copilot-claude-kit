@@ -41,16 +41,31 @@
     "authoringMode": "regenerate-from-scratch",
     "requiredSections": [
       "핵심 메시지",
-      "발표 설명",
+      "전체 흐름",
+      "구성 요소",
+      "실제 예시",
+      "검증 기준",
+      "상태/조건",
       "질문/전환",
-      "출처/상태"
+      "발표 한 문장",
+      "출처"
     ],
-    "explanationSection": "발표 설명",
-    "targetSeconds": 60,
-    "minCharacters": 400,
-    "maxCharacters": 750,
-    "minExplanationCharacters": 240,
-    "minExplanationSentences": 3
+    "explanationSection": "전체 흐름",
+    "statusSection": "상태/조건",
+    "exampleSection": "실제 예시",
+    "validationSection": "검증 기준",
+    "summarySection": "발표 한 문장",
+    "targetSeconds": 180,
+    "minCharacters": 1000,
+    "maxCharacters": 2600,
+    "minExplanationCharacters": 220,
+    "minExplanationSentences": 3,
+    "minStatusCharacters": 120,
+    "minExampleCharacters": 100,
+    "minValidationCharacters": 70,
+    "minSummaryCharacters": 30,
+    "maxSummaryCharacters": 180,
+    "requireStateLabelsInStatusSection": true
   },
   "fontPolicy": {
     "selected": "Noto Sans CJK KR",
@@ -104,13 +119,26 @@
 
 - `requiredSections`: 각 섹션은 `섹션명:` 형태로 notes에 직접 표시한다.
 - `authoringMode`: 기존 notes 문구를 이어 붙이지 않고 비운 뒤 현재 storyline·visual·근거에서 재작성한다.
-- `explanationSection`: 상세 설명 분량과 문장 수를 검사할 섹션명.
-- `targetSeconds`: 발표 목표 시간. 한국어 기본은 약 60초다.
+- `explanationSection`: 화면 읽는 순서와 요소 간 관계를 설명하는 섹션명.
+- `statusSection`: 제품 상태, 적용 범위와 예외를 정리할 섹션명.
+- `exampleSection`, `validationSection`, `summarySection`: 실제 업무 예시, KPI·evidence, 발표용 한 문장을
+  각각 검사할 섹션명.
+- `targetSeconds`: 상세 설명을 모두 사용할 때의 목표 시간. 한국어 기본은 약 180초다.
 - `minCharacters`: 결론과 질문만 적고 상세 설명·출처를 생략하는 notes를 방지한다.
 - `maxCharacters`: 발표 원고처럼 과도하게 긴 notes를 방지한다.
-- `minExplanationCharacters`, `minExplanationSentences`: `발표 설명` 블록이 단순 요약이 아니라 화면 읽는
+- `minExplanationCharacters`, `minExplanationSentences`: `전체 흐름` 블록이 단순 요약이 아니라 화면 읽는
   순서·의미·조건을 전달하도록 강제한다.
-- `출처/상태`는 긴 URL 대신 `[F-001] Publisher · Document title · GA/Preview`처럼 짧게 쓴다.
+- `minStatusCharacters`: `상태/조건`이 `GA` 같은 짧은 라벨만 반복하지 않고 정확한 범위와 조건을
+  설명하도록 강제한다.
+- `minExampleCharacters`, `minValidationCharacters`: 슬라이드 개념을 실제 고객 업무와 측정 가능한 KPI에
+  연결한다.
+- `minSummaryCharacters`, `maxSummaryCharacters`: `발표 한 문장`을 너무 짧거나 장황하지 않게 유지한다.
+- `requireStateLabelsInStatusSection`: slide의 `stateLabels`를 `상태/조건`에도 직접 표시해 시각 라벨과
+  상세 설명이 어긋나지 않게 한다.
+- `상태/조건`은 `Foundry IQ — core API GA, portal·SharePoint·advanced retrieval Preview`처럼
+  서비스 전체와 API·portal·source·개별 tool의 상태를 분리한다. 공식 기술명은 English로 유지하고
+  역할과 조건은 쉬운 한국어로 설명한다.
+- `출처`는 긴 URL 대신 `[F-001] Publisher · Document title · checked YYYY-MM-DD`처럼 짧게 쓴다.
 - 외부 출처가 없는 표지·진단·실행 장은 `내부 프레임 · 고객별 검증 필요`, `ASSUMPTION`,
   `Recommendation`처럼 성격과 검증 조건을 적는다.
 
