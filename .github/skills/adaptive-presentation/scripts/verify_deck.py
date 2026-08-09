@@ -106,6 +106,37 @@ def select_risk_slides(report: dict, count: int) -> list[int]:
     add(
         [
             {"slide": slide}
+            for slide in report.get("speaker_notes", {}).get(
+                "briefStatusSlides", []
+            )
+        ],
+        6,
+    )
+    add(
+        [
+            {"slide": item["slide"]}
+            for item in report.get("speaker_notes", {}).get(
+                "stateSummaryGaps", []
+            )
+        ],
+        10,
+    )
+    for key in (
+        "briefExampleSlides",
+        "briefValidationSlides",
+        "briefSummarySlides",
+        "longSummarySlides",
+    ):
+        add(
+            [
+                {"slide": slide}
+                for slide in report.get("speaker_notes", {}).get(key, [])
+            ],
+            6,
+        )
+    add(
+        [
+            {"slide": slide}
             for slide in report.get("missing_required_source_slides", [])
         ],
         15,
@@ -572,9 +603,14 @@ def verify(args: argparse.Namespace) -> dict:
             audit_report["language_balance"] = language_balance
             audit_failures.extend(language_policy.failures(language_balance))
         if contract.spec.get("speakerNotesPolicy") is not None:
+            state_labels_by_slide = {
+                int(slide["number"]): list(slide["stateLabels"])
+                for slide in contract.spec["slides"]
+            }
             speaker_notes_report = speaker_notes.analyze_deck(
                 deck,
                 contract.spec["speakerNotesPolicy"],
+                state_labels_by_slide=state_labels_by_slide,
             )
             audit_report["speaker_notes"] = speaker_notes_report
             audit_failures.extend(speaker_notes.failures(speaker_notes_report))

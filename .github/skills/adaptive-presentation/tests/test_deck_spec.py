@@ -118,7 +118,17 @@ class DeckSpecTests(unittest.TestCase):
         self.assertTrue(context.spec["speakerNotesPolicy"]["required"])
         self.assertEqual(
             context.spec["speakerNotesPolicy"]["requiredSections"],
-            ["핵심 메시지", "발표 설명", "질문/전환", "출처/상태"],
+            [
+                "핵심 메시지",
+                "전체 흐름",
+                "구성 요소",
+                "실제 예시",
+                "검증 기준",
+                "상태/조건",
+                "질문/전환",
+                "발표 한 문장",
+                "출처",
+            ],
         )
         self.assertEqual(
             context.spec["speakerNotesPolicy"]["authoringMode"],
@@ -128,7 +138,16 @@ class DeckSpecTests(unittest.TestCase):
             context.spec["speakerNotesPolicy"]["minExplanationSentences"],
             3,
         )
-        self.assertEqual(context.spec["speakerNotesPolicy"]["targetSeconds"], 60)
+        self.assertEqual(
+            context.spec["speakerNotesPolicy"]["statusSection"],
+            "상태/조건",
+        )
+        self.assertTrue(
+            context.spec["speakerNotesPolicy"][
+                "requireStateLabelsInStatusSection"
+            ]
+        )
+        self.assertEqual(context.spec["speakerNotesPolicy"]["targetSeconds"], 180)
 
     def test_slide_count_and_sequence_are_authoritative(self):
         value = copy.deepcopy(BASE)
@@ -250,14 +269,34 @@ class DeckSpecTests(unittest.TestCase):
         value = copy.deepcopy(BASE)
         value["speakerNotesPolicy"] = {
             "required": True,
-            "requiredSections": ["핵심 메시지", "설명"],
+            "requiredSections": [
+                "핵심 메시지",
+                "설명",
+                "구성",
+                "예시",
+                "검증",
+                "상태",
+                "질문",
+                "한 문장",
+                "출처",
+            ],
             "authoringMode": "regenerate-from-scratch",
             "explanationSection": "설명",
+            "statusSection": "상태",
+            "exampleSection": "예시",
+            "validationSection": "검증",
+            "summarySection": "한 문장",
             "targetSeconds": 60,
             "minCharacters": 500,
             "maxCharacters": 200,
             "minExplanationCharacters": 180,
             "minExplanationSentences": 3,
+            "minStatusCharacters": 50,
+            "minExampleCharacters": 50,
+            "minValidationCharacters": 50,
+            "minSummaryCharacters": 20,
+            "maxSummaryCharacters": 100,
+            "requireStateLabelsInStatusSection": True,
         }
         with self.assertRaisesRegex(deck_spec.DeckSpecError, "maxCharacters"):
             deck_spec.load_deck_spec(self.write_spec(value))

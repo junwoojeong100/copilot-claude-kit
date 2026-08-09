@@ -101,16 +101,30 @@
         "authoringMode",
         "requiredSections",
         "explanationSection",
+        "statusSection",
+        "exampleSection",
+        "validationSection",
+        "summarySection",
         "targetSeconds",
         "minCharacters",
         "maxCharacters",
         "minExplanationCharacters",
-        "minExplanationSentences"
+        "minExplanationSentences",
+        "minStatusCharacters",
+        "minExampleCharacters",
+        "minValidationCharacters",
+        "minSummaryCharacters",
+        "maxSummaryCharacters",
+        "requireStateLabelsInStatusSection"
       ],
       "properties": {
         "required": {"type": "boolean"},
         "authoringMode": {"const": "regenerate-from-scratch"},
         "explanationSection": {"type": "string", "minLength": 1},
+        "statusSection": {"type": "string", "minLength": 1},
+        "exampleSection": {"type": "string", "minLength": 1},
+        "validationSection": {"type": "string", "minLength": 1},
+        "summarySection": {"type": "string", "minLength": 1},
         "targetSeconds": {"type": "integer", "minimum": 1},
         "requiredSections": {
           "type": "array",
@@ -121,7 +135,13 @@
         "minCharacters": {"type": "integer", "minimum": 1},
         "maxCharacters": {"type": "integer", "minimum": 1},
         "minExplanationCharacters": {"type": "integer", "minimum": 1},
-        "minExplanationSentences": {"type": "integer", "minimum": 1}
+        "minExplanationSentences": {"type": "integer", "minimum": 1},
+        "minStatusCharacters": {"type": "integer", "minimum": 1},
+        "minExampleCharacters": {"type": "integer", "minimum": 1},
+        "minValidationCharacters": {"type": "integer", "minimum": 1},
+        "minSummaryCharacters": {"type": "integer", "minimum": 1},
+        "maxSummaryCharacters": {"type": "integer", "minimum": 1},
+        "requireStateLabelsInStatusSection": {"type": "boolean"}
       }
     },
     "fontPolicy": {
