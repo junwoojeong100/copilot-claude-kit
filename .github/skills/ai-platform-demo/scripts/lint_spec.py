@@ -13,6 +13,7 @@ Run this before rendering and before the browser QA:
 from __future__ import annotations
 
 import argparse
+import html as html_lib
 import json
 import math
 import re
@@ -56,6 +57,69 @@ KOREAN_COPY_EXCEPTIONS = {
     "aca · aks",
     "copilot · actions · advanced security",
 }
+DEFAULT_KOREAN_LANGUAGE_POLICY = {
+    "mode": "korean-first-technical-english",
+    "targetLatinRatio": 0.40,
+    "maxLatinRatio": 0.55,
+    "maxRouteLatinRatio": 0.75,
+    "minAnalyzedCharacters": 80,
+    "preserveOfficialTerms": True,
+    "protectedTerms": [],
+    "allowHighLatinRoutes": [],
+}
+EXECUTIVE_COPY_KEYS = {
+    "action",
+    "appName",
+    "audience",
+    "badge",
+    "button",
+    "complete",
+    "controlEvidence",
+    "crumb",
+    "dangerLabel",
+    "defaultRecommendation",
+    "detail",
+    "detailTitle",
+    "differentiation",
+    "explanation",
+    "factorsHint",
+    "factorsTitle",
+    "feedHint",
+    "feedTitle",
+    "frame",
+    "goodLabel",
+    "hint",
+    "impactsHint",
+    "impactsTitle",
+    "industry",
+    "infrastructureLabel",
+    "label",
+    "leftLabel",
+    "leversHint",
+    "leversTitle",
+    "message",
+    "name",
+    "note",
+    "outcome",
+    "owner",
+    "question",
+    "recommendationAfter",
+    "recommendationBefore",
+    "rightLabel",
+    "running",
+    "short",
+    "sub",
+    "subtitle",
+    "successCriteria",
+    "summary",
+    "text",
+    "timebox",
+    "title",
+    "toastText",
+    "toastTitle",
+    "warningLabel",
+}
+LATIN_RE = re.compile(r"[A-Za-z]")
 
 
 def _reject_constant(value: str):
@@ -92,6 +156,154 @@ def korean_copy_invariants(spec: dict) -> list[str]:
                     f"{route_id}.hero.{field} must use Korean-first executive copy "
                     f"(official product names and common acronyms are allowed): {value!r}"
                 )
+    return problems
+
+
+def _policy(spec: dict) -> dict:
+    value = spec.get("meta", {}).get("languagePolicy")
+    return {**DEFAULT_KOREAN_LANGUAGE_POLICY, **(value or {})}
+
+
+def _path_key(path: str) -> str:
+    match = re.search(r"\.([A-Za-z][A-Za-z0-9]*)$", path)
+    return match.group(1) if match else ""
+
+
+def _visible_copy_strings(value: object, path: str = "$"):
+    if isinstance(value, str):
+        if (
+            _path_key(path) in EXECUTIVE_COPY_KEYS
+            and not path.startswith(("$.meta.research", "$.design"))
+        ):
+            yield path, value
+    elif isinstance(value, dict):
+        for key, child in value.items():
+            yield from _visible_copy_strings(child, f"{path}.{key}")
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            yield from _visible_copy_strings(child, f"{path}[{index}]")
+
+
+def _plain_text(value: str) -> str:
+    return html_lib.unescape(re.sub(r"<[^>]+>", " ", value))
+
+
+def _neutralize_terms(text: str, terms: list[str]) -> str:
+    neutralized = text
+    for term in sorted(terms, key=len, reverse=True):
+        neutralized = re.sub(
+            re.escape(term),
+            " ",
+            neutralized,
+            flags=re.IGNORECASE,
+        )
+    return neutralized
+
+
+def _language_counts(
+    items: list[tuple[str, str]],
+    protected_terms: list[str],
+) -> dict:
+    text = " ".join(_plain_text(value) for _, value in items)
+    raw_latin = len(LATIN_RE.findall(text))
+    raw_hangul = len(HANGUL_RE.findall(text))
+    raw_total = raw_latin + raw_hangul
+    neutralized = _neutralize_terms(text, protected_terms)
+    latin = len(LATIN_RE.findall(neutralized))
+    hangul = len(HANGUL_RE.findall(neutralized))
+    total = latin + hangul
+    return {
+        "rawLatinCharacters": raw_latin,
+        "rawHangulCharacters": raw_hangul,
+        "rawLatinRatio": raw_latin / raw_total if raw_total else 0.0,
+        "latinCharacters": latin,
+        "hangulCharacters": hangul,
+        "analyzedCharacters": total,
+        "latinRatio": latin / total if total else 0.0,
+    }
+
+
+def language_balance_report(spec: dict) -> dict | None:
+    language = str(spec.get("meta", {}).get("language", "")).casefold()
+    if language != "ko" and not language.startswith("ko-"):
+        return None
+    policy = _policy(spec)
+    all_items = list(_visible_copy_strings(spec))
+    overall = _language_counts(all_items, policy["protectedTerms"])
+    routes = []
+    allowed = set(policy["allowHighLatinRoutes"])
+    for route_id in render_demo.ROUTE_IDS:
+        route_items = list(
+            _visible_copy_strings(spec.get(route_id, {}), f"$.{route_id}")
+        )
+        route_counts = _language_counts(route_items, policy["protectedTerms"])
+        routes.append(
+            {
+                "route": route_id,
+                **route_counts,
+                "rawLatinRatio": round(route_counts["rawLatinRatio"], 4),
+                "latinRatio": round(route_counts["latinRatio"], 4),
+                "allowed": route_id in allowed,
+            }
+        )
+    folded = " ".join(
+        value
+        for path, value in render_demo.iter_strings(spec)
+        if not path.startswith("$.meta.languagePolicy")
+    ).casefold()
+    missing_terms = [
+        term
+        for term in policy["protectedTerms"]
+        if term.casefold() not in folded
+    ]
+    return {
+        "targetLatinRatio": policy["targetLatinRatio"],
+        "maxLatinRatio": policy["maxLatinRatio"],
+        "maxRouteLatinRatio": policy["maxRouteLatinRatio"],
+        "minAnalyzedCharacters": policy["minAnalyzedCharacters"],
+        "overall": {
+            **overall,
+            "rawLatinRatio": round(overall["rawLatinRatio"], 4),
+            "latinRatio": round(overall["latinRatio"], 4),
+        },
+        "routes": routes,
+        "missingProtectedTerms": missing_terms,
+    }
+
+
+def language_balance_invariants(spec: dict) -> list[str]:
+    report = language_balance_report(spec)
+    if report is None:
+        return []
+    problems: list[str] = []
+    overall = report["overall"]
+    if (
+        overall["analyzedCharacters"] >= report["minAnalyzedCharacters"]
+        and overall["latinRatio"] > report["maxLatinRatio"]
+    ):
+        problems.append(
+            "Korean-first executive copy Latin-character ratio is too high: "
+            "(protected official terms excluded) "
+            f"{overall['latinRatio']:.1%} > {report['maxLatinRatio']:.1%} "
+            f"(target {report['targetLatinRatio']:.1%})"
+        )
+    high_routes = [
+        route["route"]
+        for route in report["routes"]
+        if route["analyzedCharacters"] >= report["minAnalyzedCharacters"]
+        and route["latinRatio"] > report["maxRouteLatinRatio"]
+        and not route["allowed"]
+    ]
+    if high_routes:
+        problems.append(
+            "Korean-first executive copy is too English-heavy on route(s): "
+            + ", ".join(high_routes)
+        )
+    if report["missingProtectedTerms"]:
+        problems.append(
+            "Protected official service/feature term(s) are missing: "
+            + ", ".join(report["missingProtectedTerms"])
+        )
     return problems
 
 
@@ -152,6 +364,7 @@ def qa_invariants(spec: dict) -> list[str]:
         )
 
     problems.extend(korean_copy_invariants(spec))
+    problems.extend(language_balance_invariants(spec))
     return problems
 
 
@@ -186,7 +399,16 @@ def main() -> int:
             print(f"  - {item}")
         return 1
 
-    print("[lint] OK — structure valid and QA invariants satisfied.")
+    balance = language_balance_report(spec)
+    suffix = ""
+    if balance is not None:
+        suffix = (
+            " | executive-copy Latin ratio="
+            f"{balance['overall']['latinRatio']:.1%} "
+            f"(target {balance['targetLatinRatio']:.1%}, "
+            f"raw {balance['overall']['rawLatinRatio']:.1%})"
+        )
+    print("[lint] OK — structure valid and QA invariants satisfied." + suffix)
     return 0
 
 

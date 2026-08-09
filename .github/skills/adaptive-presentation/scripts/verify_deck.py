@@ -15,9 +15,11 @@ from pathlib import Path
 import audit_pptx
 import deck_spec
 import inspect_template
+import language_policy
 import qa_exceptions
 import render_pptx
 import rendered_overlap
+import speaker_notes
 import toolcheck
 import visual_review
 from tooling import path_is_within, paths_collide
@@ -52,6 +54,55 @@ def select_risk_slides(report: dict, count: int) -> list[int]:
     add(report.get("rendered_text_overflow_candidates", []), 4)
     add(report.get("unmapped_rendered_text_findings", []), 12)
     add(report.get("unsupported_text_objects", []), 20)
+    add(
+        report.get("language_balance", {}).get("highLatinSlides", []),
+        8,
+    )
+    add(
+        report.get("language_balance", {}).get(
+            "unexplainedTechnicalSlides", []
+        ),
+        10,
+    )
+    add(
+        [
+            {"slide": slide}
+            for slide in report.get("speaker_notes", {}).get("missingSlides", [])
+        ],
+        12,
+    )
+    add(
+        [
+            {"slide": slide}
+            for slide in report.get("speaker_notes", {}).get("shortSlides", [])
+        ],
+        4,
+    )
+    add(
+        [
+            {"slide": item["slide"]}
+            for item in report.get("speaker_notes", {}).get("sectionGaps", [])
+        ],
+        8,
+    )
+    add(
+        [
+            {"slide": slide}
+            for slide in report.get("speaker_notes", {}).get(
+                "briefExplanationSlides", []
+            )
+        ],
+        6,
+    )
+    add(
+        [
+            {"slide": slide}
+            for slide in report.get("speaker_notes", {}).get(
+                "lowExplanationSentenceSlides", []
+            )
+        ],
+        6,
+    )
     add(
         [
             {"slide": slide}
@@ -492,6 +543,8 @@ def verify(args: argparse.Namespace) -> dict:
 
     claim_id_gaps: dict[str, list[str]] = {}
     template_profile_mismatches: list[str] = []
+    language_balance = None
+    speaker_notes_report = None
     if contract is not None:
         canvas = contract.spec["canvas"]
         actual_width = audit_report["size_inches"]["width"]
@@ -510,6 +563,21 @@ def verify(args: argparse.Namespace) -> dict:
         )
         audit_failures.extend(source_failures)
         audit_failures.extend(state_label_failures(deck, contract))
+        if contract.spec.get("languagePolicy") is not None:
+            language_balance = language_policy.analyze_deck(
+                deck,
+                contract.spec["languagePolicy"],
+                footer_top_in=args.footer_top,
+            )
+            audit_report["language_balance"] = language_balance
+            audit_failures.extend(language_policy.failures(language_balance))
+        if contract.spec.get("speakerNotesPolicy") is not None:
+            speaker_notes_report = speaker_notes.analyze_deck(
+                deck,
+                contract.spec["speakerNotesPolicy"],
+            )
+            audit_report["speaker_notes"] = speaker_notes_report
+            audit_failures.extend(speaker_notes.failures(speaker_notes_report))
         font_policy = contract.spec["fontPolicy"]
         selected_font = font_policy["selected"]
         allowed_fonts = [selected_font, *font_policy["fallbacks"]]
@@ -644,6 +712,8 @@ def verify(args: argparse.Namespace) -> dict:
         "deck_spec": str(contract.path) if contract is not None else None,
         "claim_id_gaps": claim_id_gaps,
         "template_profile_mismatches": template_profile_mismatches,
+        "language_balance": language_balance,
+        "speaker_notes": speaker_notes_report,
         "exception_manifest": (
             str(exception_manifest.path) if exception_manifest is not None else None
         ),

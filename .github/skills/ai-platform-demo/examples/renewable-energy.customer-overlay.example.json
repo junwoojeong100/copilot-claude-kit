@@ -21,6 +21,23 @@
       "appName": "Northstar Nexus",
       "initials": "NE",
       "language": "ko",
+      "languagePolicy": {
+        "mode": "korean-first-technical-english",
+        "targetLatinRatio": 0.4,
+        "maxLatinRatio": 0.55,
+        "maxRouteLatinRatio": 0.75,
+        "minAnalyzedCharacters": 80,
+        "preserveOfficialTerms": true,
+        "protectedTerms": [
+          "GitHub Copilot",
+          "Microsoft Foundry",
+          "GitHub Actions",
+          "GitHub Advanced Security",
+          "AKS",
+          "ACA"
+        ],
+        "allowHighLatinRoutes": []
+      },
       "infrastructureLabel": "GitHub · Microsoft Foundry · ACA/AKS 참조 아키텍처",
       "demoNote": "모든 고객명·운영·재무·예측 수치는 Composition 예제를 위한 시연 데이터입니다."
     },

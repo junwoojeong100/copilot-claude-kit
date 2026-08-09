@@ -98,6 +98,7 @@ Industry Pack에 금지되는 것:
 Customer Overlay가 반드시 새로 결정하는 것:
 
 - 고객명·앱명·audience
+- 한국어 데모의 `meta.languagePolicy`와 실제 사용 서비스·기능의 `protectedTerms`
 - `DEMO_FOCUS`에 맞는 Storyline·청중별 guided journey·route bridge·climax
 - 업무 예외→Foundry→GitHub→App Platform 공통 scenario trace
 - Pack의 `requiredCustomerPaths`
@@ -158,3 +159,5 @@ HTTP(S) 원문인지 확인한다.
 - Microsoft Foundry·Microsoft Agent Framework, GitHub Copilot·GitHub Platform, AKS·Azure Container
   Apps는 제품 catalog가 아니라 지능·delivery·runtime 역할로 연결한다.
 - 최종 browser QA는 `story.routeScope`에서 선택한 5~8개 route를 모두 검사한다.
+- 한국어 copy는 설명을 한글 우선으로 쓰고 서비스명·공식 기능명은 영문으로 유지한다. Composer 이후
+  `lint_spec.py`가 전체/route 영문 비율과 `protectedTerms` 존재를 검사한다.

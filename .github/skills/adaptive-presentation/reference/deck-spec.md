@@ -19,6 +19,39 @@
   "canvas": {"source": "default", "widthIn": 13.333, "heightIn": 7.5},
   "templateProfile": null,
   "factLedger": "fact-ledger.json",
+  "languagePolicy": {
+    "mode": "korean-first-technical-english",
+    "targetLatinRatio": 0.40,
+    "maxLatinRatio": 0.55,
+    "maxSlideLatinRatio": 0.75,
+    "minAnalyzedCharacters": 40,
+    "preserveOfficialTerms": true,
+    "requireKoreanExplanationForProtectedTerms": true,
+    "minHangulCharactersPerTechnicalSlide": 24,
+    "protectedTerms": [
+      "GitHub Copilot",
+      "Microsoft Foundry",
+      "Code Review",
+      "Hosted Agents"
+    ],
+    "allowHighLatinSlides": []
+  },
+  "speakerNotesPolicy": {
+    "required": true,
+    "authoringMode": "regenerate-from-scratch",
+    "requiredSections": [
+      "핵심 메시지",
+      "발표 설명",
+      "질문/전환",
+      "출처/상태"
+    ],
+    "explanationSection": "발표 설명",
+    "targetSeconds": 60,
+    "minCharacters": 400,
+    "maxCharacters": 750,
+    "minExplanationCharacters": 240,
+    "minExplanationSentences": 3
+  },
   "fontPolicy": {
     "selected": "Noto Sans CJK KR",
     "fallbacks": ["Malgun Gothic", "Apple SD Gothic Neo"],
@@ -52,6 +85,34 @@
   }
 }
 ```
+
+한국어(`ko`, `ko-KR`) spec에서 `languagePolicy`를 생략하면 위 기본 임계치가 적용된다. 다만 생성자는
+해당 덱에 실제로 사용하는 서비스명·공식 기능명을 `protectedTerms`에 명시해야 한다.
+
+- `targetLatinRatio`: `protectedTerms`를 제외한 설명용 영문의 편집 목표. 낮다고 실패하지 않는다.
+- `maxLatinRatio`: footer·출처·페이지 번호와 `protectedTerms`를 제외한 설명용 영문의 최대 비율.
+- `maxSlideLatinRatio`: 공식 명칭이 집중된 기술 장을 위한 개별 장 최대치.
+- `protectedTerms`: 번역하면 안 되는 공식 영문명. 대소문자를 무시하고 최종 PPTX 존재 여부를 검사하며
+  language ratio 계산에서는 중립 처리한다.
+- `requireKoreanExplanationForProtectedTerms`: 공식 기술명이 있는 장에 쉬운 한글 설명을 요구한다.
+- `minHangulCharactersPerTechnicalSlide`: protected term이 등장한 장에서 최소한 확보할 한글 설명 문자 수.
+  기본 24자는 최소 안전장치이며 실제 제작에서는 역할·가치·판단을 한 문장 이상 쓴다.
+- `allowHighLatinSlides`: 코드·API 중심으로 개별 장 최대치를 의도적으로 넘는 장. 전체 contact sheet와
+  확대 화면을 검토한 뒤에만 사용한다.
+
+한국어 spec에서 `speakerNotesPolicy`를 생략하면 위 기본값이 적용된다.
+
+- `requiredSections`: 각 섹션은 `섹션명:` 형태로 notes에 직접 표시한다.
+- `authoringMode`: 기존 notes 문구를 이어 붙이지 않고 비운 뒤 현재 storyline·visual·근거에서 재작성한다.
+- `explanationSection`: 상세 설명 분량과 문장 수를 검사할 섹션명.
+- `targetSeconds`: 발표 목표 시간. 한국어 기본은 약 60초다.
+- `minCharacters`: 결론과 질문만 적고 상세 설명·출처를 생략하는 notes를 방지한다.
+- `maxCharacters`: 발표 원고처럼 과도하게 긴 notes를 방지한다.
+- `minExplanationCharacters`, `minExplanationSentences`: `발표 설명` 블록이 단순 요약이 아니라 화면 읽는
+  순서·의미·조건을 전달하도록 강제한다.
+- `출처/상태`는 긴 URL 대신 `[F-001] Publisher · Document title · GA/Preview`처럼 짧게 쓴다.
+- 외부 출처가 없는 표지·진단·실행 장은 `내부 프레임 · 고객별 검증 필요`, `ASSUMPTION`,
+  `Recommendation`처럼 성격과 검증 조건을 적는다.
 
 `slides`는 `request.slideCount`와 정확히 일치하고 1부터 연속 번호를 사용한다. `claimIds`는 공통
 Fact Ledger JSON의 `Fact` ID만 참조한다. Inference는 근거 Fact ID를 연결하고 Assumption은

@@ -46,6 +46,23 @@ Pack이 없거나 bespoke 구조가 더 빠르고 정확할 때만 전체 Spec�
     "appName": "Customer IQ",
     "initials": "CI",
     "language": "ko",
+    "languagePolicy": {
+      "mode": "korean-first-technical-english",
+      "targetLatinRatio": 0.40,
+      "maxLatinRatio": 0.55,
+      "maxRouteLatinRatio": 0.75,
+      "minAnalyzedCharacters": 80,
+      "preserveOfficialTerms": true,
+      "protectedTerms": [
+        "GitHub Copilot",
+        "Microsoft Foundry",
+        "GitHub Actions",
+        "Hosted Agents",
+        "AKS",
+        "ACA"
+      ],
+      "allowHighLatinRoutes": []
+    },
     "infrastructureLabel": "Microsoft Foundry · GitHub · AKS/ACA 참조 아키텍처",
     "demoNote": "모든 수치는 시연용 가정치입니다."
   }
@@ -54,6 +71,18 @@ Pack이 없거나 bespoke 구조가 더 빠르고 정확할 때만 전체 Spec�
 
 실명 대신 회사명·직무를 사용한다. `language`가 `ko`이면 임원이 보는 문구는 한글 우선으로 작성한다.
 공식 제품명, 업계 표준 약어·단위, 코드 식별자처럼 영어가 더 명확하거나 일반적인 경우만 영어를 유지한다.
+
+`languagePolicy`는 설명용 영문 남용을 막되 공식명을 번역하지 않기 위한 계약이다.
+
+- `targetLatinRatio`: `protectedTerms`를 제외한 사용자 설명 문구의 편집 목표. 기본 40%.
+- `maxLatinRatio`: 보호 용어를 제외한 설명 문구의 전체 최대 55%.
+- `maxRouteLatinRatio`: 공식 기능명이 집중되는 단일 route 최대 75%.
+- `protectedTerms`: 최종 spec에 정확한 영문으로 존재해야 하며 비율 계산에서는 중립 처리되는
+  서비스·공식 기능명.
+- `allowHighLatinRoutes`: 코드·API 중심 route가 75%를 의도적으로 넘는 경우에만 사용한다.
+
+`GitHub Copilot로 PR을 생성합니다`처럼 공식명은 영문으로, 역할 설명은 한국어로 연결한다.
+`GitHub Copilot`을 `깃허브 코파일럿`으로, `Code Review`를 기능명 맥락에서 `코드 검토`로 번역하지 않는다.
 
 ## 3. Navigation
 
