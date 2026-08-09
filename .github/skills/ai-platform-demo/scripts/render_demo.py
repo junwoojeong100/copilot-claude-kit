@@ -85,6 +85,7 @@ ISO_TIMESTAMP_PATTERN = re.compile(
 )
 HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
 ALLOWED_DESIGN_TOKENS = {"brand", "accent"}
+LANGUAGE_POLICY_MODE = "korean-first-technical-english"
 
 UNSAFE_PATTERNS = [
     re.compile(r"<\s*script", re.IGNORECASE),
@@ -647,6 +648,84 @@ def validate_spec(spec: dict[str, Any]) -> None:
         raise SpecError("$.meta.initials must be 1-4 characters")
     if not LANGUAGE_TAG_PATTERN.fullmatch(meta["language"]):
         raise SpecError("$.meta.language must be a supported BCP 47 language tag")
+    if "languagePolicy" in meta:
+        policy = require_mapping(meta, "languagePolicy", "$.meta")
+        mode = require_string(policy, "mode", "$.meta.languagePolicy")
+        if mode != LANGUAGE_POLICY_MODE:
+            raise SpecError(
+                "$.meta.languagePolicy.mode must be "
+                f"'{LANGUAGE_POLICY_MODE}'"
+            )
+        target = require_number(
+            policy, "targetLatinRatio", "$.meta.languagePolicy"
+        )
+        maximum = require_number(
+            policy, "maxLatinRatio", "$.meta.languagePolicy"
+        )
+        route_maximum = require_number(
+            policy, "maxRouteLatinRatio", "$.meta.languagePolicy"
+        )
+        for key, value in (
+            ("targetLatinRatio", target),
+            ("maxLatinRatio", maximum),
+            ("maxRouteLatinRatio", route_maximum),
+        ):
+            if not 0 <= value <= 1:
+                raise SpecError(
+                    f"$.meta.languagePolicy.{key} must be between 0 and 1"
+                )
+        if maximum < target:
+            raise SpecError(
+                "$.meta.languagePolicy.maxLatinRatio must be >= targetLatinRatio"
+            )
+        if route_maximum < maximum:
+            raise SpecError(
+                "$.meta.languagePolicy.maxRouteLatinRatio must be >= maxLatinRatio"
+            )
+        minimum = optional_integer(
+            policy,
+            "minAnalyzedCharacters",
+            "$.meta.languagePolicy",
+            minimum=1,
+            maximum=10000,
+        )
+        if minimum is None:
+            raise SpecError(
+                "$.meta.languagePolicy.minAnalyzedCharacters is required"
+            )
+        if require_boolean(
+            policy, "preserveOfficialTerms", "$.meta.languagePolicy"
+        ) is not True:
+            raise SpecError(
+                "$.meta.languagePolicy.preserveOfficialTerms must be true"
+            )
+        protected = require_string_list(
+            policy,
+            "protectedTerms",
+            "$.meta.languagePolicy",
+            minimum=0,
+        )
+        if len(protected) != len(set(protected)):
+            raise SpecError(
+                "$.meta.languagePolicy.protectedTerms must not contain duplicates"
+            )
+        allowed_routes = require_list(
+            policy,
+            "allowHighLatinRoutes",
+            "$.meta.languagePolicy",
+            minimum=0,
+        )
+        if (
+            not all(
+                isinstance(route, str) and route in ROUTE_IDS
+                for route in allowed_routes
+            )
+            or len(allowed_routes) != len(set(allowed_routes))
+        ):
+            raise SpecError(
+                "$.meta.languagePolicy.allowHighLatinRoutes must contain "
+                "unique canonical route IDs"
+            )
     research = require_mapping(meta, "research", "$.meta")
     checked_at = require_string(research, "checkedAt", "$.meta.research")
     if not ISO_TIMESTAMP_PATTERN.fullmatch(checked_at):

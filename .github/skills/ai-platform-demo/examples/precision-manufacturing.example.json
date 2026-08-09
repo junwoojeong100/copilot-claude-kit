@@ -6,6 +6,24 @@
     "appName": "Contoso Precision IQ",
     "initials": "CP",
     "language": "ko",
+    "languagePolicy": {
+      "mode": "korean-first-technical-english",
+      "targetLatinRatio": 0.4,
+      "maxLatinRatio": 0.55,
+      "maxRouteLatinRatio": 0.75,
+      "minAnalyzedCharacters": 80,
+      "preserveOfficialTerms": true,
+      "protectedTerms": [
+        "GitHub Copilot",
+        "Microsoft Foundry",
+        "GitHub Actions",
+        "GitHub Advanced Security",
+        "AKS",
+        "ACA",
+        "MCP"
+      ],
+      "allowHighLatinRoutes": []
+    },
     "infrastructureLabel": "GitHub · Microsoft Foundry · ACA/AKS 참조 아키텍처",
     "demoNote": "모든 회사명·라인·수치·재무 결과는 Golden Runtime 검증을 위한 시연용 가정치입니다.",
     "research": {

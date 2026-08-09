@@ -105,6 +105,30 @@ class DeckSpecTests(unittest.TestCase):
         context = deck_spec.load_deck_spec(self.write_spec(copy.deepcopy(BASE)))
         self.assertEqual(context.required_source_slides, {2})
         self.assertEqual(context.claim_ids_by_slide, {2: ["F-001"]})
+        self.assertEqual(
+            context.spec["languagePolicy"]["mode"],
+            "korean-first-technical-english",
+        )
+        self.assertEqual(context.spec["languagePolicy"]["targetLatinRatio"], 0.40)
+        self.assertTrue(
+            context.spec["languagePolicy"][
+                "requireKoreanExplanationForProtectedTerms"
+            ]
+        )
+        self.assertTrue(context.spec["speakerNotesPolicy"]["required"])
+        self.assertEqual(
+            context.spec["speakerNotesPolicy"]["requiredSections"],
+            ["핵심 메시지", "발표 설명", "질문/전환", "출처/상태"],
+        )
+        self.assertEqual(
+            context.spec["speakerNotesPolicy"]["authoringMode"],
+            "regenerate-from-scratch",
+        )
+        self.assertEqual(
+            context.spec["speakerNotesPolicy"]["minExplanationSentences"],
+            3,
+        )
+        self.assertEqual(context.spec["speakerNotesPolicy"]["targetSeconds"], 60)
 
     def test_slide_count_and_sequence_are_authoritative(self):
         value = copy.deepcopy(BASE)
@@ -186,6 +210,56 @@ class DeckSpecTests(unittest.TestCase):
         value = copy.deepcopy(BASE)
         value["canvas"].update(widthIn=10, heightIn=7.5)
         with self.assertRaisesRegex(deck_spec.DeckSpecError, "canonical"):
+            deck_spec.load_deck_spec(self.write_spec(value))
+
+    def test_language_policy_rejects_invalid_threshold_order(self):
+        value = copy.deepcopy(BASE)
+        value["languagePolicy"] = {
+            "mode": "korean-first-technical-english",
+            "targetLatinRatio": 0.6,
+            "maxLatinRatio": 0.5,
+            "maxSlideLatinRatio": 0.75,
+            "minAnalyzedCharacters": 40,
+            "preserveOfficialTerms": True,
+            "requireKoreanExplanationForProtectedTerms": True,
+            "minHangulCharactersPerTechnicalSlide": 24,
+            "protectedTerms": ["GitHub Copilot"],
+            "allowHighLatinSlides": [],
+        }
+        with self.assertRaisesRegex(deck_spec.DeckSpecError, "maxLatinRatio"):
+            deck_spec.load_deck_spec(self.write_spec(value))
+
+    def test_language_policy_rejects_out_of_range_allowed_slide(self):
+        value = copy.deepcopy(BASE)
+        value["languagePolicy"] = {
+            "mode": "korean-first-technical-english",
+            "targetLatinRatio": 0.4,
+            "maxLatinRatio": 0.55,
+            "maxSlideLatinRatio": 0.75,
+            "minAnalyzedCharacters": 40,
+            "preserveOfficialTerms": True,
+            "requireKoreanExplanationForProtectedTerms": True,
+            "minHangulCharactersPerTechnicalSlide": 24,
+            "protectedTerms": ["Microsoft Foundry"],
+            "allowHighLatinSlides": [3],
+        }
+        with self.assertRaisesRegex(deck_spec.DeckSpecError, "valid slide"):
+            deck_spec.load_deck_spec(self.write_spec(value))
+
+    def test_speaker_notes_policy_rejects_invalid_length_range(self):
+        value = copy.deepcopy(BASE)
+        value["speakerNotesPolicy"] = {
+            "required": True,
+            "requiredSections": ["핵심 메시지", "설명"],
+            "authoringMode": "regenerate-from-scratch",
+            "explanationSection": "설명",
+            "targetSeconds": 60,
+            "minCharacters": 500,
+            "maxCharacters": 200,
+            "minExplanationCharacters": 180,
+            "minExplanationSentences": 3,
+        }
+        with self.assertRaisesRegex(deck_spec.DeckSpecError, "maxCharacters"):
             deck_spec.load_deck_spec(self.write_spec(value))
 
 

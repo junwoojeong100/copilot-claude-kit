@@ -74,6 +74,25 @@ class LintSpecTests(unittest.TestCase):
         self.assertIn("Korean-first executive copy", result.stdout)
         self.assertIn("navigation[0].name", result.stdout)
 
+    def test_korean_language_balance_policy_is_enforced(self):
+        spec = json.loads(BASE.read_text(encoding="utf-8"))
+        spec["meta"]["languagePolicy"]["targetLatinRatio"] = 0.05
+        spec["meta"]["languagePolicy"]["maxLatinRatio"] = 0.10
+        with tempfile.TemporaryDirectory() as directory:
+            result = run_lint(write_temp(spec, directory))
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("Latin-character ratio", result.stdout)
+
+    def test_missing_protected_official_term_is_caught(self):
+        spec = json.loads(BASE.read_text(encoding="utf-8"))
+        spec["meta"]["languagePolicy"]["protectedTerms"].append(
+            "Nonexistent Official Feature"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            result = run_lint(write_temp(spec, directory))
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("Protected official service/feature", result.stdout)
+
     def test_structural_error_is_caught(self):
         spec = json.loads(BASE.read_text(encoding="utf-8"))
         spec["navigation"] = spec["navigation"][:7]  # break the runtime data contract

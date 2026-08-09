@@ -186,6 +186,50 @@ row가 슬라이드마다 31/32/34pt로 달라지면 위계가 흔들린다. 긴
 1~2개 보강한다. 이미 밀도가 높은 슬라이드는 내용을 늘리지 않으며, 표/부록은 필요하면 명확히
 Appendix로 구분한다.
 
+### 한국어 덱의 영문 유지 기준
+
+- 설명 문장·결론·KPI 해설·행동 문구는 한국어 우선이다.
+- 제품·서비스·공식 기능·기술 계약 이름은 원문 영문을 유지한다. 예:
+  `GitHub Copilot`, `Microsoft Foundry`, `Code Review`, `Browser Tools`, `Hosted Agents`,
+  `Memory`, `Routines`, `Trace`, `Eval`, `Control Plane`, `AKS`, `ACA`, `MCP`.
+- 공식 기능명을 한글로 바꾸지 않는다. `코드 검토`가 일반 행위라면 한글이지만 GitHub의 기능을
+  지칭하면 `Code Review`로 쓴다.
+- 권장 패턴은 `공식 영문명 + 한국어 역할 설명`이다.
+  예: `Hosted Agents로 격리 실행환경을 제공합니다`.
+- 전체 영문 문자 비율은 약 40%를 목표로 하되 비율을 맞추려고 불필요한 영어를 추가하지 않는다.
+
+### 비기술 청중용 기술 설명
+
+- 기술 깊이를 낮춘다는 것은 기술명을 삭제한다는 의미가 아니다. service·feature·component name은
+  English로 유지하고, 바로 아래 또는 옆에 쉬운 한국어로 역할을 설명한다.
+- 제목은 고객이 이해할 변화나 질문을 말한다. visual node·card heading에는 정확한 English term을 쓰고,
+  body에는 “무엇을 하는가 / 왜 필요한가 / 어떤 결과가 생기는가”를 한국어로 적는다.
+- architecture 흐름은 `English component → 쉬운 역할 → business outcome`으로 읽히게 한다.
+- capitalization을 공식 문서와 일치시킨다. 예: `Microsoft Foundry`, `Hosted Agents`,
+  `Foundry IQ`, `Toolboxes`, `Code Review`, `Browser Tools`, `Control Plane`.
+- `Policy + Evidence`, `Sandbox + Review`, `Settings + Streaming`처럼 공식 기능명을 축약한 임의 묶음은
+  피하고 `Managed Settings + Session Streaming`, `Sandboxes + Code Review`처럼 실제 명칭을 쓴다.
+- 설명은 “권한 있는 근거를 찾는다”, “실행 범위를 제한한다”, “상태·비용·위험을 한곳에서 관리한다”처럼
+  비기술 청중도 행동과 결과를 이해할 수 있는 문장으로 작성한다.
+
+### Speaker notes
+
+모든 본문·표지·마무리 장에 notes를 작성한다.
+기존 notes가 있으면 문구를 재사용하거나 덧붙이지 말고 전체를 삭제한 뒤 새로 작성한다.
+
+```text
+핵심 메시지: 청중이 기억할 결론 한 문장.
+발표 설명: 화면 읽는 순서, 왜 중요한지, 조건·예외를 3~5문장.
+질문/전환: 고객에게 던질 질문, 다음 장면 연결 또는 다음 의사결정.
+출처/상태: [F-001] Publisher · Document title · GA/Preview/Assumption.
+```
+
+- notes는 슬라이드 본문을 낭독하지 않는다. 화면에 없는 의미·전환·예외를 보강한다.
+- `발표 설명`에는 기능 목록보다 “왜 중요한가 / 무엇을 비교하는가 / 어떤 조건인가”를 쓴다.
+- 출처는 footer와 일치하는 Fact ID·발행자·문서명을 짧게 적고 긴 URL은 넣지 않는다.
+- 한국어 기준 약 60초, 400~750자를 기본으로 한다. `발표 설명`은 240자·3문장 이상이되 5개 핵심 문장을
+  넘기지 않는다.
+
 ## 6. 한글 폰트
 
 실행 환경에서 폰트를 검색하고 언어·템플릿에 맞는 실제 설치 폰트를 선택한다.

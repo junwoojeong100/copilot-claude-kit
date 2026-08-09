@@ -12,6 +12,8 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 import render_pptx  # noqa: E402
+import language_policy  # noqa: E402
+import speaker_notes  # noqa: E402
 import toolcheck  # noqa: E402
 import tooling  # noqa: E402
 from pptx import Presentation  # noqa: E402
@@ -214,6 +216,131 @@ class VerifyDeckTests(unittest.TestCase):
             }
 
         self.assertTrue(state_label_failures(deck, Context()))
+
+    def test_language_balance_preserves_official_terms_and_flags_english_heavy_slide(self):
+        prs = Presentation()
+        prs.slide_width = Inches(13.333)
+        prs.slide_height = Inches(7.5)
+        first = prs.slides.add_slide(prs.slide_layouts[6])
+        first.shapes.add_textbox(
+            Inches(0.8), Inches(0.8), Inches(11), Inches(1)
+        ).text = "GitHub Copilot로 개발 흐름을 개선합니다"
+        second = prs.slides.add_slide(prs.slide_layouts[6])
+        second.shapes.add_textbox(
+            Inches(0.8), Inches(0.8), Inches(11), Inches(1)
+        ).text = "English only executive platform operations dashboard controls"
+        deck = self.work_dir / "language-balance.pptx"
+        prs.save(deck)
+        policy = {
+            **language_policy.DEFAULT_KOREAN_POLICY,
+            "maxLatinRatio": 0.7,
+            "maxSlideLatinRatio": 0.6,
+            "protectedTerms": ["GitHub Copilot"],
+        }
+        report = language_policy.analyze_deck(
+            deck,
+            policy,
+            footer_top_in=6.9,
+        )
+        self.assertEqual(report["missingProtectedTerms"], [])
+        self.assertEqual([item["slide"] for item in report["highLatinSlides"]], [2])
+
+    def test_language_balance_requires_configured_official_term(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.shapes.add_textbox(
+            Inches(0.8), Inches(0.8), Inches(11), Inches(1)
+        ).text = "설명 문구만 있습니다"
+        deck = self.work_dir / "missing-term.pptx"
+        prs.save(deck)
+        policy = {
+            **language_policy.DEFAULT_KOREAN_POLICY,
+            "protectedTerms": ["Microsoft Foundry"],
+        }
+        report = language_policy.analyze_deck(
+            deck,
+            policy,
+            footer_top_in=6.9,
+        )
+        self.assertIn("Microsoft Foundry", report["missingProtectedTerms"])
+
+    def test_protected_technical_term_requires_korean_explanation(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.shapes.add_textbox(
+            Inches(0.8), Inches(0.8), Inches(11), Inches(1)
+        ).text = "Hosted Agents"
+        deck = self.work_dir / "unexplained-technical-term.pptx"
+        prs.save(deck)
+        policy = {
+            **language_policy.DEFAULT_KOREAN_POLICY,
+            "protectedTerms": ["Hosted Agents"],
+            "minHangulCharactersPerTechnicalSlide": 12,
+        }
+        report = language_policy.analyze_deck(
+            deck,
+            policy,
+            footer_top_in=6.9,
+        )
+        self.assertEqual(
+            [item["slide"] for item in report["unexplainedTechnicalSlides"]],
+            [1],
+        )
+
+    def test_speaker_notes_contract_detects_missing_sections_and_length(self):
+        prs = Presentation()
+        first = prs.slides.add_slide(prs.slide_layouts[6])
+        first.notes_slide.notes_text_frame.text = (
+            "핵심 메시지: 결론입니다.\n"
+            "설명: 간단한 설명입니다.\n"
+            "질문/행동: 다음 행동을 정합니다.\n"
+            "출처/상태: 내부 자료입니다."
+        )
+        second = prs.slides.add_slide(prs.slide_layouts[6])
+        second.notes_slide.notes_text_frame.text = "핵심 메시지: 너무 짧습니다."
+        deck = self.work_dir / "speaker-notes.pptx"
+        prs.save(deck)
+        policy = {
+            "required": True,
+            "requiredSections": ["핵심 메시지", "설명", "질문/행동", "출처/상태"],
+            "authoringMode": "regenerate-from-scratch",
+            "explanationSection": "설명",
+            "targetSeconds": 60,
+            "minCharacters": 40,
+            "maxCharacters": 300,
+            "minExplanationCharacters": 30,
+            "minExplanationSentences": 2,
+        }
+        report = speaker_notes.analyze_deck(deck, policy)
+        self.assertEqual(report["shortSlides"], [2])
+        self.assertEqual(report["sectionGaps"][0]["slide"], 2)
+        self.assertIn("설명", report["sectionGaps"][0]["missingSections"])
+
+    def test_speaker_notes_contract_requires_detailed_explanation(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        slide.notes_slide.notes_text_frame.text = (
+            "핵심 메시지: 결론입니다.\n"
+            "설명: 짧은 설명입니다. 두 번째 문장입니다.\n"
+            "질문/행동: 질문입니다.\n"
+            "출처/상태: 출처입니다."
+        )
+        deck = self.work_dir / "brief-explanation.pptx"
+        prs.save(deck)
+        policy = {
+            "required": True,
+            "requiredSections": ["핵심 메시지", "설명", "질문/행동", "출처/상태"],
+            "authoringMode": "regenerate-from-scratch",
+            "explanationSection": "설명",
+            "targetSeconds": 60,
+            "minCharacters": 40,
+            "maxCharacters": 500,
+            "minExplanationCharacters": 60,
+            "minExplanationSentences": 3,
+        }
+        report = speaker_notes.analyze_deck(deck, policy)
+        self.assertEqual(report["briefExplanationSlides"], [1])
+        self.assertEqual(report["lowExplanationSentenceSlides"], [1])
 
     def test_runner_protects_visual_review_inside_managed_qa(self):
         out = self.work_dir / "verify"

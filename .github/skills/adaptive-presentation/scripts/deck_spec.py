@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
 import re
@@ -19,6 +20,8 @@ WEB_SEARCH_SCRIPTS = (
 )
 sys.path.insert(0, str(WEB_SEARCH_SCRIPTS))
 import validate_fact_ledger as fact_ledger_validator  # noqa: E402
+import language_policy  # noqa: E402
+import speaker_notes  # noqa: E402
 
 
 STATE_LABELS = {"GA", "PARTIAL GA", "PREVIEW", "ASSUMPTION", "DEMO DATA"}
@@ -186,6 +189,8 @@ def validate_spec(
             "templateProfile",
             "factLedger",
             "fontPolicy",
+            "languagePolicy",
+            "speakerNotesPolicy",
             "slides",
             "qa",
         },
@@ -206,6 +211,25 @@ def validate_spec(
     slide_count = request.get("slideCount")
     if isinstance(slide_count, bool) or not isinstance(slide_count, int) or slide_count < 1:
         raise DeckSpecError("$.request.slideCount must be a positive integer")
+    try:
+        normalized_language_policy = language_policy.normalize_policy(
+            language,
+            spec.get("languagePolicy"),
+            slide_count=slide_count,
+        )
+    except language_policy.LanguagePolicyError as error:
+        raise DeckSpecError(str(error)) from error
+    if normalized_language_policy is not None:
+        spec["languagePolicy"] = copy.deepcopy(normalized_language_policy)
+    try:
+        normalized_notes_policy = speaker_notes.normalize_policy(
+            language,
+            spec.get("speakerNotesPolicy"),
+        )
+    except speaker_notes.SpeakerNotesPolicyError as error:
+        raise DeckSpecError(str(error)) from error
+    if normalized_notes_policy is not None:
+        spec["speakerNotesPolicy"] = copy.deepcopy(normalized_notes_policy)
 
     canvas = require_object(spec, "canvas", "$")
     reject_unknown(canvas, {"source", "widthIn", "heightIn"}, "$.canvas")
@@ -380,6 +404,8 @@ def main() -> int:
         "slides": context.spec["request"]["slideCount"],
         "requiredSourceSlides": sorted(context.required_source_slides),
         "templateProfile": context.template_profile is not None,
+        "languagePolicy": context.spec.get("languagePolicy"),
+        "speakerNotesPolicy": context.spec.get("speakerNotesPolicy"),
         "valid": True,
     }
     if args.json:
