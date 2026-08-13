@@ -21,11 +21,12 @@ from pptx.util import Inches, Pt  # noqa: E402
 from verify_deck import (  # noqa: E402
     audit_namespace,
     build_parser,
-    claim_footer_failures,
     font_matches,
+    internal_fact_id_visibility_failures,
     prepare_output_dirs,
     resolve_contract,
     select_risk_slides,
+    source_footer_failures,
     state_label_failures,
     unexpected_fonts,
     verify,
@@ -170,20 +171,57 @@ class VerifyDeckTests(unittest.TestCase):
             ["Aptos"],
         )
 
-    def test_claim_footer_requires_fact_ledger_ids(self):
+    def test_source_footer_uses_human_readable_publishers(self):
         class Context:
             claim_ids_by_slide = {2: ["F-001", "F-002"]}
+            fact_ledger = {
+                "facts": [
+                    {
+                        "id": "F-001",
+                        "sources": [{"publisher": "Microsoft"}],
+                    },
+                    {
+                        "id": "F-002",
+                        "sources": [{"publisher": "GitHub"}],
+                    },
+                ]
+            }
 
-        failures, gaps = claim_footer_failures(
+        failures, gaps = source_footer_failures(
             {
                 "footer_source_texts_by_slide": {
-                    "2": ["Source: [F-001] Microsoft · Documentation"]
+                    "2": ["출처: Microsoft Learn · 공식 제품 문서"]
                 }
             },
             Context(),
         )
-        self.assertEqual(gaps, {"2": ["F-002"]})
-        self.assertIn("F-002", failures[0])
+        self.assertEqual(gaps, {"2": ["F-002 (GitHub)"]})
+        self.assertIn("GitHub", failures[0])
+
+        failures, gaps = source_footer_failures(
+            {
+                "footer_source_texts_by_slide": {
+                    "2": ["출처: Microsoft Learn · GitHub Docs"]
+                }
+            },
+            Context(),
+        )
+        self.assertEqual(failures, [])
+        self.assertEqual(gaps, {})
+
+    def test_internal_fact_ids_are_not_visible(self):
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        shape = slide.shapes.add_textbox(
+            Inches(1), Inches(1), Inches(5), Inches(1)
+        )
+        shape.text = "출처: [F-001] Microsoft Learn"
+        deck = self.work_dir / "internal-id.pptx"
+        prs.save(deck)
+
+        failures = internal_fact_id_visibility_failures(deck)
+        self.assertEqual(len(failures), 1)
+        self.assertIn("[F-001]", failures[0])
 
     def test_without_deck_spec_defaults_remain_backward_compatible(self):
         args = build_parser().parse_args(
@@ -605,7 +643,7 @@ class VerifyDeckTests(unittest.TestCase):
             ("Decision title", 0.6, 0.8, 30),
             ("This body sentence provides enough evidence for the decision.", 2, 0.8, 15),
             ("GA", 5.8, 0.3, 11),
-            ("Source: [F-001] Example · Official documentation", 6.95, 0.2, 8),
+            ("Source: Example · Official documentation", 6.95, 0.2, 8),
         ):
             shape = slide.shapes.add_textbox(
                 Inches(0.8), Inches(top), Inches(11.5), Inches(height)
@@ -695,6 +733,7 @@ class VerifyDeckTests(unittest.TestCase):
         )
         result = verify(args)
         self.assertTrue(result["passed"], result["audit_failures"])
+        self.assertEqual(result["source_footer_gaps"], {})
         self.assertEqual(result["claim_id_gaps"], {})
 
 

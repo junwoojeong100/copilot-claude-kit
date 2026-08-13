@@ -138,14 +138,16 @@
 - `상태/조건`은 `Foundry IQ — core API GA, portal·SharePoint·advanced retrieval Preview`처럼
   서비스 전체와 API·portal·source·개별 tool의 상태를 분리한다. 공식 기술명은 English로 유지하고
   역할과 조건은 쉬운 한국어로 설명한다.
-- `출처`는 긴 URL 대신 `[F-001] Publisher · Document title · checked YYYY-MM-DD`처럼 짧게 쓴다.
+- speaker notes의 `출처`는 추적성을 위해 `[F-001] Publisher · Document title · checked YYYY-MM-DD`
+  형식으로 기록한다. 슬라이드에 보이는 footer에는 Fact ID를 제거하고
+  `출처: Publisher · Document title (YYYY-MM-DD 확인)`처럼 사람이 읽을 수 있게 표시한다.
 - 외부 출처가 없는 표지·진단·실행 장은 `내부 프레임 · 고객별 검증 필요`, `ASSUMPTION`,
   `Recommendation`처럼 성격과 검증 조건을 적는다.
 
 `slides`는 `request.slideCount`와 정확히 일치하고 1부터 연속 번호를 사용한다. `claimIds`는 공통
 Fact Ledger JSON의 `Fact` ID만 참조한다. Inference는 근거 Fact ID를 연결하고 Assumption은
-`stateLabels`로 표시한다. 해당 슬라이드 footer에는
-`Source: [F-001] Publisher · Document title`처럼 ID를 표시한다. Preview·가정·시연 수치는
+`stateLabels`로 표시한다. `claimIds`는 machine contract와 speaker notes에만 남기며 해당 슬라이드
+footer에는 `출처: Publisher · Document title`처럼 발행자와 문서명을 표시한다. Preview·가정·시연 수치는
 `stateLabels`에 기록하고 실제 슬라이드에도 같은 텍스트를 보여준다.
 
 ## 템플릿

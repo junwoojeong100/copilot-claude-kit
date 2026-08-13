@@ -253,7 +253,9 @@ advanced retrieval은 Preview입니다.
   API·SDK·portal·knowledge source·개별 tool의 상태가 다르면 각각 구분한다.
 - `GA + PREVIEW`를 그대로 반복하지 말고 무엇이 GA이고 무엇이 Preview인지 적는다. 제품 상태가 없는
   전략·진단·실행 장은 `내부 프레임`, `ASSUMPTION`, `Recommendation`과 검증 조건을 기록한다.
-- 출처는 footer와 일치하는 Fact ID·발행자·문서명을 짧게 적고 긴 URL은 넣지 않는다.
+- notes의 출처는 Fact ID·발행자·문서명을 기록해 machine traceability를 유지한다.
+- 화면 footer는 `출처: Publisher · Document title (YYYY-MM-DD 확인)`처럼 사람이 읽을 수 있게 쓰고,
+  `[F-001]` 같은 내부 Fact ID와 긴 URL은 넣지 않는다.
 - 한국어 기준 상세 설명 약 3분, 1,000~2,600자를 기본으로 한다. `전체 흐름`은 220자·3문장 이상,
   `실제 예시`는 100자 이상, `검증 기준`은 70자 이상, `상태/조건`은 120자 이상으로 작성한다.
 

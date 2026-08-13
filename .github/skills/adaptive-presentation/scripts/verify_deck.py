@@ -352,23 +352,105 @@ def unexpected_fonts(allowed: list[str], candidates: list[str]) -> list[str]:
     )
 
 
-def claim_footer_failures(
+def _claim_source_publishers(
+    context: deck_spec.DeckSpecContext,
+    claim_id: str,
+) -> list[str]:
+    if context.fact_ledger is None:
+        return []
+    fact = next(
+        (
+            item
+            for item in context.fact_ledger.get("facts", [])
+            if item.get("id") == claim_id
+        ),
+        None,
+    )
+    if fact is None:
+        return []
+    sources = fact.get("sources")
+    if isinstance(sources, list):
+        publishers = [
+            str(source.get("publisher", "")).strip()
+            for source in sources
+            if isinstance(source, dict)
+        ]
+    else:
+        publishers = [str(fact.get("publisher", "")).strip()]
+    return list(dict.fromkeys(publisher for publisher in publishers if publisher))
+
+
+def source_footer_failures(
     audit_report: dict,
     context: deck_spec.DeckSpecContext,
 ) -> tuple[list[str], dict[str, list[str]]]:
+    """Require human-readable source publishers instead of internal Fact IDs."""
     footers = audit_report.get("footer_source_texts_by_slide", {})
     missing: dict[str, list[str]] = {}
     for slide, claim_ids in context.claim_ids_by_slide.items():
         footer = "\n".join(footers.get(str(slide), []))
-        absent = [claim_id for claim_id in claim_ids if f"[{claim_id}]" not in footer]
+        normalized_footer = " ".join(footer.casefold().split())
+        absent: list[str] = []
+        for claim_id in claim_ids:
+            publishers = _claim_source_publishers(context, claim_id)
+            if not any(
+                " ".join(publisher.casefold().split()) in normalized_footer
+                for publisher in publishers
+            ):
+                rendered = " / ".join(publishers) or "source publisher"
+                absent.append(f"{claim_id} ({rendered})")
         if absent:
             missing[str(slide)] = absent
     failures = [
-        "Fact Ledger claim IDs missing from source footer on slide "
-        f"{slide}: {', '.join(claim_ids)}"
-        for slide, claim_ids in missing.items()
+        "Human-readable source publisher missing from footer on slide "
+        f"{slide}: {', '.join(items)}"
+        for slide, items in missing.items()
     ]
     return failures, missing
+
+
+def internal_fact_id_visibility_failures(deck: Path) -> list[str]:
+    """Reject machine-only Fact Ledger IDs from visible slide text."""
+    from pptx import Presentation
+    from pptx.enum.shapes import MSO_SHAPE_TYPE
+
+    pattern = re.compile(r"\[(?:F|I|A)-[A-Z0-9_-]+\]", re.IGNORECASE)
+
+    def visible_text(shape) -> list[str]:
+        if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
+            return [
+                text
+                for child in shape.shapes
+                for text in visible_text(child)
+            ]
+        if getattr(shape, "has_table", False):
+            return [
+                cell.text
+                for row in shape.table.rows
+                for cell in row.cells
+                if cell.text.strip()
+            ]
+        if getattr(shape, "has_text_frame", False) and shape.text.strip():
+            return [shape.text]
+        return []
+
+    prs = Presentation(deck)
+    failures: list[str] = []
+    for slide_number, slide in enumerate(prs.slides, 1):
+        identifiers = sorted(
+            {
+                match.group(0)
+                for shape in slide.shapes
+                for text in visible_text(shape)
+                for match in pattern.finditer(text)
+            }
+        )
+        if identifiers:
+            failures.append(
+                f"Internal Fact Ledger ID(s) must not be visible on slide "
+                f"{slide_number}: {', '.join(identifiers)}"
+            )
+    return failures
 
 
 def state_label_failures(
@@ -572,7 +654,7 @@ def verify(args: argparse.Namespace) -> dict:
             "finding-level exception"
         )
 
-    claim_id_gaps: dict[str, list[str]] = {}
+    source_footer_gaps: dict[str, list[str]] = {}
     template_profile_mismatches: list[str] = []
     language_balance = None
     speaker_notes_report = None
@@ -589,10 +671,11 @@ def verify(args: argparse.Namespace) -> dict:
                 f"{actual_width}x{actual_height} vs "
                 f"{canvas['widthIn']}x{canvas['heightIn']} inches"
             )
-        source_failures, claim_id_gaps = claim_footer_failures(
+        source_failures, source_footer_gaps = source_footer_failures(
             audit_report, contract
         )
         audit_failures.extend(source_failures)
+        audit_failures.extend(internal_fact_id_visibility_failures(deck))
         audit_failures.extend(state_label_failures(deck, contract))
         if contract.spec.get("languagePolicy") is not None:
             language_balance = language_policy.analyze_deck(
@@ -746,7 +829,8 @@ def verify(args: argparse.Namespace) -> dict:
         "detail_render": detail_manifest,
         "zip_integrity": zip_integrity,
         "deck_spec": str(contract.path) if contract is not None else None,
-        "claim_id_gaps": claim_id_gaps,
+        "source_footer_gaps": source_footer_gaps,
+        "claim_id_gaps": source_footer_gaps,
         "template_profile_mismatches": template_profile_mismatches,
         "language_balance": language_balance,
         "speaker_notes": speaker_notes_report,
