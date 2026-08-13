@@ -15,8 +15,8 @@ Runner가 구조 감사와 전체 렌더를 읽기 전용으로 병렬 실행하
 결함을 일괄 수정한다. deck spec의 strict 계약은 15pt 미만의 likely body 후보, 명시적 크기가 없는 run, title risk,
 본문 title row의 font-size 불일치, 승인되지 않은 geometry overlap, 서로 다른 text frame에서 실제
 렌더된 글자의 충돌·overflow·허용치를 넘는 unmapped span을 실패 처리한다.
-Fact Ledger `claimIds`가 있는 슬라이드는 자동으로 출처 대상이 되며 footer에 `[F-001]` 같은 ID가
-없으면 실패한다.
+Fact Ledger `claimIds`가 있는 슬라이드는 자동으로 출처 대상이 된다. Footer에는 Fact Ledger의
+발행자 또는 이해 가능한 문서명이 있어야 하며, `[F-001]` 같은 내부 ID가 보이는 텍스트에 포함되면 실패한다.
 
 chart·SmartArt처럼 자동 text mapping을 지원하지 않는 객체는 성공으로 가정하지 않는다. 첫 실행에서
 발급된 finding ID를 전체 화면으로 확인한 뒤 `qa-exceptions.json`에 정확한 ID와 검토 이유를 기록한다.
