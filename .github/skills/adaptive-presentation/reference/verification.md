@@ -162,7 +162,7 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 | Preview/demo | 텍스트 라벨 존재 |
 | Korean language balance | 전체 영문 목표 약 40%, 최대 55%; 개별 장 최대 75%; `protectedTerms` 영문 유지 |
 | Technical explanation | protected term이 있는 장에 쉬운 한글 역할 설명 존재 |
-| Speaker notes | 전 장 재생성 + 상세 설명 약 3분·1,000~2,600자 + 흐름·구성·예시·KPI·상태·발표 한 문장 + 9개 섹션 |
+| Speaker notes | 전 장 재생성 + 질문으로 시작 + 약 60초·80~600자·최대 5문장 + 질문·핵심 메시지·전환 |
 | Render | 전체 compact overview 생성 + 위험 슬라이드 선택 렌더 |
 | Integrity | `unzip -t` 오류 0 |
 | Contract | deck spec의 장수·canvas·font·Fact Ledger ID와 일치 |
@@ -187,11 +187,11 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 `protectedTerms`가 사라지면 번역 또는 누락으로 간주해 실패한다. 영문 비율이 낮다는 이유로 실패하지
 않으므로, 목표치를 맞추기 위한 장식적 영어 추가는 금지한다.
 
-`speaker_notes` report는 슬라이드별 문자 수, 전체 흐름 문자 수·문장 수, 실제 예시·검증 기준·상태/조건·
-발표 한 문장 문자 수, 누락된 slide state label과 필수 섹션을 기록한다. notes 누락, 1,000자 미만,
-2,600자 초과, 전체 흐름 220자/3문장 미달, 실제 예시 100자 미달, 검증 기준 70자 미달, 상태/조건
-120자 미달, 발표 한 문장 범위 이탈, slide state label 누락은 strict verification을 실패시키고 risk
-slide 후보에 포함한다.
+`speaker_notes` report는 슬라이드별 전체 문자·문장 수, 질문의 위치·길이·문장 수·물음표, 핵심 메시지
+문자·문장 수, 전환 문자·문장 수, 출처 reference 존재 여부와 필수 섹션을 기록한다. notes 누락,
+80자 미만, 600자 초과, 질문이 첫 섹션이 아님, 질문 20~140자 범위 이탈, 물음표 누락,
+핵심 메시지 30~260자 범위 이탈, 전환 180자 초과, 전체 5문장 초과, `출처:`·Fact ID·URL 포함은
+strict verification을 실패시키고 risk slide 후보에 포함한다.
 
 `language_balance.unexplainedTechnicalSlides`는 protected term은 있지만 한글 설명이 부족한 장을
 기록한다. 비기술 청중용 덱은 English technical label 자체를 감점하지 않고, 역할·가치·판단을 설명하는

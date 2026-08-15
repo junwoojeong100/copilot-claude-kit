@@ -329,14 +329,9 @@ class VerifyDeckTests(unittest.TestCase):
         prs = Presentation()
         first = prs.slides.add_slide(prs.slide_layouts[6])
         first.notes_slide.notes_text_frame.text = (
-            "핵심 메시지: 결론입니다.\n"
-            "설명: 간단한 설명입니다.\n"
-            "상태: 이 기능은 GA이며 적용 범위와 예외 조건을 확인해야 합니다.\n"
-            "예시: 실제 업무에서 이 기능을 적용하는 구체적인 예시를 설명합니다.\n"
-            "검증: 품질과 시간, 위험 지표를 같은 기준으로 비교합니다.\n"
-            "한 문장: 이 기능은 허용된 범위에서 업무 결과를 개선합니다.\n"
-            "질문/행동: 다음 행동을 정합니다.\n"
-            "출처/상태: 내부 자료입니다."
+            "질문: 여러분의 회사에서 AI를 쓸수록 실제로 축적되는 것은 무엇입니까?\n"
+            "핵심 메시지: 모델보다 기업이 소유한 learning loop가 장기 경쟁력을 만듭니다.\n"
+            "전환: 다음 장에서 기업에 남겨야 할 learning asset을 보겠습니다."
         )
         second = prs.slides.add_slide(prs.slide_layouts[6])
         second.notes_slide.notes_text_frame.text = "핵심 메시지: 너무 짧습니다."
@@ -345,263 +340,145 @@ class VerifyDeckTests(unittest.TestCase):
         policy = {
             "required": True,
             "requiredSections": [
+                "질문",
                 "핵심 메시지",
-                "설명",
-                "예시",
-                "검증",
-                "상태",
-                "질문/행동",
-                "한 문장",
-                "출처/상태",
+                "전환",
             ],
             "authoringMode": "regenerate-from-scratch",
-            "explanationSection": "설명",
-            "statusSection": "상태",
-            "exampleSection": "예시",
-            "validationSection": "검증",
-            "summarySection": "한 문장",
+            "questionSection": "질문",
+            "coreSection": "핵심 메시지",
+            "transitionSection": "전환",
             "targetSeconds": 60,
             "minCharacters": 40,
             "maxCharacters": 300,
-            "minExplanationCharacters": 30,
-            "minExplanationSentences": 2,
-            "minStatusCharacters": 20,
-            "minExampleCharacters": 20,
-            "minValidationCharacters": 20,
-            "minSummaryCharacters": 20,
-            "maxSummaryCharacters": 100,
-            "requireStateLabelsInStatusSection": True,
+            "minQuestionCharacters": 20,
+            "maxQuestionCharacters": 140,
+            "maxQuestionSentences": 1,
+            "minCoreCharacters": 30,
+            "maxCoreCharacters": 120,
+            "maxCoreSentences": 3,
+            "maxTransitionCharacters": 100,
+            "maxTransitionSentences": 1,
+            "maxTotalSentences": 5,
+            "requireQuestionFirst": True,
+            "requireQuestionMark": True,
+            "forbidSourceReferences": True,
         }
-        report = speaker_notes.analyze_deck(
-            deck,
-            policy,
-            state_labels_by_slide={1: ["GA"], 2: ["PREVIEW"]},
-        )
+        report = speaker_notes.analyze_deck(deck, policy)
         self.assertEqual(report["shortSlides"], [2])
         self.assertEqual(report["sectionGaps"][0]["slide"], 2)
-        self.assertIn("설명", report["sectionGaps"][0]["missingSections"])
-        self.assertEqual(report["stateSummaryGaps"][0]["slide"], 2)
+        self.assertIn("질문", report["sectionGaps"][0]["missingSections"])
+        self.assertEqual(report["questionNotFirstSlides"], [2])
 
-    def test_speaker_notes_contract_requires_detailed_explanation(self):
+    def test_speaker_notes_contract_enforces_question_first_and_five_sentences(self):
         prs = Presentation()
-        slide = prs.slides.add_slide(prs.slide_layouts[6])
-        slide.notes_slide.notes_text_frame.text = (
-            "핵심 메시지: 결론입니다.\n"
-            "설명: 짧은 설명입니다. 두 번째 문장입니다.\n"
-            "상태: GA 상태와 적용 조건을 함께 확인합니다.\n"
-            "예시: 실제 업무에서 적용하는 구체적인 예시를 설명합니다.\n"
-            "검증: 품질과 위험을 같은 기준으로 비교합니다.\n"
-            "한 문장: 이 기능의 역할과 결과를 한 문장으로 설명합니다.\n"
-            "질문/행동: 질문입니다.\n"
-            "출처/상태: 출처입니다."
+        wrong_order = prs.slides.add_slide(prs.slide_layouts[6])
+        wrong_order.notes_slide.notes_text_frame.text = (
+            "핵심 메시지: 기업이 workflow와 eval을 소유해야 학습이 남습니다.\n"
+            "질문: 내일 model을 바꿔도 우리 회사의 기준과 기록은 남습니까?\n"
+            "전환: 다음 장에서 운영 loop를 보겠습니다."
         )
-        deck = self.work_dir / "brief-explanation.pptx"
+        no_question_mark = prs.slides.add_slide(prs.slide_layouts[6])
+        no_question_mark.notes_slide.notes_text_frame.text = (
+            "질문: 현재 Agent의 개선 근거를 확인할 수 있습니까\n"
+            "핵심 메시지: trace와 eval이 있어야 운영 결과를 다음 version으로 되돌릴 수 있습니다.\n"
+            "전환: 다음 장에서 promotion gate를 보겠습니다."
+        )
+        too_many_sentences = prs.slides.add_slide(prs.slide_layouts[6])
+        too_many_sentences.notes_slide.notes_text_frame.text = (
+            "질문: 첫 pilot의 성공 기준을 한 문장으로 말할 수 있습니까?\n"
+            "핵심 메시지: 첫째 문장입니다. 둘째 문장입니다. 셋째 문장입니다. 넷째 문장입니다.\n"
+            "전환: 다음 장에서 실행 계획을 보겠습니다."
+        )
+        source_reference = prs.slides.add_slide(prs.slide_layouts[6])
+        source_reference.notes_slide.notes_text_frame.text = (
+            "질문: 근거가 발표 흐름보다 더 길어지고 있지는 않습니까?\n"
+            "핵심 메시지: 출처는 slide footer와 machine contract에 두고 발표 cue에서는 제거합니다.\n"
+            "전환: 다음 장에서 핵심 메시지에 집중하겠습니다.\n"
+            "출처: [F-001] https://example.com"
+        )
+        deck = self.work_dir / "question-first-notes.pptx"
         prs.save(deck)
         policy = {
             "required": True,
             "requiredSections": [
+                "질문",
                 "핵심 메시지",
-                "설명",
-                "예시",
-                "검증",
-                "상태",
-                "질문/행동",
-                "한 문장",
-                "출처/상태",
+                "전환",
             ],
             "authoringMode": "regenerate-from-scratch",
-            "explanationSection": "설명",
-            "statusSection": "상태",
-            "exampleSection": "예시",
-            "validationSection": "검증",
-            "summarySection": "한 문장",
+            "questionSection": "질문",
+            "coreSection": "핵심 메시지",
+            "transitionSection": "전환",
             "targetSeconds": 60,
             "minCharacters": 40,
             "maxCharacters": 500,
-            "minExplanationCharacters": 60,
-            "minExplanationSentences": 3,
-            "minStatusCharacters": 20,
-            "minExampleCharacters": 20,
-            "minValidationCharacters": 20,
-            "minSummaryCharacters": 20,
-            "maxSummaryCharacters": 100,
-            "requireStateLabelsInStatusSection": True,
+            "minQuestionCharacters": 20,
+            "maxQuestionCharacters": 140,
+            "maxQuestionSentences": 1,
+            "minCoreCharacters": 20,
+            "maxCoreCharacters": 260,
+            "maxCoreSentences": 3,
+            "maxTransitionCharacters": 180,
+            "maxTransitionSentences": 1,
+            "maxTotalSentences": 5,
+            "requireQuestionFirst": True,
+            "requireQuestionMark": True,
+            "forbidSourceReferences": True,
         }
-        report = speaker_notes.analyze_deck(
-            deck,
-            policy,
-            state_labels_by_slide={1: ["GA"]},
-        )
-        self.assertEqual(report["briefExplanationSlides"], [1])
-        self.assertEqual(report["lowExplanationSentenceSlides"], [1])
-
-    def test_speaker_notes_contract_requires_detailed_status_summary(self):
-        prs = Presentation()
-        slide = prs.slides.add_slide(prs.slide_layouts[6])
-        slide.notes_slide.notes_text_frame.text = (
-            "핵심 메시지: 결론입니다.\n"
-            "설명: 첫 번째 설명입니다. 두 번째 설명입니다. 세 번째 설명입니다.\n"
-            "상태: GA입니다.\n"
-            "질문/행동: 질문입니다.\n"
-            "출처/상태: 출처입니다."
-        )
-        deck = self.work_dir / "brief-status.pptx"
-        prs.save(deck)
-        policy = {
-            "required": True,
-            "requiredSections": [
-                "핵심 메시지",
-                "설명",
-                "예시",
-                "검증",
-                "상태",
-                "질문/행동",
-                "한 문장",
-                "출처/상태",
-            ],
-            "authoringMode": "regenerate-from-scratch",
-            "explanationSection": "설명",
-            "statusSection": "상태",
-            "exampleSection": "예시",
-            "validationSection": "검증",
-            "summarySection": "한 문장",
-            "targetSeconds": 60,
-            "minCharacters": 40,
-            "maxCharacters": 500,
-            "minExplanationCharacters": 20,
-            "minExplanationSentences": 3,
-            "minStatusCharacters": 40,
-            "minExampleCharacters": 20,
-            "minValidationCharacters": 20,
-            "minSummaryCharacters": 20,
-            "maxSummaryCharacters": 100,
-            "requireStateLabelsInStatusSection": True,
-        }
-        report = speaker_notes.analyze_deck(
-            deck,
-            policy,
-            state_labels_by_slide={1: ["GA", "PREVIEW"]},
-        )
-        self.assertEqual(report["briefStatusSlides"], [1])
-        self.assertEqual(
-            report["stateSummaryGaps"],
-            [{"slide": 1, "missingStateLabels": ["PREVIEW"]}],
-        )
+        report = speaker_notes.analyze_deck(deck, policy)
+        self.assertEqual(report["questionNotFirstSlides"], [1])
+        self.assertEqual(report["questionMarkGaps"], [2])
+        self.assertEqual(report["multiSentenceCoreSlides"], [3])
+        self.assertEqual(report["overSentenceLimitSlides"], [3])
+        self.assertEqual(report["sourceReferenceSlides"], [4])
 
     def test_speaker_notes_contract_reads_multiline_bullet_sections(self):
         prs = Presentation()
         slide = prs.slides.add_slide(prs.slide_layouts[6])
         slide.notes_slide.notes_text_frame.text = (
-            "핵심 메시지: 결론입니다.\n"
-            "설명:\n"
-            "첫 번째 설명입니다. 두 번째 설명입니다. 세 번째 설명입니다.\n"
-            "예시:\n"
-            "• 사용자가 질문합니다.\n"
-            "• 시스템이 근거를 찾습니다.\n"
-            "검증:\n"
-            "• 품질과 위험 지표를 비교합니다.\n"
-            "상태:\n"
-            "• Core API는 GA입니다.\n"
-            "• Portal은 PREVIEW입니다.\n"
-            "질문/행동: 다음 행동을 정합니다.\n"
-            "한 문장: 근거와 실행을 분리해 안전하게 업무를 처리합니다.\n"
-            "출처/상태: 공식 문서입니다."
+            "질문:\n"
+            "Agent가 무엇을 알고 무엇까지 실행해도 되는지 분리되어 있습니까?\n"
+            "핵심 메시지:\n"
+            "근거와 실행을 분리해 안전하게 업무를 처리합니다.\n"
+            "전환:\n"
+            "다음 장에서 운영 통제를 설명합니다."
         )
         deck = self.work_dir / "multiline-notes.pptx"
         prs.save(deck)
         policy = {
             "required": True,
             "requiredSections": [
+                "질문",
                 "핵심 메시지",
-                "설명",
-                "예시",
-                "검증",
-                "상태",
-                "질문/행동",
-                "한 문장",
-                "출처/상태",
+                "전환",
             ],
             "authoringMode": "regenerate-from-scratch",
-            "explanationSection": "설명",
-            "statusSection": "상태",
-            "exampleSection": "예시",
-            "validationSection": "검증",
-            "summarySection": "한 문장",
+            "questionSection": "질문",
+            "coreSection": "핵심 메시지",
+            "transitionSection": "전환",
             "targetSeconds": 60,
             "minCharacters": 40,
             "maxCharacters": 600,
-            "minExplanationCharacters": 20,
-            "minExplanationSentences": 3,
-            "minStatusCharacters": 20,
-            "minExampleCharacters": 20,
-            "minValidationCharacters": 20,
-            "minSummaryCharacters": 20,
-            "maxSummaryCharacters": 100,
-            "requireStateLabelsInStatusSection": True,
+            "minQuestionCharacters": 20,
+            "maxQuestionCharacters": 140,
+            "maxQuestionSentences": 1,
+            "minCoreCharacters": 20,
+            "maxCoreCharacters": 100,
+            "maxCoreSentences": 3,
+            "maxTransitionCharacters": 100,
+            "maxTransitionSentences": 1,
+            "maxTotalSentences": 5,
+            "requireQuestionFirst": True,
+            "requireQuestionMark": True,
+            "forbidSourceReferences": True,
         }
-        report = speaker_notes.analyze_deck(
-            deck,
-            policy,
-            state_labels_by_slide={1: ["GA", "PREVIEW"]},
-        )
+        report = speaker_notes.analyze_deck(deck, policy)
         self.assertEqual(report["sectionGaps"], [])
-        self.assertGreater(report["slides"][0]["exampleCharacters"], 20)
-        self.assertGreater(report["slides"][0]["statusCharacters"], 20)
-
-    def test_partial_ga_does_not_satisfy_ga_state_label(self):
-        prs = Presentation()
-        slide = prs.slides.add_slide(prs.slide_layouts[6])
-        slide.notes_slide.notes_text_frame.text = (
-            "핵심 메시지: 결론입니다.\n"
-            "설명: 첫 문장입니다. 둘째 문장입니다. 셋째 문장입니다.\n"
-            "예시: 실제 업무의 입력과 처리와 결과를 설명하는 충분한 예시입니다.\n"
-            "검증: 품질과 위험과 비용을 같은 기준으로 확인합니다.\n"
-            "상태: 전체 기능은 PARTIAL GA이며 일부 기능은 PREVIEW입니다.\n"
-            "질문/행동: 다음 행동을 정합니다.\n"
-            "한 문장: 부분적으로 제공되는 기능의 범위를 확인해야 합니다.\n"
-            "출처/상태: 공식 문서입니다."
-        )
-        deck = self.work_dir / "partial-ga-notes.pptx"
-        prs.save(deck)
-        policy = {
-            "required": True,
-            "requiredSections": [
-                "핵심 메시지",
-                "설명",
-                "예시",
-                "검증",
-                "상태",
-                "질문/행동",
-                "한 문장",
-                "출처/상태",
-            ],
-            "authoringMode": "regenerate-from-scratch",
-            "explanationSection": "설명",
-            "statusSection": "상태",
-            "exampleSection": "예시",
-            "validationSection": "검증",
-            "summarySection": "한 문장",
-            "targetSeconds": 60,
-            "minCharacters": 40,
-            "maxCharacters": 600,
-            "minExplanationCharacters": 20,
-            "minExplanationSentences": 3,
-            "minStatusCharacters": 20,
-            "minExampleCharacters": 20,
-            "minValidationCharacters": 20,
-            "minSummaryCharacters": 20,
-            "maxSummaryCharacters": 100,
-            "requireStateLabelsInStatusSection": True,
-        }
-        report = speaker_notes.analyze_deck(
-            deck,
-            policy,
-            state_labels_by_slide={1: ["GA", "PREVIEW"]},
-        )
-        self.assertEqual(
-            report["stateSummaryGaps"],
-            [{"slide": 1, "missingStateLabels": ["GA"]}],
-        )
+        self.assertGreater(report["slides"][0]["questionCharacters"], 20)
+        self.assertGreater(report["slides"][0]["coreCharacters"], 20)
+        self.assertGreaterEqual(report["slides"][0]["transitionCharacters"], 20)
+        self.assertEqual(report["sourceReferenceSlides"], [])
 
     def test_runner_protects_visual_review_inside_managed_qa(self):
         out = self.work_dir / "verify"

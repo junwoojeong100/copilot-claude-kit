@@ -40,32 +40,28 @@
     "required": true,
     "authoringMode": "regenerate-from-scratch",
     "requiredSections": [
+      "질문",
       "핵심 메시지",
-      "전체 흐름",
-      "구성 요소",
-      "실제 예시",
-      "검증 기준",
-      "상태/조건",
-      "질문/전환",
-      "발표 한 문장",
-      "출처"
+      "전환"
     ],
-    "explanationSection": "전체 흐름",
-    "statusSection": "상태/조건",
-    "exampleSection": "실제 예시",
-    "validationSection": "검증 기준",
-    "summarySection": "발표 한 문장",
-    "targetSeconds": 180,
-    "minCharacters": 1000,
-    "maxCharacters": 2600,
-    "minExplanationCharacters": 220,
-    "minExplanationSentences": 3,
-    "minStatusCharacters": 120,
-    "minExampleCharacters": 100,
-    "minValidationCharacters": 70,
-    "minSummaryCharacters": 30,
-    "maxSummaryCharacters": 180,
-    "requireStateLabelsInStatusSection": true
+    "questionSection": "질문",
+    "coreSection": "핵심 메시지",
+    "transitionSection": "전환",
+    "targetSeconds": 60,
+    "minCharacters": 80,
+    "maxCharacters": 600,
+    "minQuestionCharacters": 20,
+    "maxQuestionCharacters": 140,
+    "maxQuestionSentences": 1,
+    "minCoreCharacters": 30,
+    "maxCoreCharacters": 260,
+    "maxCoreSentences": 3,
+    "maxTransitionCharacters": 180,
+    "maxTransitionSentences": 1,
+    "maxTotalSentences": 5,
+    "requireQuestionFirst": true,
+    "requireQuestionMark": true,
+    "forbidSourceReferences": true
   },
   "fontPolicy": {
     "selected": "Noto Sans CJK KR",
@@ -119,36 +115,32 @@
 
 - `requiredSections`: 각 섹션은 `섹션명:` 형태로 notes에 직접 표시한다.
 - `authoringMode`: 기존 notes 문구를 이어 붙이지 않고 비운 뒤 현재 storyline·visual·근거에서 재작성한다.
-- `explanationSection`: 화면 읽는 순서와 요소 간 관계를 설명하는 섹션명.
-- `statusSection`: 제품 상태, 적용 범위와 예외를 정리할 섹션명.
-- `exampleSection`, `validationSection`, `summarySection`: 실제 업무 예시, KPI·evidence, 발표용 한 문장을
-  각각 검사할 섹션명.
-- `targetSeconds`: 상세 설명을 모두 사용할 때의 목표 시간. 한국어 기본은 약 180초다.
-- `minCharacters`: 결론과 질문만 적고 상세 설명·출처를 생략하는 notes를 방지한다.
-- `maxCharacters`: 발표 원고처럼 과도하게 긴 notes를 방지한다.
-- `minExplanationCharacters`, `minExplanationSentences`: `전체 흐름` 블록이 단순 요약이 아니라 화면 읽는
-  순서·의미·조건을 전달하도록 강제한다.
-- `minStatusCharacters`: `상태/조건`이 `GA` 같은 짧은 라벨만 반복하지 않고 정확한 범위와 조건을
-  설명하도록 강제한다.
-- `minExampleCharacters`, `minValidationCharacters`: 슬라이드 개념을 실제 고객 업무와 측정 가능한 KPI에
-  연결한다.
-- `minSummaryCharacters`, `maxSummaryCharacters`: `발표 한 문장`을 너무 짧거나 장황하지 않게 유지한다.
-- `requireStateLabelsInStatusSection`: slide의 `stateLabels`를 `상태/조건`에도 직접 표시해 시각 라벨과
-  상세 설명이 어긋나지 않게 한다.
-- `상태/조건`은 `Foundry IQ — core API GA, portal·SharePoint·advanced retrieval Preview`처럼
-  서비스 전체와 API·portal·source·개별 tool의 상태를 분리한다. 공식 기술명은 English로 유지하고
-  역할과 조건은 쉬운 한국어로 설명한다.
-- speaker notes의 `출처`는 추적성을 위해 `[F-001] Publisher · Document title · checked YYYY-MM-DD`
-  형식으로 기록한다. 슬라이드에 보이는 footer에는 Fact ID를 제거하고
-  `출처: Publisher · Document title (YYYY-MM-DD 확인)`처럼 사람이 읽을 수 있게 표시한다.
+- `questionSection`: 고객이 현재 workflow·책임·KPI·위험을 떠올리게 하는 질문 섹션명.
+- `coreSection`: 발표자가 그대로 말할 결론 1~3문장을 담는 섹션명.
+- `transitionSection`: 다음 장의 질문·판단·행동으로 연결하는 섹션명.
+- `targetSeconds`: 한 장의 핵심을 전달하는 목표 시간. 한국어 기본은 약 60초다.
+- `minCharacters`, `maxCharacters`: cue가 지나치게 빈약하거나 상세 원고로 길어지는 것을 방지한다.
+- `minQuestionCharacters`, `maxQuestionCharacters`, `maxQuestionSentences`: 질문을 20~140자의 한 문장으로
+  유지한다.
+- `minCoreCharacters`, `maxCoreCharacters`, `maxCoreSentences`: 핵심 메시지를 30~260자의 1~3문장으로
+  유지한다.
+- `maxTransitionCharacters`, `maxTransitionSentences`: 전환을 한 문장 수준으로 제한한다.
+- `maxTotalSentences`: 질문·핵심 메시지·전환을 합쳐 최대 5문장으로 제한한다.
+- `requireQuestionFirst`, `requireQuestionMark`: notes를 질문으로 시작하고 질문형 문장으로 끝내게 한다.
+- `forbidSourceReferences`: notes의 `출처:`·`Source:` 블록, Fact ID, URL을 금지한다.
+- GA/Preview, 적용 범위, 예외는 slide visual·footer·`stateLabels`에 명확히 표시한다. 발표 결론을
+  바꾸는 조건만 `핵심 메시지`에 압축하고 notes에 별도 상세 블록을 만들지 않는다.
+- Fact ID와 출처는 speaker notes가 아니라 machine contract와 Fact Ledger에만 기록한다. 슬라이드에
+  보이는 footer에는 Fact ID를 제거하고 `출처: Publisher · Document title (YYYY-MM-DD 확인)`처럼
+  사람이 읽을 수 있게 표시한다.
 - 외부 출처가 없는 표지·진단·실행 장은 `내부 프레임 · 고객별 검증 필요`, `ASSUMPTION`,
   `Recommendation`처럼 성격과 검증 조건을 적는다.
 
 `slides`는 `request.slideCount`와 정확히 일치하고 1부터 연속 번호를 사용한다. `claimIds`는 공통
 Fact Ledger JSON의 `Fact` ID만 참조한다. Inference는 근거 Fact ID를 연결하고 Assumption은
-`stateLabels`로 표시한다. `claimIds`는 machine contract와 speaker notes에만 남기며 해당 슬라이드
-footer에는 `출처: Publisher · Document title`처럼 발행자와 문서명을 표시한다. Preview·가정·시연 수치는
-`stateLabels`에 기록하고 실제 슬라이드에도 같은 텍스트를 보여준다.
+`stateLabels`로 표시한다. `claimIds`는 machine contract와 Fact Ledger에만 남기며 speaker notes에는
+넣지 않는다. 해당 슬라이드 footer에는 `출처: Publisher · Document title`처럼 발행자와 문서명을
+표시한다. Preview·가정·시연 수치는 `stateLabels`에 기록하고 실제 슬라이드에도 같은 텍스트를 보여준다.
 
 ## 템플릿
 

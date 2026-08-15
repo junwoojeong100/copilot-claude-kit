@@ -119,15 +119,9 @@ class DeckSpecTests(unittest.TestCase):
         self.assertEqual(
             context.spec["speakerNotesPolicy"]["requiredSections"],
             [
+                "질문",
                 "핵심 메시지",
-                "전체 흐름",
-                "구성 요소",
-                "실제 예시",
-                "검증 기준",
-                "상태/조건",
-                "질문/전환",
-                "발표 한 문장",
-                "출처",
+                "전환",
             ],
         )
         self.assertEqual(
@@ -135,19 +129,24 @@ class DeckSpecTests(unittest.TestCase):
             "regenerate-from-scratch",
         )
         self.assertEqual(
-            context.spec["speakerNotesPolicy"]["minExplanationSentences"],
+            context.spec["speakerNotesPolicy"]["maxCoreSentences"],
             3,
         )
         self.assertEqual(
-            context.spec["speakerNotesPolicy"]["statusSection"],
-            "상태/조건",
+            context.spec["speakerNotesPolicy"]["questionSection"],
+            "질문",
         )
         self.assertTrue(
-            context.spec["speakerNotesPolicy"][
-                "requireStateLabelsInStatusSection"
-            ]
+            context.spec["speakerNotesPolicy"]["requireQuestionFirst"]
         )
-        self.assertEqual(context.spec["speakerNotesPolicy"]["targetSeconds"], 180)
+        self.assertTrue(
+            context.spec["speakerNotesPolicy"]["forbidSourceReferences"]
+        )
+        self.assertEqual(context.spec["speakerNotesPolicy"]["targetSeconds"], 60)
+        self.assertEqual(
+            context.spec["speakerNotesPolicy"]["maxTotalSentences"],
+            5,
+        )
 
     def test_slide_count_and_sequence_are_authoritative(self):
         value = copy.deepcopy(BASE)
@@ -270,33 +269,29 @@ class DeckSpecTests(unittest.TestCase):
         value["speakerNotesPolicy"] = {
             "required": True,
             "requiredSections": [
-                "핵심 메시지",
-                "설명",
-                "구성",
-                "예시",
-                "검증",
-                "상태",
                 "질문",
-                "한 문장",
-                "출처",
+                "핵심 메시지",
+                "전환",
             ],
             "authoringMode": "regenerate-from-scratch",
-            "explanationSection": "설명",
-            "statusSection": "상태",
-            "exampleSection": "예시",
-            "validationSection": "검증",
-            "summarySection": "한 문장",
+            "questionSection": "질문",
+            "coreSection": "핵심 메시지",
+            "transitionSection": "전환",
             "targetSeconds": 60,
             "minCharacters": 500,
             "maxCharacters": 200,
-            "minExplanationCharacters": 180,
-            "minExplanationSentences": 3,
-            "minStatusCharacters": 50,
-            "minExampleCharacters": 50,
-            "minValidationCharacters": 50,
-            "minSummaryCharacters": 20,
-            "maxSummaryCharacters": 100,
-            "requireStateLabelsInStatusSection": True,
+            "minQuestionCharacters": 20,
+            "maxQuestionCharacters": 140,
+            "maxQuestionSentences": 1,
+            "minCoreCharacters": 30,
+            "maxCoreCharacters": 260,
+            "maxCoreSentences": 3,
+            "maxTransitionCharacters": 180,
+            "maxTransitionSentences": 1,
+            "maxTotalSentences": 5,
+            "requireQuestionFirst": True,
+            "requireQuestionMark": True,
+            "forbidSourceReferences": True,
         }
         with self.assertRaisesRegex(deck_spec.DeckSpecError, "maxCharacters"):
             deck_spec.load_deck_spec(self.write_spec(value))

@@ -15,32 +15,28 @@ DEFAULT_KOREAN_POLICY = {
     "required": True,
     "authoringMode": "regenerate-from-scratch",
     "requiredSections": [
+        "질문",
         "핵심 메시지",
-        "전체 흐름",
-        "구성 요소",
-        "실제 예시",
-        "검증 기준",
-        "상태/조건",
-        "질문/전환",
-        "발표 한 문장",
-        "출처",
+        "전환",
     ],
-    "explanationSection": "전체 흐름",
-    "statusSection": "상태/조건",
-    "exampleSection": "실제 예시",
-    "validationSection": "검증 기준",
-    "summarySection": "발표 한 문장",
-    "targetSeconds": 180,
-    "minCharacters": 1000,
-    "maxCharacters": 2600,
-    "minExplanationCharacters": 220,
-    "minExplanationSentences": 3,
-    "minStatusCharacters": 120,
-    "minExampleCharacters": 100,
-    "minValidationCharacters": 70,
-    "minSummaryCharacters": 30,
-    "maxSummaryCharacters": 180,
-    "requireStateLabelsInStatusSection": True,
+    "questionSection": "질문",
+    "coreSection": "핵심 메시지",
+    "transitionSection": "전환",
+    "targetSeconds": 60,
+    "minCharacters": 80,
+    "maxCharacters": 600,
+    "minQuestionCharacters": 20,
+    "maxQuestionCharacters": 140,
+    "maxQuestionSentences": 1,
+    "minCoreCharacters": 30,
+    "maxCoreCharacters": 260,
+    "maxCoreSentences": 3,
+    "maxTransitionCharacters": 180,
+    "maxTransitionSentences": 1,
+    "maxTotalSentences": 5,
+    "requireQuestionFirst": True,
+    "requireQuestionMark": True,
+    "forbidSourceReferences": True,
 }
 
 
@@ -85,27 +81,7 @@ def normalize_policy(language: str, value: Any) -> dict[str, Any] | None:
             "non-empty strings"
         )
     policy["requiredSections"] = [section.strip() for section in sections]
-    explanation_section = policy["explanationSection"]
-    if (
-        not isinstance(explanation_section, str)
-        or explanation_section.strip() not in policy["requiredSections"]
-    ):
-        raise SpeakerNotesPolicyError(
-            "$.speakerNotesPolicy.explanationSection must name one of "
-            "requiredSections"
-        )
-    policy["explanationSection"] = explanation_section.strip()
-    status_section = policy["statusSection"]
-    if (
-        not isinstance(status_section, str)
-        or status_section.strip() not in policy["requiredSections"]
-    ):
-        raise SpeakerNotesPolicyError(
-            "$.speakerNotesPolicy.statusSection must name one of "
-            "requiredSections"
-        )
-    policy["statusSection"] = status_section.strip()
-    for key in ("exampleSection", "validationSection", "summarySection"):
+    for key in ("questionSection", "coreSection", "transitionSection"):
         section = policy[key]
         if (
             not isinstance(section, str)
@@ -115,22 +91,28 @@ def normalize_policy(language: str, value: Any) -> dict[str, Any] | None:
                 f"$.speakerNotesPolicy.{key} must name one of requiredSections"
             )
         policy[key] = section.strip()
-    if not isinstance(policy["requireStateLabelsInStatusSection"], bool):
-        raise SpeakerNotesPolicyError(
-            "$.speakerNotesPolicy.requireStateLabelsInStatusSection "
-            "must be a boolean"
-        )
+    for key in (
+        "requireQuestionFirst",
+        "requireQuestionMark",
+        "forbidSourceReferences",
+    ):
+        if not isinstance(policy[key], bool):
+            raise SpeakerNotesPolicyError(
+                f"$.speakerNotesPolicy.{key} must be a boolean"
+            )
     for key in (
         "minCharacters",
         "maxCharacters",
         "targetSeconds",
-        "minExplanationCharacters",
-        "minExplanationSentences",
-        "minStatusCharacters",
-        "minExampleCharacters",
-        "minValidationCharacters",
-        "minSummaryCharacters",
-        "maxSummaryCharacters",
+        "minQuestionCharacters",
+        "maxQuestionCharacters",
+        "maxQuestionSentences",
+        "minCoreCharacters",
+        "maxCoreCharacters",
+        "maxCoreSentences",
+        "maxTransitionCharacters",
+        "maxTransitionSentences",
+        "maxTotalSentences",
     ):
         value = policy[key]
         if isinstance(value, bool) or not isinstance(value, int) or value < 1:
@@ -141,10 +123,15 @@ def normalize_policy(language: str, value: Any) -> dict[str, Any] | None:
         raise SpeakerNotesPolicyError(
             "$.speakerNotesPolicy.maxCharacters must be >= minCharacters"
         )
-    if policy["maxSummaryCharacters"] < policy["minSummaryCharacters"]:
+    if policy["maxQuestionCharacters"] < policy["minQuestionCharacters"]:
         raise SpeakerNotesPolicyError(
-            "$.speakerNotesPolicy.maxSummaryCharacters must be >= "
-            "minSummaryCharacters"
+            "$.speakerNotesPolicy.maxQuestionCharacters must be >= "
+            "minQuestionCharacters"
+        )
+    if policy["maxCoreCharacters"] < policy["minCoreCharacters"]:
+        raise SpeakerNotesPolicyError(
+            "$.speakerNotesPolicy.maxCoreCharacters must be >= "
+            "minCoreCharacters"
         )
     return policy
 
@@ -189,20 +176,20 @@ def _sentence_count(text: str) -> int:
     return len(re.findall(r"[.!?](?:\s|$)", text))
 
 
-def _contains_state_label(text: str, label: str) -> bool:
-    normalized_text = " ".join(text.upper().split())
-    normalized_label = " ".join(label.upper().split())
-    if normalized_label == "GA":
-        normalized_text = normalized_text.replace("PARTIAL GA", "")
-        return re.search(r"(?<![A-Z])GA(?![A-Z])", normalized_text) is not None
-    return normalized_label in normalized_text
+def _contains_source_reference(text: str) -> bool:
+    return any(
+        re.search(pattern, text, flags)
+        for pattern, flags in (
+            (r"^\s*(?:출처|source)\s*:", re.IGNORECASE | re.MULTILINE),
+            (r"\[?F-\d{3,}\]?", re.IGNORECASE),
+            (r"https?://", re.IGNORECASE),
+        )
+    )
 
 
 def analyze_deck(
     deck: Path,
     policy: dict[str, Any],
-    *,
-    state_labels_by_slide: dict[int, list[str]] | None = None,
 ) -> dict[str, Any]:
     """Inspect notes length and required section markers on every slide."""
     prs = Presentation(deck)
@@ -211,17 +198,23 @@ def analyze_deck(
     short_slides: list[int] = []
     long_slides: list[int] = []
     section_gaps: list[dict[str, Any]] = []
-    brief_explanation_slides: list[int] = []
-    low_explanation_sentence_slides: list[int] = []
-    brief_status_slides: list[int] = []
-    state_summary_gaps: list[dict[str, Any]] = []
-    brief_example_slides: list[int] = []
-    brief_validation_slides: list[int] = []
-    brief_summary_slides: list[int] = []
-    long_summary_slides: list[int] = []
+    question_not_first_slides: list[int] = []
+    brief_question_slides: list[int] = []
+    long_question_slides: list[int] = []
+    multi_sentence_question_slides: list[int] = []
+    question_mark_gaps: list[int] = []
+    brief_core_slides: list[int] = []
+    long_core_slides: list[int] = []
+    multi_sentence_core_slides: list[int] = []
+    long_transition_slides: list[int] = []
+    multi_sentence_transition_slides: list[int] = []
+    over_sentence_limit_slides: list[int] = []
+    source_reference_slides: list[int] = []
     for number, slide in enumerate(prs.slides, 1):
         text = _notes_text(slide)
         character_count = len(text)
+        total_sentences = _sentence_count(text)
+        has_source_reference = _contains_source_reference(text)
         parsed_sections = _parse_sections(text, policy["requiredSections"])
         missing_sections = [
             section
@@ -241,108 +234,97 @@ def analyze_deck(
                     "missingSections": missing_sections,
                 }
             )
-        explanation = parsed_sections[policy["explanationSection"]]
-        explanation_characters = len(explanation)
-        explanation_sentences = _sentence_count(explanation)
-        if (
-            explanation
-            and explanation_characters < policy["minExplanationCharacters"]
-        ):
-            brief_explanation_slides.append(number)
-        if (
-            explanation
-            and explanation_sentences < policy["minExplanationSentences"]
-        ):
-            low_explanation_sentence_slides.append(number)
-        status_summary = parsed_sections[policy["statusSection"]]
-        status_characters = len(status_summary)
-        if status_summary and status_characters < policy["minStatusCharacters"]:
-            brief_status_slides.append(number)
-        expected_state_labels = (
-            state_labels_by_slide.get(number, [])
-            if state_labels_by_slide is not None
-            else []
-        )
-        missing_state_labels = []
-        if policy["requireStateLabelsInStatusSection"]:
-            missing_state_labels = [
-                label
-                for label in expected_state_labels
-                if not _contains_state_label(status_summary, label)
-            ]
-        if missing_state_labels:
-            state_summary_gaps.append(
-                {
-                    "slide": number,
-                    "missingStateLabels": missing_state_labels,
-                }
-            )
-        example = parsed_sections[policy["exampleSection"]]
-        example_characters = len(example)
-        if example and example_characters < policy["minExampleCharacters"]:
-            brief_example_slides.append(number)
-        validation = parsed_sections[policy["validationSection"]]
-        validation_characters = len(validation)
-        if (
-            validation
-            and validation_characters < policy["minValidationCharacters"]
-        ):
-            brief_validation_slides.append(number)
-        summary = parsed_sections[policy["summarySection"]]
-        summary_characters = len(summary)
-        if summary and summary_characters < policy["minSummaryCharacters"]:
-            brief_summary_slides.append(number)
-        if summary_characters > policy["maxSummaryCharacters"]:
-            long_summary_slides.append(number)
+        question = parsed_sections[policy["questionSection"]]
+        question_characters = len(question)
+        question_sentences = _sentence_count(question)
+        question_first = text.startswith(f"{policy['questionSection']}:")
+        has_question_mark = question.rstrip().endswith(("?", "？"))
+        if text and policy["requireQuestionFirst"] and not question_first:
+            question_not_first_slides.append(number)
+        if question and question_characters < policy["minQuestionCharacters"]:
+            brief_question_slides.append(number)
+        if question_characters > policy["maxQuestionCharacters"]:
+            long_question_slides.append(number)
+        if question_sentences > policy["maxQuestionSentences"]:
+            multi_sentence_question_slides.append(number)
+        if question and policy["requireQuestionMark"] and not has_question_mark:
+            question_mark_gaps.append(number)
+        core = parsed_sections[policy["coreSection"]]
+        core_characters = len(core)
+        core_sentences = _sentence_count(core)
+        if core and core_characters < policy["minCoreCharacters"]:
+            brief_core_slides.append(number)
+        if core_characters > policy["maxCoreCharacters"]:
+            long_core_slides.append(number)
+        if core_sentences > policy["maxCoreSentences"]:
+            multi_sentence_core_slides.append(number)
+        transition = parsed_sections[policy["transitionSection"]]
+        transition_characters = len(transition)
+        transition_sentences = _sentence_count(transition)
+        if transition_characters > policy["maxTransitionCharacters"]:
+            long_transition_slides.append(number)
+        if transition_sentences > policy["maxTransitionSentences"]:
+            multi_sentence_transition_slides.append(number)
+        if total_sentences > policy["maxTotalSentences"]:
+            over_sentence_limit_slides.append(number)
+        if policy["forbidSourceReferences"] and has_source_reference:
+            source_reference_slides.append(number)
         slides.append(
             {
                 "slide": number,
                 "characters": character_count,
+                "sentences": total_sentences,
                 "missingSections": missing_sections,
-                "explanationCharacters": explanation_characters,
-                "explanationSentences": explanation_sentences,
-                "statusCharacters": status_characters,
-                "missingStateLabels": missing_state_labels,
-                "exampleCharacters": example_characters,
-                "validationCharacters": validation_characters,
-                "summaryCharacters": summary_characters,
+                "questionCharacters": question_characters,
+                "questionSentences": question_sentences,
+                "questionFirst": question_first,
+                "hasQuestionMark": has_question_mark,
+                "coreCharacters": core_characters,
+                "coreSentences": core_sentences,
+                "transitionCharacters": transition_characters,
+                "transitionSentences": transition_sentences,
+                "hasSourceReference": has_source_reference,
             }
         )
     return {
         "required": policy["required"],
         "authoringMode": policy["authoringMode"],
         "requiredSections": policy["requiredSections"],
-        "explanationSection": policy["explanationSection"],
-        "statusSection": policy["statusSection"],
-        "exampleSection": policy["exampleSection"],
-        "validationSection": policy["validationSection"],
-        "summarySection": policy["summarySection"],
+        "questionSection": policy["questionSection"],
+        "coreSection": policy["coreSection"],
+        "transitionSection": policy["transitionSection"],
         "minCharacters": policy["minCharacters"],
         "maxCharacters": policy["maxCharacters"],
         "targetSeconds": policy["targetSeconds"],
-        "minExplanationCharacters": policy["minExplanationCharacters"],
-        "minExplanationSentences": policy["minExplanationSentences"],
-        "minStatusCharacters": policy["minStatusCharacters"],
-        "minExampleCharacters": policy["minExampleCharacters"],
-        "minValidationCharacters": policy["minValidationCharacters"],
-        "minSummaryCharacters": policy["minSummaryCharacters"],
-        "maxSummaryCharacters": policy["maxSummaryCharacters"],
-        "requireStateLabelsInStatusSection": policy[
-            "requireStateLabelsInStatusSection"
-        ],
+        "minQuestionCharacters": policy["minQuestionCharacters"],
+        "maxQuestionCharacters": policy["maxQuestionCharacters"],
+        "maxQuestionSentences": policy["maxQuestionSentences"],
+        "minCoreCharacters": policy["minCoreCharacters"],
+        "maxCoreCharacters": policy["maxCoreCharacters"],
+        "maxCoreSentences": policy["maxCoreSentences"],
+        "maxTransitionCharacters": policy["maxTransitionCharacters"],
+        "maxTransitionSentences": policy["maxTransitionSentences"],
+        "maxTotalSentences": policy["maxTotalSentences"],
+        "requireQuestionFirst": policy["requireQuestionFirst"],
+        "requireQuestionMark": policy["requireQuestionMark"],
+        "forbidSourceReferences": policy["forbidSourceReferences"],
         "slides": slides,
         "missingSlides": missing_slides,
         "shortSlides": short_slides,
         "longSlides": long_slides,
         "sectionGaps": section_gaps,
-        "briefExplanationSlides": brief_explanation_slides,
-        "lowExplanationSentenceSlides": low_explanation_sentence_slides,
-        "briefStatusSlides": brief_status_slides,
-        "stateSummaryGaps": state_summary_gaps,
-        "briefExampleSlides": brief_example_slides,
-        "briefValidationSlides": brief_validation_slides,
-        "briefSummarySlides": brief_summary_slides,
-        "longSummarySlides": long_summary_slides,
+        "questionNotFirstSlides": question_not_first_slides,
+        "briefQuestionSlides": brief_question_slides,
+        "longQuestionSlides": long_question_slides,
+        "multiSentenceQuestionSlides": multi_sentence_question_slides,
+        "questionMarkGaps": question_mark_gaps,
+        "briefCoreSlides": brief_core_slides,
+        "longCoreSlides": long_core_slides,
+        "multiSentenceCoreSlides": multi_sentence_core_slides,
+        "longTransitionSlides": long_transition_slides,
+        "multiSentenceTransitionSlides": multi_sentence_transition_slides,
+        "overSentenceLimitSlides": over_sentence_limit_slides,
+        "sourceReferenceSlides": source_reference_slides,
     }
 
 
@@ -375,55 +357,73 @@ def failures(report: dict[str, Any]) -> list[str]:
         problems.append(
             "Speaker notes are missing required section(s): " + rendered
         )
-    if report["briefExplanationSlides"]:
+    if report["questionNotFirstSlides"]:
         problems.append(
-            "Speaker note explanations are shorter than "
-            f"{report['minExplanationCharacters']} characters on slide(s): "
-            + ", ".join(map(str, report["briefExplanationSlides"]))
+            "Speaker notes do not start with the question section on slide(s): "
+            + ", ".join(map(str, report["questionNotFirstSlides"]))
         )
-    if report["lowExplanationSentenceSlides"]:
+    if report["briefQuestionSlides"]:
         problems.append(
-            "Speaker note explanations contain fewer than "
-            f"{report['minExplanationSentences']} sentences on slide(s): "
-            + ", ".join(map(str, report["lowExplanationSentenceSlides"]))
+            "Speaker note questions are shorter than "
+            f"{report['minQuestionCharacters']} characters on slide(s): "
+            + ", ".join(map(str, report["briefQuestionSlides"]))
         )
-    if report["briefStatusSlides"]:
+    if report["longQuestionSlides"]:
         problems.append(
-            "Speaker note status/condition summaries are shorter than "
-            f"{report['minStatusCharacters']} characters on slide(s): "
-            + ", ".join(map(str, report["briefStatusSlides"]))
+            "Speaker note questions exceed "
+            f"{report['maxQuestionCharacters']} characters on slide(s): "
+            + ", ".join(map(str, report["longQuestionSlides"]))
         )
-    if report["stateSummaryGaps"]:
-        rendered = "; ".join(
-            f"{item['slide']} ({', '.join(item['missingStateLabels'])})"
-            for item in report["stateSummaryGaps"]
-        )
+    if report["multiSentenceQuestionSlides"]:
         problems.append(
-            "Speaker note status/condition summaries are missing slide state "
-            "label(s): " + rendered
+            "Speaker note questions contain more than "
+            f"{report['maxQuestionSentences']} sentence(s) on slide(s): "
+            + ", ".join(map(str, report["multiSentenceQuestionSlides"]))
         )
-    if report["briefExampleSlides"]:
+    if report["questionMarkGaps"]:
         problems.append(
-            "Speaker note examples are shorter than "
-            f"{report['minExampleCharacters']} characters on slide(s): "
-            + ", ".join(map(str, report["briefExampleSlides"]))
+            "Speaker note questions do not end with a question mark on slide(s): "
+            + ", ".join(map(str, report["questionMarkGaps"]))
         )
-    if report["briefValidationSlides"]:
+    if report["briefCoreSlides"]:
         problems.append(
-            "Speaker note validation criteria are shorter than "
-            f"{report['minValidationCharacters']} characters on slide(s): "
-            + ", ".join(map(str, report["briefValidationSlides"]))
+            "Speaker note core messages are shorter than "
+            f"{report['minCoreCharacters']} characters on slide(s): "
+            + ", ".join(map(str, report["briefCoreSlides"]))
         )
-    if report["briefSummarySlides"]:
+    if report["longCoreSlides"]:
         problems.append(
-            "Speaker note presenter summaries are shorter than "
-            f"{report['minSummaryCharacters']} characters on slide(s): "
-            + ", ".join(map(str, report["briefSummarySlides"]))
+            "Speaker note core messages exceed "
+            f"{report['maxCoreCharacters']} characters on slide(s): "
+            + ", ".join(map(str, report["longCoreSlides"]))
         )
-    if report["longSummarySlides"]:
+    if report["multiSentenceCoreSlides"]:
         problems.append(
-            "Speaker note presenter summaries exceed "
-            f"{report['maxSummaryCharacters']} characters on slide(s): "
-            + ", ".join(map(str, report["longSummarySlides"]))
+            "Speaker note core messages contain more than "
+            f"{report['maxCoreSentences']} sentence(s) on slide(s): "
+            + ", ".join(map(str, report["multiSentenceCoreSlides"]))
+        )
+    if report["longTransitionSlides"]:
+        problems.append(
+            "Speaker note transitions exceed "
+            f"{report['maxTransitionCharacters']} characters on slide(s): "
+            + ", ".join(map(str, report["longTransitionSlides"]))
+        )
+    if report["multiSentenceTransitionSlides"]:
+        problems.append(
+            "Speaker note transitions contain more than "
+            f"{report['maxTransitionSentences']} sentence(s) on slide(s): "
+            + ", ".join(map(str, report["multiSentenceTransitionSlides"]))
+        )
+    if report["overSentenceLimitSlides"]:
+        problems.append(
+            "Speaker notes exceed "
+            f"{report['maxTotalSentences']} total sentences on slide(s): "
+            + ", ".join(map(str, report["overSentenceLimitSlides"]))
+        )
+    if report["sourceReferenceSlides"]:
+        problems.append(
+            "Speaker notes contain forbidden source references on slide(s): "
+            + ", ".join(map(str, report["sourceReferenceSlides"]))
         )
     return problems
