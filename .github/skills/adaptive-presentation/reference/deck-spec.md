@@ -115,9 +115,13 @@
 
 - `requiredSections`: 각 섹션은 `섹션명:` 형태로 notes에 직접 표시한다.
 - `authoringMode`: 기존 notes 문구를 이어 붙이지 않고 비운 뒤 현재 storyline·visual·근거에서 재작성한다.
-- `questionSection`: 고객이 현재 workflow·책임·KPI·위험을 떠올리게 하는 질문 섹션명.
-- `coreSection`: 발표자가 그대로 말할 결론 1~3문장을 담는 섹션명.
-- `transitionSection`: 다음 장의 질문·판단·행동으로 연결하는 섹션명.
+- `questionSection`: 고객이 구체적 사례·상황과 evidence·owner·KPI·위험·trade-off 중 판단 축을 함께
+  떠올리게 하는 질문 섹션명. 길이 검증을 통과해도 단순 예/아니오 상태 확인이면 editorial QA에서
+  수정한다.
+- `coreSection`: 발표자가 그대로 말할 결론 1~3문장을 담는 섹션명. 현재 visual의 핵심 요소 2~4개가
+  어떻게 연결되어 결론과 고객 의미를 만드는지 설명한다.
+- `transitionSection`: 현재 장의 결론에서 남은 판단·조건을 짚고 다음 장이 필요한 이유로 연결하는
+  섹션명. 어느 장에도 붙일 수 있는 일반적인 “다음 장에서 보겠습니다” 문장은 허용하지 않는다.
 - `targetSeconds`: 한 장의 핵심을 전달하는 목표 시간. 한국어 기본은 약 60초다.
 - `minCharacters`, `maxCharacters`: cue가 지나치게 빈약하거나 상세 원고로 길어지는 것을 방지한다.
 - `minQuestionCharacters`, `maxQuestionCharacters`, `maxQuestionSentences`: 질문을 20~140자의 한 문장으로
@@ -128,6 +132,8 @@
 - `maxTotalSentences`: 질문·핵심 메시지·전환을 합쳐 최대 5문장으로 제한한다.
 - `requireQuestionFirst`, `requireQuestionMark`: notes를 질문으로 시작하고 질문형 문장으로 끝내게 한다.
 - `forbidSourceReferences`: notes의 `출처:`·`Source:` 블록, Fact ID, URL을 금지한다.
+- verifier는 section·길이·문장 수 같은 구조 계약을 검사한다. 질문의 깊이, visual 설명의 충분성,
+  transition bridge의 논리성은 storyline 검토와 최종 editorial review에서 별도로 확인한다.
 - GA/Preview, 적용 범위, 예외는 slide visual·footer·`stateLabels`에 명확히 표시한다. 발표 결론을
   바꾸는 조건만 `핵심 메시지`에 압축하고 notes에 별도 상세 블록을 만들지 않는다.
 - Fact ID와 출처는 speaker notes가 아니라 machine contract와 Fact Ledger에만 기록한다. 슬라이드에
