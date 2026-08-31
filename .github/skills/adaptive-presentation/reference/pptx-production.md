@@ -13,6 +13,9 @@
 4. 도구 탐색·의존성 준비는 `scripts/toolcheck.py`(soffice·PyMuPDF·Pillow·python-pptx·한글 폰트 1회
    탐지·캐시)와
    `reference/full-optimized.md`의 캐시 규칙을 따른다.
+5. 한국어 기본 글꼴은 `Apple SD Gothic Neo`다. 표지·본문·표·도식·footer를 포함한 모든 visible text
+   run에 같은 글꼴을 명시한다. 표지·section divider를 제외한 본문 리딩 메시지는
+   `Apple SD Gothic Neo · 27pt · Bold`로 만들고 deck spec의 `fontPolicy`와 일치시킨다.
 
 ## 2. 파일 구조
 
@@ -58,7 +61,8 @@ import pptx_helpers as H
 INK = RGBColor(0x1A, 0x1A, 0x1A)
 ACCENT = RGBColor(0x0F, 0x62, 0xFE)
 CANVAS = RGBColor(0xFF, 0xFF, 0xFF)
-BODY_FONT = os.environ["PPTX_FONT"]  # toolcheck가 확인해 deck spec에 기록한 설치 폰트
+BODY_FONT = "Apple SD Gothic Neo"
+LEADING_MESSAGE_SIZE = 27
 
 def textbox(slide, text, x, y, w, h, size, *, color=INK, bold=False,
             align=PP_ALIGN.LEFT, font=BODY_FONT):
@@ -72,7 +76,7 @@ def textbox(slide, text, x, y, w, h, size, *, color=INK, bold=False,
     run.text = text
     run.font.size = Pt(size)
     run.font.bold = bold
-    run.font.name = font
+    H.set_run_font(run, font)
     run.font.color.rgb = color
     return box
 
@@ -86,7 +90,16 @@ def build():
 
     # 슬라이드마다 정보 관계에 맞는 형태를 직접 구성한다.
     slide = prs.slides.add_slide(blank)
-    textbox(slide, "결론형 제목", 0.72, 0.5, 11.9, 1.0, 34, bold=True)
+    textbox(
+        slide,
+        "결론형 제목",
+        0.72,
+        0.5,
+        11.9,
+        1.0,
+        LEADING_MESSAGE_SIZE,
+        bold=True,
+    )
     # ... 도형·차트·출처 footer 등 자유 배치 ...
 
     prs.save(OUT)
@@ -114,7 +127,18 @@ import pptx_helpers as H
 prs, blank = H.new_deck()                              # 16:9 치수(디자인 아님)
 INK, ACCENT = H.hexc("14203A"), H.hexc("1F63D8")       # 색은 매 덱 자유
 s = H.add_slide(prs, blank, bg=H.hexc("FFFFFF"))
-H.text(s, "결론형 제목", 0.72, 0.6, 11.9, 1.0, 30, INK, bold=True)
+H.text(
+    s,
+    "결론형 제목",
+    0.72,
+    0.6,
+    11.9,
+    1.0,
+    27,
+    INK,
+    bold=True,
+    font="Apple SD Gothic Neo",
+)
 H.bullets(s, ["근거 1", "근거 2"], 0.72, 1.9, 6.0, 2.0, 17, INK, marker_color=ACCENT)
 prs.save(OUT)
 ```
@@ -156,6 +180,8 @@ prs.save(OUT)
 - `word_wrap=True`, `auto_size=NONE`
 - 텍스트 프레임 margin을 명시
 - 모든 run에 font name/size/color를 직접 적용
+- 한국어 덱은 모든 visible run의 Latin·East Asian·complex-script typeface를
+  `Apple SD Gothic Neo`로 동일하게 지정
 - 한글과 영문 혼용 렌더를 실제 PDF에서 확인
 - 줄 간격과 paragraph spacing을 명시
 - 텍스트가 들어가는 도형은 PowerPoint/LibreOffice의 폰트 메트릭 차이를 고려해 가로·세로 8~12%의
@@ -165,13 +191,15 @@ prs.save(OUT)
 
 크기:
 
-- 제목 30~42pt
+- 표지·section divider 제목 30~42pt
+- 한국어 본문 리딩 메시지 27pt Bold
 - 주요 본문 15~19pt
 - 보조 13~15pt
 - 표·도식 label 11~13pt
 - 출처 8~9.5pt
 
-표지·section divider를 제외한 본문 슬라이드 title role은 덱 전체에서 한 가지 크기를 사용한다. 같은 title
+표지·section divider를 제외한 본문 슬라이드 title role은 `fontPolicy.leadingMessage`를 사용한다. 한국어
+repository 기본은 `Apple SD Gothic Neo · 27pt · Bold`다. 같은 title
 row가 슬라이드마다 31/32/34pt로 달라지면 위계가 흔들린다. 긴 제목은 문구 단축, title frame 폭·높이,
 명시적 줄바꿈으로 해결하고 해당 슬라이드만 축소하지 않는다. 정말 다른 위계인 슬라이드만 예외로 기록한다.
 
@@ -218,17 +246,21 @@ Appendix로 구분한다.
 기존 notes가 있으면 문구를 재사용하거나 덧붙이지 말고 전체를 삭제한 뒤 새로 작성한다.
 
 ```text
-질문: 고객이 실제 사례와 판단 기준을 함께 떠올리게 하는 질문 한 문장?
-핵심 메시지: 슬라이드의 결론·작동 원리·고객 의미를 충분히 설명하는 1~3문장.
-전환: 현재 결론에서 남은 판단을 짚고 다음 장이 필요한 이유를 연결하는 한 문장.
+핵심 메시지: 슬라이드의 결론을 한 문장으로 말합니다.
+핵심 근거와 visual 요소의 관계를 설명합니다.
+작동 방식이나 운영 조건을 설명합니다.
+고객에게 중요한 영향과 판단 기준을 연결합니다.
+실행하거나 기억할 내용을 한 문장으로 닫습니다.
 ```
 
 간결한 발표 cue는 다음처럼 작성한다.
 
 ```text
-질문: 최근 Agent 실행을 기준으로, 참조한 근거와 허용된 action을 누가 어떤 기준으로 승인했습니까?
-핵심 메시지: Foundry IQ는 사용자 권한을 반영해 판단 근거를 제공하고, Toolboxes는 승인된 API와 자격 증명을 재사용 가능한 실행 경계로 관리합니다. 맥락과 action을 분리해야 정확도와 운영 통제를 함께 높일 수 있습니다.
-전환: 근거와 실행 범위를 정했다면, 이제 실제 경로와 결과가 기준을 벗어났을 때 발견하고 되돌릴 운영 신호가 필요합니다.
+핵심 메시지: Foundry IQ는 사용자 권한을 반영해 Agent가 판단할 근거를 제공합니다.
+Toolboxes는 승인된 API와 자격 증명을 재사용 가능한 실행 경계로 관리합니다.
+Knowledge와 action을 분리하면 근거의 정확성과 실행 통제를 각각 검증할 수 있습니다.
+권한과 access 변경을 중앙에서 관리해야 운영 중에도 같은 기준을 유지할 수 있습니다.
+이 구조는 Agent의 업무 가치를 높이면서 허용되지 않은 실행 위험을 줄입니다.
 ```
 
 - notes는 슬라이드 본문을 낭독하거나 상세 reference를 반복하지 않는다.
@@ -239,23 +271,18 @@ Appendix로 구분한다.
   실제 발표에서 입에 붙는 표현을 우선한다.
 - 소리 내어 읽었을 때 숨이 차거나 의미가 한 번에 잡히지 않는 문장은 둘로 나눈다. 불필요한
   `~할 수 있습니다`, `~에 해당합니다`, `~을 의미합니다` 반복은 제거한다.
-- `질문`은 notes의 첫 문장이며, 최근 사례·현재 workflow·가정한 상황 중 하나와
-  evidence·owner·KPI·위험·trade-off·영향 중 하나 이상을 결합한다. 단순한 “명확합니까?”,
-  “준비되어 있습니까?”처럼 예/아니오로 끝나는 상태 점검은 피하고 고객이 현재 방식을 설명하게 한다.
-  정답을 유도하거나 고객을 압박하는 표현도 피한다.
-- `핵심 메시지`는 메타 표현 없이 발표자가 그대로 말할 수 있는 결론 1~3문장으로 쓴다. 제목을 반복하지
-  말고 visual의 핵심 요소 2~4개 사이의 관계, 그 관계가 만드는 결론, 고객에게 중요한 의미를 포함한다.
-- `전환`은 현재 장의 결론에서 아직 해결되지 않은 판단·조건을 짚고, 다음 장이 그 문제를 어떻게
-  구체화하는지 연결한다. `다음 장에서 보겠습니다`, `이제 살펴보겠습니다`처럼 대상만 바꿔 재사용할 수
-  있는 문장은 금지한다. 마지막 장은 다음 장 예고 대신 실제 합의·결정·행동으로 닫는다.
+- 기본 `core-only` notes는 `핵심 메시지:`로 시작하고 `질문:`과 `전환:` 섹션을 넣지 않는다.
+- 핵심 메시지는 메타 표현 없이 발표자가 그대로 말할 수 있는 4~6문장으로 쓴다. 제목을 반복하지 말고
+  visual의 핵심 요소 2~4개 사이의 관계, 작동 원리, 고객 의미와 판단 또는 행동을 포함한다.
+- 사용자가 workshop 진행 질문과 장표 간 bridge를 명시적으로 요청한 경우에만 `guided-flow` 모드로
+  `질문/핵심 메시지/전환` 3블록을 작성한다.
 - 실제 예시·구성 요소·KPI·상태 조건은 slide visual과 footer에서 전달하고, 결론을 바꾸는 조건만
   `핵심 메시지`에 압축한다.
 - notes에는 출처 블록, Fact ID, URL을 넣지 않는다. machine traceability는 Fact Ledger와
   deck spec의 `claimIds`로 유지한다.
 - 화면 footer는 `출처: Publisher · Document title (YYYY-MM-DD 확인)`처럼 사람이 읽을 수 있게 쓰고,
   `[F-001]` 같은 내부 Fact ID와 긴 URL은 넣지 않는다.
-- 한국어 기준 장당 약 60초, 전체 80~600자·최대 5문장을 기본으로 한다. `질문`은 20~140자의
-  한 문장, `핵심 메시지`는 30~260자의 1~3문장, `전환`은 180자 이하의 한 문장으로 작성한다.
+- 한국어 기준 장당 약 60초, 전체 120~600자·4~6문장을 기본으로 한다.
 
 ## 6. 한글 폰트
 

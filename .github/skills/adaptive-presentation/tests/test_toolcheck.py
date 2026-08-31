@@ -73,11 +73,11 @@ class ToolcheckTests(unittest.TestCase):
         ]
         self.assertEqual(
             toolcheck.select_font(available, language="ko-KR"),
-            "Noto Sans KR",
+            "Apple SD Gothic Neo",
         )
         self.assertEqual(
             toolcheck.select_font(reversed(available), language="ko-KR"),
-            "Noto Sans KR",
+            "Apple SD Gothic Neo",
         )
         self.assertEqual(
             toolcheck.select_font(available, language="en-US"),

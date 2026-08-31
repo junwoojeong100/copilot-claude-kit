@@ -100,26 +100,18 @@
         "required",
         "authoringMode",
         "requiredSections",
-        "questionSection",
         "coreSection",
-        "transitionSection",
         "targetSeconds",
         "minCharacters",
         "maxCharacters",
-        "minQuestionCharacters",
-        "maxQuestionCharacters",
-        "maxQuestionSentences",
         "minCoreCharacters",
         "maxCoreCharacters",
         "maxCoreSentences",
-        "maxTransitionCharacters",
-        "maxTransitionSentences",
         "maxTotalSentences",
-        "requireQuestionFirst",
-        "requireQuestionMark",
         "forbidSourceReferences"
       ],
       "properties": {
+        "mode": {"enum": ["core-only", "guided-flow"]},
         "required": {"type": "boolean"},
         "authoringMode": {"const": "regenerate-from-scratch"},
         "questionSection": {"type": "string", "minLength": 1},
@@ -139,14 +131,80 @@
         "maxQuestionSentences": {"type": "integer", "minimum": 1},
         "minCoreCharacters": {"type": "integer", "minimum": 1},
         "maxCoreCharacters": {"type": "integer", "minimum": 1},
+        "minCoreSentences": {"type": "integer", "minimum": 1},
         "maxCoreSentences": {"type": "integer", "minimum": 1},
         "maxTransitionCharacters": {"type": "integer", "minimum": 1},
         "maxTransitionSentences": {"type": "integer", "minimum": 1},
+        "minTotalSentences": {"type": "integer", "minimum": 1},
         "maxTotalSentences": {"type": "integer", "minimum": 1},
+        "forbiddenSections": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "requireCoreFirst": {"type": "boolean"},
         "requireQuestionFirst": {"type": "boolean"},
         "requireQuestionMark": {"type": "boolean"},
         "forbidSourceReferences": {"type": "boolean"}
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"mode": {"const": "core-only"}},
+            "required": ["mode"]
+          },
+          "then": {
+            "required": [
+              "mode",
+              "minCoreSentences",
+              "minTotalSentences",
+              "forbiddenSections",
+              "requireCoreFirst"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {"mode": {"const": "guided-flow"}},
+            "required": ["mode"]
+          },
+          "then": {
+            "required": [
+              "mode",
+              "questionSection",
+              "transitionSection",
+              "minQuestionCharacters",
+              "maxQuestionCharacters",
+              "maxQuestionSentences",
+              "minCoreSentences",
+              "maxTransitionCharacters",
+              "maxTransitionSentences",
+              "minTotalSentences",
+              "requireQuestionFirst",
+              "requireQuestionMark"
+            ]
+          }
+        },
+        {
+          "if": {
+            "not": {"required": ["mode"]}
+          },
+          "then": {
+            "required": [
+              "questionSection",
+              "transitionSection",
+              "minQuestionCharacters",
+              "maxQuestionCharacters",
+              "maxQuestionSentences",
+              "maxTransitionCharacters",
+              "maxTransitionSentences",
+              "requireQuestionFirst",
+              "requireQuestionMark"
+            ]
+          }
+        }
+      ]
     },
     "fontPolicy": {
       "type": "object",
@@ -165,7 +223,26 @@
           "items": {"type": "string", "minLength": 1}
         },
         "requireAvailable": {"type": "boolean"},
-        "requireRenderedMatch": {"type": "boolean"}
+        "requireRenderedMatch": {"type": "boolean"},
+        "requireAllTextFont": {
+          "type": "boolean",
+          "default": true
+        },
+        "leadingMessage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fontFamily", "sizePt", "bold"],
+          "properties": {
+            "fontFamily": {"type": "string", "minLength": 1},
+            "sizePt": {"type": "number", "exclusiveMinimum": 0},
+            "bold": {"type": "boolean"}
+          },
+          "default": {
+            "fontFamily": "Apple SD Gothic Neo",
+            "sizePt": 27,
+            "bold": true
+          }
+        }
       }
     },
     "slides": {

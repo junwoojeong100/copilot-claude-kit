@@ -8,7 +8,8 @@
 규칙:
 - 여기에 기본 색/팔레트를 추가하지 말 것. 색은 항상 인자.
 - 여기에 'cover/architecture' 같은 의미 컴포넌트를 추가하지 말 것. 그건 각 덱의 build 스크립트가 자유 구성.
-- 유일한 편의 기본값은 폰트 폴백 문자열(override 가능)과 표준 16:9 치수뿐이다.
+- 이 repository의 한국어 슬라이드 기본 글꼴은 Apple SD Gothic Neo이며, 호출자가 명시적으로 override할 수 있다.
+- 유일한 다른 편의 기본값은 표준 16:9 치수뿐이다.
 """
 from __future__ import annotations
 
@@ -25,15 +26,28 @@ from pptx.oxml.ns import qn
 __all__ = [
     "PP_ALIGN", "MSO_ANCHOR", "MSO_AUTO_SIZE", "MSO_SHAPE", "RGBColor", "Inches", "Pt",
     "hexc", "new_deck", "init_deck", "initialize_deck", "add_slide", "soft_shadow", "box", "text",
-    "bullets", "chip", "hline", "vline", "chevron", "grid_table",
+    "bullets", "chip", "hline", "vline", "chevron", "grid_table", "set_run_font",
 ]
 
-DEFAULT_FONT = "Arial"  # 폴백일 뿐, 호출자가 언제든 override
+DEFAULT_FONT = "Apple SD Gothic Neo"
 
 
 def hexc(value: str) -> RGBColor:
     """'1F63D8' 또는 '#1F63D8' → RGBColor."""
     return RGBColor.from_string(value.lstrip("#").upper())
+
+
+def set_run_font(run, font: str):
+    """Apply one typeface to Latin, East Asian, and complex-script text."""
+    run.font.name = font
+    rpr = run._r.get_or_add_rPr()
+    for tag in ("a:latin", "a:ea", "a:cs"):
+        typeface = rpr.find(qn(tag))
+        if typeface is None:
+            typeface = rpr.makeelement(qn(tag), {})
+            rpr.append(typeface)
+        typeface.set("typeface", font)
+    return run
 
 
 def new_deck(width_in: float = 13.333, height_in: float = 7.5):
@@ -194,7 +208,7 @@ def _apply_runs(tf, lines, size, color, bold, italic, font, align, spacing):
         r.font.size = Pt(size)
         r.font.bold = bold
         r.font.italic = italic
-        r.font.name = font
+        set_run_font(r, font)
         r.font.color.rgb = color
 
 
@@ -227,10 +241,10 @@ def bullets(slide, items: Sequence[str], x, y, w, h, size, color: RGBColor, *, m
         p.space_after = Pt(gap)
         if marker:
             rm = p.add_run(); rm.text = marker + "  "
-            rm.font.size = Pt(size); rm.font.name = font; rm.font.bold = True
+            rm.font.size = Pt(size); set_run_font(rm, font); rm.font.bold = True
             rm.font.color.rgb = marker_color or color
         r = p.add_run(); r.text = str(it)
-        r.font.size = Pt(size); r.font.name = font; r.font.color.rgb = color; r.font.bold = bold
+        r.font.size = Pt(size); set_run_font(r, font); r.font.color.rgb = color; r.font.bold = bold
     return tb
 
 
@@ -246,7 +260,7 @@ def chip(slide, x, y, w, h, s, fill: RGBColor, text_color: RGBColor, *, size=11,
         setattr(tf, m, Inches(0.02))
     p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
     r = p.add_run(); r.text = str(s)
-    r.font.size = Pt(size); r.font.bold = bold; r.font.name = font; r.font.color.rgb = text_color
+    r.font.size = Pt(size); r.font.bold = bold; set_run_font(r, font); r.font.color.rgb = text_color
     return sp
 
 

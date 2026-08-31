@@ -29,7 +29,9 @@
 
 ## 4. 타이포그래피
 
-- Slide title: 30~42pt, 강한 weight. 긴 제목은 2줄을 위한 전용 높이를 확보하거나 문구를 줄인다.
+- 한국어 덱의 모든 visible text: `Apple SD Gothic Neo`. 표지·본문·표·도식·footer에서 다른 글꼴을 섞지 않는다.
+- 한국어 본문 리딩 메시지: `Apple SD Gothic Neo · 27pt · Bold`. 모든 본문 장에서 같은 family·size·weight를 쓴다.
+- 표지·section divider title: 30~42pt, 강한 weight. 긴 제목은 2줄을 위한 전용 높이를 확보하거나 문구를 줄인다.
 - Primary body: 15~19pt.
 - Secondary body: 13~15pt.
 - Table/diagram label: 11~13pt.
