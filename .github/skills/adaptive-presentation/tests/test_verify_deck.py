@@ -19,10 +19,12 @@ import tooling  # noqa: E402
 from pptx import Presentation  # noqa: E402
 from pptx.util import Inches, Pt  # noqa: E402
 from verify_deck import (  # noqa: E402
+    all_text_font_failures,
     audit_namespace,
     build_parser,
     font_matches,
     internal_fact_id_visibility_failures,
+    leading_message_style_failures,
     prepare_output_dirs,
     resolve_contract,
     select_risk_slides,
@@ -169,6 +171,95 @@ class VerifyDeckTests(unittest.TestCase):
                 ["Arial-Bold", "Aptos", "Malgun Gothic"],
             ),
             ["Aptos"],
+        )
+
+    def test_all_text_font_policy_rejects_declared_and_inherited_mixing(self):
+        policy = {
+            "selected": "Apple SD Gothic Neo",
+            "fallbacks": ["NanumGothic"],
+            "requireAllTextFont": True,
+        }
+        failures = all_text_font_failures(
+            {
+                "fonts": [
+                    ("Apple SD Gothic Neo", 4),
+                    ("NanumGothic", 1),
+                ],
+                "unfonted_runs": [{"slide": 2}],
+            },
+            policy,
+        )
+        self.assertEqual(len(failures), 2)
+        self.assertIn("NanumGothic", failures[0])
+        self.assertIn("do not declare", failures[1])
+
+        policy["requireAllTextFont"] = False
+        self.assertEqual(
+            all_text_font_failures(
+                {
+                    "fonts": [
+                        ("Apple SD Gothic Neo", 4),
+                        ("NanumGothic", 1),
+                    ],
+                    "unfonted_runs": [{"slide": 2}],
+                },
+                policy,
+            ),
+            [],
+        )
+
+    def test_leading_message_style_enforces_family_size_and_weight(self):
+        font_policy = {
+            "leadingMessage": {
+                "fontFamily": "Apple SD Gothic Neo",
+                "sizePt": 27,
+                "bold": True,
+            }
+        }
+        slides = [
+            {"number": 1, "role": "cover"},
+            {"number": 2, "role": "evidence"},
+        ]
+        report = {
+            "content_title_rows": [
+                {
+                    "slide": 1,
+                    "shape": "Cover",
+                    "text": "Cover title",
+                    "run_fonts": ["Aptos"],
+                    "run_sizes_pt": [40],
+                    "run_bold_values": [True],
+                },
+                {
+                    "slide": 2,
+                    "shape": "Title",
+                    "text": "Conclusion title",
+                    "run_fonts": ["Apple SD Gothic Neo"],
+                    "run_sizes_pt": [27],
+                    "run_bold_values": [True],
+                },
+            ]
+        }
+        failures, analysis = leading_message_style_failures(
+            report,
+            font_policy,
+            slides,
+        )
+        self.assertEqual(failures, [])
+        self.assertEqual(analysis["findings"], [])
+
+        report["content_title_rows"][1]["run_fonts"] = ["NanumGothic"]
+        report["content_title_rows"][1]["run_sizes_pt"] = [31]
+        report["content_title_rows"][1]["run_bold_values"] = [False]
+        failures, analysis = leading_message_style_failures(
+            report,
+            font_policy,
+            slides,
+        )
+        self.assertEqual(len(failures), 1)
+        self.assertEqual(
+            analysis["findings"][0]["mismatches"],
+            ["fontFamily", "sizePt", "bold"],
         )
 
     def test_source_footer_uses_human_readable_publishers(self):
@@ -323,6 +414,58 @@ class VerifyDeckTests(unittest.TestCase):
         self.assertEqual(
             [item["slide"] for item in report["unexplainedTechnicalSlides"]],
             [1],
+        )
+
+    def test_core_only_notes_require_about_five_sentences_and_no_flow_sections(self):
+        prs = Presentation()
+        valid = prs.slides.add_slide(prs.slide_layouts[6])
+        valid.notes_slide.notes_text_frame.text = (
+            "핵심 메시지: 기업은 model보다 workflow와 eval을 학습 자산으로 남겨야 합니다.\n"
+            "GitHub Copilot은 검토 가능한 변경을 만들고 PR에 evidence를 남깁니다.\n"
+            "Microsoft Foundry는 기업 맥락과 허용된 action 안에서 Agent를 실행합니다.\n"
+            "Tracing과 Evals는 품질, 비용과 위험을 다음 version의 판단 근거로 기록합니다.\n"
+            "이 loop를 반복하면 실행 결과가 다음 개선으로 이어져 기업의 경쟁력이 축적됩니다."
+        )
+        forbidden = prs.slides.add_slide(prs.slide_layouts[6])
+        forbidden.notes_slide.notes_text_frame.text = (
+            "핵심 메시지: 첫째 문장입니다. 둘째 문장입니다.\n"
+            "질문: 이 질문은 core-only notes에 포함되면 안 됩니까?"
+        )
+        wrong_order = prs.slides.add_slide(prs.slide_layouts[6])
+        wrong_order.notes_slide.notes_text_frame.text = (
+            "전환: 이 전환은 core-only notes에 포함되면 안 됩니다.\n"
+            "핵심 메시지: 첫째 문장입니다. 둘째 문장입니다. 셋째 문장입니다. "
+            "넷째 문장입니다. 다섯째 문장입니다."
+        )
+        deck = self.work_dir / "core-only-notes.pptx"
+        prs.save(deck)
+
+        report = speaker_notes.analyze_deck(
+            deck,
+            speaker_notes.DEFAULT_KOREAN_POLICY,
+        )
+
+        self.assertEqual(report["mode"], "core-only")
+        self.assertEqual(report["underCoreSentenceMinimumSlides"], [2])
+        self.assertEqual(report["underSentenceMinimumSlides"], [2])
+        self.assertEqual(report["coreNotFirstSlides"], [3])
+        self.assertEqual(
+            report["forbiddenSectionSlides"],
+            [
+                {"slide": 2, "sections": ["질문"]},
+                {"slide": 3, "sections": ["전환"]},
+            ],
+        )
+        problems = speaker_notes.failures(report)
+        self.assertIn(
+            "Speaker notes do not start with the core-message section on "
+            "slide(s): 3",
+            problems,
+        )
+        self.assertIn(
+            "Speaker notes contain forbidden section(s): "
+            "2 (질문); 3 (전환)",
+            problems,
         )
 
     def test_speaker_notes_contract_detects_missing_sections_and_length(self):
@@ -574,7 +717,7 @@ class VerifyDeckTests(unittest.TestCase):
             "factLedger": "fact-ledger.json",
             "fontPolicy": {
                 "selected": font,
-                "fallbacks": [],
+                "fallbacks": ["Liberation Sans"],
                 "requireAvailable": True,
                 "requireRenderedMatch": True,
             },

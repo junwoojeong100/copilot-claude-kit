@@ -31,8 +31,8 @@ BASE = {
     "templateProfile": None,
     "factLedger": "fact-ledger.json",
     "fontPolicy": {
-        "selected": "Noto Sans CJK KR",
-        "fallbacks": ["Malgun Gothic"],
+        "selected": "Apple SD Gothic Neo",
+        "fallbacks": ["Malgun Gothic", "Noto Sans CJK KR"],
         "requireAvailable": True,
         "requireRenderedMatch": True,
     },
@@ -117,35 +117,58 @@ class DeckSpecTests(unittest.TestCase):
         )
         self.assertTrue(context.spec["speakerNotesPolicy"]["required"])
         self.assertEqual(
+            context.spec["speakerNotesPolicy"]["mode"],
+            "core-only",
+        )
+        self.assertEqual(
             context.spec["speakerNotesPolicy"]["requiredSections"],
-            [
-                "질문",
-                "핵심 메시지",
-                "전환",
-            ],
+            ["핵심 메시지"],
         )
         self.assertEqual(
             context.spec["speakerNotesPolicy"]["authoringMode"],
             "regenerate-from-scratch",
         )
         self.assertEqual(
-            context.spec["speakerNotesPolicy"]["maxCoreSentences"],
-            3,
+            context.spec["speakerNotesPolicy"]["minCoreSentences"],
+            4,
         )
         self.assertEqual(
-            context.spec["speakerNotesPolicy"]["questionSection"],
-            "질문",
+            context.spec["speakerNotesPolicy"]["maxCoreSentences"],
+            6,
+        )
+        self.assertEqual(
+            context.spec["speakerNotesPolicy"]["coreSection"],
+            "핵심 메시지",
         )
         self.assertTrue(
-            context.spec["speakerNotesPolicy"]["requireQuestionFirst"]
+            context.spec["speakerNotesPolicy"]["requireCoreFirst"]
+        )
+        self.assertEqual(
+            context.spec["speakerNotesPolicy"]["forbiddenSections"],
+            ["질문", "전환"],
         )
         self.assertTrue(
             context.spec["speakerNotesPolicy"]["forbidSourceReferences"]
         )
         self.assertEqual(context.spec["speakerNotesPolicy"]["targetSeconds"], 60)
         self.assertEqual(
+            context.spec["speakerNotesPolicy"]["minTotalSentences"],
+            4,
+        )
+        self.assertEqual(
             context.spec["speakerNotesPolicy"]["maxTotalSentences"],
-            5,
+            6,
+        )
+        self.assertEqual(
+            context.spec["fontPolicy"]["leadingMessage"],
+            {
+                "fontFamily": "Apple SD Gothic Neo",
+                "sizePt": 27.0,
+                "bold": True,
+            },
+        )
+        self.assertTrue(
+            context.spec["fontPolicy"]["requireAllTextFont"]
         )
 
     def test_slide_count_and_sequence_are_authoritative(self):
@@ -230,6 +253,27 @@ class DeckSpecTests(unittest.TestCase):
         with self.assertRaisesRegex(deck_spec.DeckSpecError, "canonical"):
             deck_spec.load_deck_spec(self.write_spec(value))
 
+    def test_leading_message_font_must_be_selected_or_fallback(self):
+        value = copy.deepcopy(BASE)
+        value["fontPolicy"]["leadingMessage"] = {
+            "fontFamily": "Aptos",
+            "sizePt": 27,
+            "bold": True,
+        }
+        with self.assertRaisesRegex(
+            deck_spec.DeckSpecError,
+            "must match selected",
+        ):
+            deck_spec.load_deck_spec(self.write_spec(value))
+
+        value["fontPolicy"]["requireAllTextFont"] = False
+        value["fontPolicy"]["fallbacks"].append("Aptos")
+        context = deck_spec.load_deck_spec(self.write_spec(value))
+        self.assertEqual(
+            context.spec["fontPolicy"]["leadingMessage"]["fontFamily"],
+            "Aptos",
+        )
+
     def test_language_policy_rejects_invalid_threshold_order(self):
         value = copy.deepcopy(BASE)
         value["languagePolicy"] = {
@@ -295,6 +339,37 @@ class DeckSpecTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(deck_spec.DeckSpecError, "maxCharacters"):
             deck_spec.load_deck_spec(self.write_spec(value))
+
+    def test_legacy_guided_notes_policy_is_inferred_without_mode(self):
+        value = copy.deepcopy(BASE)
+        value["speakerNotesPolicy"] = {
+            "required": True,
+            "requiredSections": ["질문", "핵심 메시지", "전환"],
+            "authoringMode": "regenerate-from-scratch",
+            "questionSection": "질문",
+            "coreSection": "핵심 메시지",
+            "transitionSection": "전환",
+            "targetSeconds": 60,
+            "minCharacters": 80,
+            "maxCharacters": 600,
+            "minQuestionCharacters": 20,
+            "maxQuestionCharacters": 140,
+            "maxQuestionSentences": 1,
+            "minCoreCharacters": 30,
+            "maxCoreCharacters": 260,
+            "maxCoreSentences": 3,
+            "maxTransitionCharacters": 180,
+            "maxTransitionSentences": 1,
+            "maxTotalSentences": 5,
+            "requireQuestionFirst": True,
+            "requireQuestionMark": True,
+            "forbidSourceReferences": True,
+        }
+        context = deck_spec.load_deck_spec(self.write_spec(value))
+        policy = context.spec["speakerNotesPolicy"]
+        self.assertEqual(policy["mode"], "guided-flow")
+        self.assertEqual(policy["minCoreSentences"], 1)
+        self.assertEqual(policy["minTotalSentences"], 1)
 
 
 if __name__ == "__main__":

@@ -13,7 +13,9 @@ python3 -B .github/skills/adaptive-presentation/scripts/verify_deck.py \
 Runner가 구조 감사와 전체 렌더를 읽기 전용으로 병렬 실행하고, risk score가 높은 슬라이드를 같은 PDF로
 상세 렌더한다. `verification-report.json`, `qa/contact-*.jpg`, `qa-detail/slide-*.jpg`를 확인한 뒤
 결함을 일괄 수정한다. deck spec의 strict 계약은 15pt 미만의 likely body 후보, 명시적 크기가 없는 run, title risk,
-본문 title row의 font-size 불일치, 승인되지 않은 geometry overlap, 서로 다른 text frame에서 실제
+본문 title row의 font-size 불일치, 모든 visible run의 selected font 미선언·혼용,
+`fontPolicy.leadingMessage`의 family·size·weight 불일치,
+승인되지 않은 geometry overlap, 서로 다른 text frame에서 실제
 렌더된 글자의 충돌·overflow·허용치를 넘는 unmapped span을 실패 처리한다.
 Fact Ledger `claimIds`가 있는 슬라이드는 자동으로 출처 대상이 된다. Footer에는 Fact Ledger의
 발행자 또는 이해 가능한 문서명이 있어야 하며, `[F-001]` 같은 내부 ID가 보이는 텍스트에 포함되면 실패한다.
@@ -148,6 +150,8 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 | Bounds | 의도하지 않은 out-of-bounds 0 |
 | Overlap | `unexpected_overlap_candidates` 0 + `unexpected_rendered_text_overlaps` 0 |
 | Content title size | `unexpected_title_size_inconsistencies` 0 |
+| Leading message style | 한국어 기본 `Apple SD Gothic Neo · 27pt · Bold`; deck spec과 family·size·weight 일치 |
+| Whole-deck font | 한국어 visible text run 전체가 `Apple SD Gothic Neo`를 명시; fallback은 PDF 렌더 대체만 허용 |
 | Primary body | 원칙적으로 16pt+, 최소 15pt |
 | Automated body floor | canonical QA에서 likely body 15pt 미만 실패; compact label/secondary annotation은 별도 보고 |
 | Source/footer | 8~9.5pt 허용 |
@@ -162,7 +166,7 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 | Preview/demo | 텍스트 라벨 존재 |
 | Korean language balance | 전체 영문 목표 약 40%, 최대 55%; 개별 장 최대 75%; `protectedTerms` 영문 유지 |
 | Technical explanation | protected term이 있는 장에 쉬운 한글 역할 설명 존재 |
-| Speaker notes | 전 장 재생성 + 질문으로 시작 + 약 60초·80~600자·최대 5문장 + 질문·핵심 메시지·전환 |
+| Speaker notes | 전 장 재생성 + `핵심 메시지:`로 시작 + 약 60초·120~600자·4~6문장 + 질문·전환 없음 |
 | Render | 전체 compact overview 생성 + 위험 슬라이드 선택 렌더 |
 | Integrity | `unzip -t` 오류 0 |
 | Contract | deck spec의 장수·canvas·font·Fact Ledger ID와 일치 |
@@ -187,11 +191,11 @@ full-slide 이미지는 최대 2~3개만 확인한다.
 `protectedTerms`가 사라지면 번역 또는 누락으로 간주해 실패한다. 영문 비율이 낮다는 이유로 실패하지
 않으므로, 목표치를 맞추기 위한 장식적 영어 추가는 금지한다.
 
-`speaker_notes` report는 슬라이드별 전체 문자·문장 수, 질문의 위치·길이·문장 수·물음표, 핵심 메시지
-문자·문장 수, 전환 문자·문장 수, 출처 reference 존재 여부와 필수 섹션을 기록한다. notes 누락,
-80자 미만, 600자 초과, 질문이 첫 섹션이 아님, 질문 20~140자 범위 이탈, 물음표 누락,
-핵심 메시지 30~260자 범위 이탈, 전환 180자 초과, 전체 5문장 초과, `출처:`·Fact ID·URL 포함은
-strict verification을 실패시키고 risk slide 후보에 포함한다.
+기본 `core-only`의 `speaker_notes` report는 슬라이드별 전체 문자·문장 수, 핵심 메시지의 위치·길이·
+문장 수, 금지 섹션과 출처 reference 존재 여부를 기록한다. notes 누락, 120자 미만, 600자 초과,
+`핵심 메시지:`가 첫 섹션이 아님, 핵심 메시지 4문장 미만 또는 6문장 초과, `질문:`·`전환:` 포함,
+`출처:`·Fact ID·URL 포함은 strict verification을 실패시키고 risk slide 후보에 포함한다.
+`guided-flow` mode는 기존 질문 위치·길이·물음표와 전환 길이·문장 수 계약을 별도로 검사한다.
 
 `language_balance.unexplainedTechnicalSlides`는 protected term은 있지만 한글 설명이 부족한 장을
 기록한다. 비기술 청중용 덱은 English technical label 자체를 감점하지 않고, 역할·가치·판단을 설명하는

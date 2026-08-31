@@ -377,16 +377,25 @@ def detect_title_size_consistency(
                 or shape.top > Inches(1.85)
             ):
                 continue
+            runs = [
+                run
+                for paragraph in shape.text_frame.paragraphs
+                for run in paragraph.runs
+                if run.text.strip()
+            ]
             sizes = sorted(
                 {
                     round(run.font.size.pt, 2)
-                    for paragraph in shape.text_frame.paragraphs
-                    for run in paragraph.runs
-                    if run.text.strip() and run.font.size
+                    for run in runs
+                    if run.font.size
                 }
             )
             if not sizes or max(sizes) < min_title_pt:
                 continue
+            bold_values = []
+            for value in (True, False, None):
+                if any(run.font.bold is value for run in runs):
+                    bold_values.append(value)
             candidates.append(
                 {
                     "slide": slide_number,
@@ -397,6 +406,15 @@ def detect_title_size_consistency(
                     "width_in": round(shape.width / Inches(1), 3),
                     "size_pt": max(sizes),
                     "run_sizes_pt": sizes,
+                    "run_fonts": sorted(
+                        {
+                            run.font.name
+                            for run in runs
+                            if run.font.name
+                        },
+                        key=lambda value: (value.casefold(), value),
+                    ),
+                    "run_bold_values": bold_values,
                 }
             )
         if candidates:
@@ -414,6 +432,7 @@ def detect_title_size_consistency(
     if len(title_rows) < 2:
         return {
             "title_rows": title_rows,
+            "content_title_rows": title_rows,
             "content_title_reference_pt": None,
             "content_title_size_range_pt": 0.0,
             "title_size_inconsistencies": [],
@@ -478,6 +497,7 @@ def detect_title_size_consistency(
     ]
     return {
         "title_rows": title_rows,
+        "content_title_rows": content_titles,
         "content_title_reference_pt": reference,
         "content_title_size_range_pt": size_range,
         "title_size_inconsistencies": inconsistencies,
@@ -591,6 +611,7 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
     empty_text_frames: list[dict] = []
     title_risks: list[dict] = []
     unsized_runs: list[dict] = []
+    unfonted_runs: list[dict] = []
     group_shapes: list[dict] = []
     slides_with_sources: list[int] = []
     slides_with_footer_sources: list[int] = []
@@ -655,6 +676,14 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
             for paragraph in text_frame.paragraphs:
                 paragraph_text = paragraph.text.strip()
                 for run in paragraph.runs:
+                    if run.text.strip() and not run.font.name:
+                        unfonted_runs.append(
+                            {
+                                "slide": slide_number,
+                                "shape": target_name,
+                                "text": run.text.strip()[:120],
+                            }
+                        )
                     if run.font.name:
                         fonts[run.font.name] += 1
                     if not run.font.size:
@@ -798,6 +827,7 @@ def audit(args: argparse.Namespace) -> tuple[dict, list[str]]:
         **title_consistency,
         "unsized_runs": unsized_runs,
         "unexpected_unsized_runs": unexpected_unsized_runs,
+        "unfonted_runs": unfonted_runs,
         "group_shapes": group_shapes,
         "overlap_candidates": overlap_candidates,
         "unexpected_overlap_candidates": unexpected_overlap_candidates,

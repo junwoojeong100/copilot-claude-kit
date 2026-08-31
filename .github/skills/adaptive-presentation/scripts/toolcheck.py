@@ -27,11 +27,14 @@ FONT_PATTERNS = (
     r"AppleGothic|Nanum(Gothic|Myeongjo)|나눔(고딕|명조)|"
     r"Source Han Sans K|Pretendard|Spoqa"
 )
+DEFAULT_KOREAN_FONT = "Apple SD Gothic Neo"
+DEFAULT_KOREAN_LEADING_MESSAGE_SIZE_PT = 27.0
+DEFAULT_KOREAN_LEADING_MESSAGE_BOLD = True
 KOREAN_FONT_CANDIDATES = (
+    DEFAULT_KOREAN_FONT,
     "Noto Sans KR",
     "Noto Sans CJK KR",
     "Malgun Gothic",
-    "Apple SD Gothic Neo",
     "Pretendard",
     "NanumGothic",
     "Source Han Sans K",

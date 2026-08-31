@@ -22,6 +22,7 @@ sys.path.insert(0, str(WEB_SEARCH_SCRIPTS))
 import validate_fact_ledger as fact_ledger_validator  # noqa: E402
 import language_policy  # noqa: E402
 import speaker_notes  # noqa: E402
+import toolcheck  # noqa: E402
 
 
 STATE_LABELS = {"GA", "PARTIAL GA", "PREVIEW", "ASSUMPTION", "DEMO DATA"}
@@ -249,13 +250,79 @@ def validate_spec(
     font_policy = require_object(spec, "fontPolicy", "$")
     reject_unknown(
         font_policy,
-        {"selected", "fallbacks", "requireAvailable", "requireRenderedMatch"},
+        {
+            "selected",
+            "fallbacks",
+            "requireAvailable",
+            "requireRenderedMatch",
+            "requireAllTextFont",
+            "leadingMessage",
+        },
         "$.fontPolicy",
     )
-    require_string(font_policy, "selected", "$.fontPolicy")
-    require_string_list(font_policy, "fallbacks", "$.fontPolicy")
+    selected_font = require_string(font_policy, "selected", "$.fontPolicy")
+    fallback_fonts = require_string_list(font_policy, "fallbacks", "$.fontPolicy")
     require_bool(font_policy, "requireAvailable", "$.fontPolicy")
     require_bool(font_policy, "requireRenderedMatch", "$.fontPolicy")
+    is_korean = language.casefold() == "ko" or language.casefold().startswith("ko-")
+    if "requireAllTextFont" not in font_policy and is_korean:
+        font_policy["requireAllTextFont"] = True
+    if "requireAllTextFont" in font_policy:
+        require_bool(
+            font_policy,
+            "requireAllTextFont",
+            "$.fontPolicy",
+        )
+    leading_message = font_policy.get("leadingMessage")
+    if leading_message is None and is_korean:
+        leading_message = {
+            "fontFamily": selected_font,
+            "sizePt": toolcheck.DEFAULT_KOREAN_LEADING_MESSAGE_SIZE_PT,
+            "bold": toolcheck.DEFAULT_KOREAN_LEADING_MESSAGE_BOLD,
+        }
+        font_policy["leadingMessage"] = copy.deepcopy(leading_message)
+    if leading_message is not None:
+        if not isinstance(leading_message, dict):
+            raise DeckSpecError("$.fontPolicy.leadingMessage must be an object")
+        reject_unknown(
+            leading_message,
+            {"fontFamily", "sizePt", "bold"},
+            "$.fontPolicy.leadingMessage",
+        )
+        leading_font = require_string(
+            leading_message,
+            "fontFamily",
+            "$.fontPolicy.leadingMessage",
+        )
+        leading_message["sizePt"] = require_positive_number(
+            leading_message,
+            "sizePt",
+            "$.fontPolicy.leadingMessage",
+        )
+        require_bool(
+            leading_message,
+            "bold",
+            "$.fontPolicy.leadingMessage",
+        )
+        allowed_fonts = {
+            " ".join(font.split()).casefold()
+            for font in [selected_font, *fallback_fonts]
+        }
+        normalized_leading_font = " ".join(leading_font.split()).casefold()
+        normalized_selected_font = " ".join(selected_font.split()).casefold()
+        if (
+            font_policy.get("requireAllTextFont", False)
+            and normalized_leading_font != normalized_selected_font
+        ):
+            raise DeckSpecError(
+                "$.fontPolicy.leadingMessage.fontFamily must match selected "
+                "when requireAllTextFont is true"
+            )
+        if normalized_leading_font not in allowed_fonts:
+            raise DeckSpecError(
+                "$.fontPolicy.leadingMessage.fontFamily must be selected or "
+                "listed in fallbacks"
+            )
 
     slides = spec.get("slides")
     if not isinstance(slides, list) or len(slides) != slide_count:

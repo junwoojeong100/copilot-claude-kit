@@ -37,37 +37,35 @@
     "allowHighLatinSlides": []
   },
   "speakerNotesPolicy": {
+    "mode": "core-only",
     "required": true,
     "authoringMode": "regenerate-from-scratch",
-    "requiredSections": [
-      "질문",
-      "핵심 메시지",
-      "전환"
-    ],
-    "questionSection": "질문",
+    "requiredSections": ["핵심 메시지"],
     "coreSection": "핵심 메시지",
-    "transitionSection": "전환",
     "targetSeconds": 60,
-    "minCharacters": 80,
+    "minCharacters": 120,
     "maxCharacters": 600,
-    "minQuestionCharacters": 20,
-    "maxQuestionCharacters": 140,
-    "maxQuestionSentences": 1,
-    "minCoreCharacters": 30,
-    "maxCoreCharacters": 260,
-    "maxCoreSentences": 3,
-    "maxTransitionCharacters": 180,
-    "maxTransitionSentences": 1,
-    "maxTotalSentences": 5,
-    "requireQuestionFirst": true,
-    "requireQuestionMark": true,
+    "minCoreCharacters": 100,
+    "maxCoreCharacters": 580,
+    "minCoreSentences": 4,
+    "maxCoreSentences": 6,
+    "minTotalSentences": 4,
+    "maxTotalSentences": 6,
+    "forbiddenSections": ["질문", "전환"],
+    "requireCoreFirst": true,
     "forbidSourceReferences": true
   },
   "fontPolicy": {
-    "selected": "Noto Sans CJK KR",
-    "fallbacks": ["Malgun Gothic", "Apple SD Gothic Neo"],
+    "selected": "Apple SD Gothic Neo",
+    "fallbacks": ["Malgun Gothic", "Noto Sans CJK KR", "NanumGothic"],
     "requireAvailable": true,
-    "requireRenderedMatch": true
+    "requireRenderedMatch": true,
+    "requireAllTextFont": true,
+    "leadingMessage": {
+      "fontFamily": "Apple SD Gothic Neo",
+      "sizePt": 27,
+      "bold": true
+    }
   },
   "slides": [
     {
@@ -97,6 +95,15 @@
 }
 ```
 
+한국어 덱의 repository 기본은 `Apple SD Gothic Neo`이며, 표지·section divider를 제외한 본문
+리딩 메시지는 `27pt · Bold`다. `leadingMessage`를 생략하면 validator가 `selected · 27pt · Bold`로
+정규화한다. 브랜드·템플릿 때문에 다른 스타일을 써야 하면 `fontFamily`는 `selected` 또는
+`fallbacks` 중 하나로 명시하고, verifier가 실제 본문 title row의 family·size·weight를 검사한다.
+`requireAllTextFont=true`이면 PPTX의 모든 visible text run은 `selected`를 명시해야 한다.
+이때 `leadingMessage.fontFamily`도 반드시 `selected`와 같아야 한다. 브랜드·템플릿 override는
+해당 글꼴을 `selected`로 바꿔 기록한다. `fallbacks`는 렌더 환경의 대체 글꼴만 허용하며 PPTX 내부의
+혼용 글꼴로 사용할 수 없다.
+
 한국어(`ko`, `ko-KR`) spec에서 `languagePolicy`를 생략하면 위 기본 임계치가 적용된다. 다만 생성자는
 해당 덱에 실제로 사용하는 서비스명·공식 기능명을 `protectedTerms`에 명시해야 한다.
 
@@ -113,27 +120,25 @@
 
 한국어 spec에서 `speakerNotesPolicy`를 생략하면 위 기본값이 적용된다.
 
+- `mode`: 기본은 `core-only`다. 사용자가 workshop 진행 질문과 장표 전환 cue를 명시적으로 요청한
+  경우에만 `guided-flow`를 사용한다.
 - `requiredSections`: 각 섹션은 `섹션명:` 형태로 notes에 직접 표시한다.
 - `authoringMode`: 기존 notes 문구를 이어 붙이지 않고 비운 뒤 현재 storyline·visual·근거에서 재작성한다.
-- `questionSection`: 고객이 구체적 사례·상황과 evidence·owner·KPI·위험·trade-off 중 판단 축을 함께
-  떠올리게 하는 질문 섹션명. 길이 검증을 통과해도 단순 예/아니오 상태 확인이면 editorial QA에서
-  수정한다.
-- `coreSection`: 발표자가 그대로 말할 결론 1~3문장을 담는 섹션명. 현재 visual의 핵심 요소 2~4개가
-  어떻게 연결되어 결론과 고객 의미를 만드는지 설명한다.
-- `transitionSection`: 현재 장의 결론에서 남은 판단·조건을 짚고 다음 장이 필요한 이유로 연결하는
-  섹션명. 어느 장에도 붙일 수 있는 일반적인 “다음 장에서 보겠습니다” 문장은 허용하지 않는다.
+- `coreSection`: 발표자가 그대로 말할 핵심 메시지 약 5문장을 담는 섹션명. 현재 visual의 핵심 요소
+  2~4개가 어떻게 연결되어 결론, 작동 방식, 고객 의미와 판단 또는 행동을 만드는지 설명한다.
 - `targetSeconds`: 한 장의 핵심을 전달하는 목표 시간. 한국어 기본은 약 60초다.
 - `minCharacters`, `maxCharacters`: cue가 지나치게 빈약하거나 상세 원고로 길어지는 것을 방지한다.
-- `minQuestionCharacters`, `maxQuestionCharacters`, `maxQuestionSentences`: 질문을 20~140자의 한 문장으로
-  유지한다.
-- `minCoreCharacters`, `maxCoreCharacters`, `maxCoreSentences`: 핵심 메시지를 30~260자의 1~3문장으로
-  유지한다.
-- `maxTransitionCharacters`, `maxTransitionSentences`: 전환을 한 문장 수준으로 제한한다.
-- `maxTotalSentences`: 질문·핵심 메시지·전환을 합쳐 최대 5문장으로 제한한다.
-- `requireQuestionFirst`, `requireQuestionMark`: notes를 질문으로 시작하고 질문형 문장으로 끝내게 한다.
+- `minCoreCharacters`, `maxCoreCharacters`: 핵심 메시지 블록의 길이를 제한한다.
+- `minCoreSentences`, `maxCoreSentences`: 기본 4~6문장으로 제한해 약 5문장 분량을 유지한다.
+- `minTotalSentences`, `maxTotalSentences`: notes 전체 문장 수도 같은 범위로 검증한다.
+- `forbiddenSections`: `core-only`에서 허용하지 않는 `질문`, `전환` 같은 섹션명이다.
+- `requireCoreFirst`: notes가 `핵심 메시지:`로 시작하도록 한다.
 - `forbidSourceReferences`: notes의 `출처:`·`Source:` 블록, Fact ID, URL을 금지한다.
-- verifier는 section·길이·문장 수 같은 구조 계약을 검사한다. 질문의 깊이, visual 설명의 충분성,
-  transition bridge의 논리성은 storyline 검토와 최종 editorial review에서 별도로 확인한다.
+- verifier는 section·길이·문장 수와 금지 섹션을 검사한다. visual 설명의 충분성과 구어체 품질은
+  storyline 검토와 최종 editorial review에서 별도로 확인한다.
+- `guided-flow`는 기존 `questionSection`, `transitionSection`, 질문·전환 길이와 문장 수,
+  `requireQuestionFirst`, `requireQuestionMark` 필드를 사용한다. 기존 deck spec은 이 필드가 있으면
+  `mode`가 없어도 `guided-flow`로 자동 인식한다.
 - GA/Preview, 적용 범위, 예외는 slide visual·footer·`stateLabels`에 명확히 표시한다. 발표 결론을
   바꾸는 조건만 `핵심 메시지`에 압축하고 notes에 별도 상세 블록을 만들지 않는다.
 - Fact ID와 출처는 speaker notes가 아니라 machine contract와 Fact Ledger에만 기록한다. 슬라이드에

@@ -10,6 +10,7 @@ sys.path.insert(0, str(SKILL_DIR))
 
 from pptx import Presentation  # noqa: E402
 from pptx.dml.color import RGBColor  # noqa: E402
+from pptx.oxml.ns import qn  # noqa: E402
 
 import pptx_helpers as H  # noqa: E402
 
@@ -56,9 +57,9 @@ class PptxHelpersTests(unittest.TestCase):
                  if not name.startswith("_") and isinstance(getattr(H, name), RGBColor)]
         self.assertEqual(baked, [], f"pptx_helpers must not bake palette colors: {baked}")
 
-    def test_default_font_is_overridable_string(self):
+    def test_default_font_is_canonical_korean_typeface(self):
         self.assertIsInstance(H.DEFAULT_FONT, str)
-        self.assertNotIn("Apple", H.DEFAULT_FONT)
+        self.assertEqual(H.DEFAULT_FONT, "Apple SD Gothic Neo")
 
     def test_shadow_produces_single_effectlst(self):
         """그림자는 effectLst를 중복 생성하지 않아야 한다(PowerPoint repair 방지)."""
@@ -76,6 +77,29 @@ class PptxHelpersTests(unittest.TestCase):
         slide = H.add_slide(prs, blank)
         shape = H.text(slide, "본문", 1, 1, 2, 1, 18, H.hexc("000000"))
         self.assertEqual(shape.text_frame.auto_size, H.MSO_AUTO_SIZE.NONE)
+
+    def test_text_helpers_apply_one_font_to_all_script_typefaces(self):
+        prs, blank = H.new_deck()
+        slide = H.add_slide(prs, blank)
+        shape = H.text(
+            slide,
+            "한글 English",
+            1,
+            1,
+            4,
+            1,
+            18,
+            H.hexc("000000"),
+            font="Apple SD Gothic Neo",
+        )
+        run = shape.text_frame.paragraphs[0].runs[0]
+        rpr = run._r.get_or_add_rPr()
+        self.assertEqual(run.font.name, "Apple SD Gothic Neo")
+        for tag in ("a:latin", "a:ea", "a:cs"):
+            self.assertEqual(
+                rpr.find(qn(tag)).get("typeface"),
+                "Apple SD Gothic Neo",
+            )
 
     def test_grid_table_renders_numeric_zero_and_custom_padding(self):
         prs, blank = H.new_deck()

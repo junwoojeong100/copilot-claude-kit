@@ -44,8 +44,13 @@ def select_risk_slides(report: dict, count: int) -> list[int]:
     add(report.get("small_text_label_candidates", []), 1)
     add(report.get("title_risks", []), 10)
     add(report.get("title_size_inconsistencies", []), 12)
+    add(
+        (report.get("leading_message_style") or {}).get("findings", []),
+        12,
+    )
     add(report.get("group_shapes", []), 3)
     add(report.get("unsized_runs", []), 5)
+    add(report.get("unfonted_runs", []), 5)
     add(report.get("empty_text_frames", []), 1)
     add(report.get("ooxml_repair_risks", []), 30)
     add(report.get("unexpected_out_of_bounds", []), 20)
@@ -85,6 +90,19 @@ def select_risk_slides(report: dict, count: int) -> list[int]:
         ],
         8,
     )
+    add(
+        [
+            {"slide": slide}
+            for slide in report.get("speaker_notes", {}).get(
+                "coreNotFirstSlides", []
+            )
+        ],
+        10,
+    )
+    add(
+        report.get("speaker_notes", {}).get("forbiddenSectionSlides", []),
+        10,
+    )
     for key, weight in (
         ("questionNotFirstSlides", 10),
         ("briefQuestionSlides", 6),
@@ -112,10 +130,28 @@ def select_risk_slides(report: dict, count: int) -> list[int]:
         [
             {"slide": slide}
             for slide in report.get("speaker_notes", {}).get(
+                "underCoreSentenceMinimumSlides", []
+            )
+        ],
+        6,
+    )
+    add(
+        [
+            {"slide": slide}
+            for slide in report.get("speaker_notes", {}).get(
                 "longCoreSlides", []
             )
         ],
         6,
+    )
+    add(
+        [
+            {"slide": slide}
+            for slide in report.get("speaker_notes", {}).get(
+                "underSentenceMinimumSlides", []
+            )
+        ],
+        8,
     )
     add(
         [
@@ -378,6 +414,111 @@ def unexpected_fonts(allowed: list[str], candidates: list[str]) -> list[str]:
             if normalize_font_name(candidate) not in normalized_allowed
         }
     )
+
+
+def all_text_font_failures(
+    audit_report: dict,
+    font_policy: dict,
+) -> list[str]:
+    selected_font = font_policy["selected"]
+    allowed_fonts = [selected_font, *font_policy["fallbacks"]]
+    declared_fonts = [name for name, _ in audit_report["fonts"]]
+    declared_allowed_fonts = (
+        [selected_font]
+        if font_policy.get("requireAllTextFont", False)
+        else allowed_fonts
+    )
+    failures = []
+    unexpected_declared = unexpected_fonts(
+        declared_allowed_fonts,
+        declared_fonts,
+    )
+    if unexpected_declared:
+        failures.append(
+            "Deck declares fonts outside the selected font policy: "
+            + ", ".join(unexpected_declared)
+        )
+    if (
+        font_policy.get("requireAllTextFont", False)
+        and audit_report.get("unfonted_runs")
+    ):
+        failures.append(
+            f"{len(audit_report['unfonted_runs'])} visible text run(s) "
+            "do not declare the selected font explicitly"
+        )
+    return failures
+
+
+def leading_message_style_failures(
+    audit_report: dict,
+    font_policy: dict,
+    slides: list[dict],
+) -> tuple[list[str], dict | None]:
+    style = font_policy.get("leadingMessage")
+    if style is None:
+        return [], None
+
+    excluded_roles = {"cover", "section", "section-divider"}
+    excluded_slides = {
+        int(slide["number"])
+        for slide in slides
+        if str(slide.get("role", "")).strip().casefold() in excluded_roles
+    }
+    expected_font = style["fontFamily"]
+    expected_size = float(style["sizePt"])
+    expected_bold = bool(style["bold"])
+    findings: list[dict] = []
+    for item in audit_report.get("content_title_rows", []):
+        slide_number = int(item["slide"])
+        if slide_number in excluded_slides:
+            continue
+        fonts = list(item.get("run_fonts", []))
+        sizes = [float(value) for value in item.get("run_sizes_pt", [])]
+        bold_values = list(item.get("run_bold_values", []))
+        reasons = []
+        if not fonts or any(
+            not font_matches(expected_font, [font])
+            for font in fonts
+        ):
+            reasons.append("fontFamily")
+        if not sizes or any(abs(size - expected_size) > 0.05 for size in sizes):
+            reasons.append("sizePt")
+        if bold_values != [expected_bold]:
+            reasons.append("bold")
+        if reasons:
+            findings.append(
+                {
+                    "slide": slide_number,
+                    "shape": item.get("shape"),
+                    "text": item.get("text"),
+                    "expected": {
+                        "fontFamily": expected_font,
+                        "sizePt": expected_size,
+                        "bold": expected_bold,
+                    },
+                    "actual": {
+                        "fontFamilies": fonts,
+                        "sizesPt": sizes,
+                        "boldValues": bold_values,
+                    },
+                    "mismatches": reasons,
+                }
+            )
+
+    failures = []
+    if findings:
+        failures.append(
+            "Leading-message typography differs from fontPolicy on slide(s): "
+            + ", ".join(str(item["slide"]) for item in findings)
+        )
+    return failures, {
+        "expected": {
+            "fontFamily": expected_font,
+            "sizePt": expected_size,
+            "bold": expected_bold,
+        },
+        "findings": findings,
+    }
 
 
 def _claim_source_publishers(
@@ -743,12 +884,9 @@ def verify(args: argparse.Namespace) -> dict:
             audit_failures.append(
                 f"Selected font is not explicitly declared in the deck: {selected_font}"
             )
-        unexpected_declared = unexpected_fonts(allowed_fonts, declared_fonts)
-        if unexpected_declared:
-            audit_failures.append(
-                "Deck declares fonts outside the selected font policy: "
-                + ", ".join(unexpected_declared)
-            )
+        audit_failures.extend(
+            all_text_font_failures(audit_report, font_policy)
+        )
         rendered_fonts = rendered_findings["rendered_fonts"]
         unexpected_rendered = unexpected_fonts(allowed_fonts, rendered_fonts)
         if unexpected_rendered:
@@ -763,6 +901,13 @@ def verify(args: argparse.Namespace) -> dict:
                 "Rendered PDF does not expose the selected font or an allowed "
                 f"fallback: {selected_font}"
             )
+        leading_failures, leading_report = leading_message_style_failures(
+            audit_report,
+            font_policy,
+            contract.spec["slides"],
+        )
+        audit_report["leading_message_style"] = leading_report
+        audit_failures.extend(leading_failures)
         if contract.template_profile is not None:
             actual_profile = inspect_template.inspect_template(deck)
             expected_profile = contract.template_profile
